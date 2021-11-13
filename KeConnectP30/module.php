@@ -104,7 +104,7 @@ class KeConnectP30 extends IPSModule
             'Datatype'        => 'UINT32',
             'VariableType'    => VARIABLETYPE_FLOAT,
             'VariableProfile' => 'KebaConnect.Energy',
-            'Factor'          => 0.001,
+            'Factor'          => 0.0001,
         ],
         [
             'Index'           => 1100,
@@ -514,7 +514,7 @@ class KeConnectP30 extends IPSModule
 
         $prod = $this->GetVariable(1016, 'UINT32', VARIABLETYPE_STRING);
         $serialNo = $this->GetVariable(1014, 'UINT32', VARIABLETYPE_STRING);
-        $s = $this->FormatVariable('ProductType', $prod) . ', #' . $serialNo;
+        $s = $this->FormatVariable('ProductType', $prod) . ' (#' . $serialNo . ')';
         $this->SetSummary($s);
     }
 }
