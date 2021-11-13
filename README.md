@@ -102,5 +102,5 @@ https://www.keba.com/download/x/dea7ae6b84/kecontactp30modbustcp_pgen.pdf
 
 ## 7. Versions-Historie
 
-- 1.0 @ 12.11.2021 16:28 (beta)
+- 1.0 @ 13.11.2021 20:44 (beta)
   - Initiale Version
