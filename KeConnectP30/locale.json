@@ -38,18 +38,18 @@
 
 			"system started": "System bereit",
 			"not read for charging": "nicht bereit zum Laden",
-			"read for charging": "bereit zu Laden",
+			"read for charging": "bereit zum Laden",
 			"charging": "Ladevorgang aktiv",
 			"error occured": "Fehler aufgetreten",
 			"charging suspended": "Lådevorgang unterbrochen",
 
 			"not plugged": "nicht verbunden",
 			"plugged in station": "verbunden mit Wallbox",
-			"locked in station": "verrigelt in Wallbox",
+			"locked in station": "verriegelt in Wallbox",
 			"plugged in vehicle": "verbunden mit Fahrzeug",
-			"locked in vehicle": "verrigelt in Fahrzeug",
+			"locked in vehicle": "verriegelt in Fahrzeug",
 
-			"ok": "in Ordnung",
+			"no error": "kein Fehler",
 			"Error 0x%05x": "Fehler 0x%05x",
 
 			"Instance getting created": "Instanz wird erstellt",
