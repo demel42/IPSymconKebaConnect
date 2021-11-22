@@ -420,7 +420,7 @@ class KeConnectP30udp extends IPSModule
                 $new_actions = [];
                 if ($n_actions > 0) {
                     $action = $actions[0];
-					$this->SendDebug(__FUNCTION__, 'action='.print_r($action,true),0);
+                    $this->SendDebug(__FUNCTION__, 'action=' . print_r($action, true), 0);
                     $exec_ts = isset($action['exec_ts']) ? $action['exec_ts'] : 0;
                     if ($exec_ts == 0) {
                         $action['exec_ts'] = time();
@@ -750,8 +750,8 @@ class KeConnectP30udp extends IPSModule
                 }
             }
             // wenn 'State' => "report 2" abrufen, ggfs schneller zyklus
-        	// $this->AddAction('report 2');
-        	// $this->Cycle();
+            // $this->AddAction('report 2');
+            // $this->Cycle();
 
             if ($is_changed) {
                 $this->SetValue('LastChange', $now);
