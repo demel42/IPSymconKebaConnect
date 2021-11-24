@@ -10,7 +10,8 @@ class KeConnectP30udp extends IPSModule
     use KebaConnectCommonLib;
     use KebaConnectLocalLib;
 
-    private static $QueueMaxWait = 60;
+    private static $UnicastPort = 7090;
+    private static $BroadcastPort = 7092;
 
     private static $Variables = [
         [
@@ -141,6 +142,7 @@ class KeConnectP30udp extends IPSModule
         $this->RegisterPropertyBoolean('module_disable', false);
         $this->RegisterPropertyInteger('update_interval', '5');
 
+        $this->RegisterPropertyString('hostname', '');
         $this->RegisterPropertyString('use_fields', '[]');
 
         $this->RegisterTimer('UpdateData', 0, 'KebaConnect_UpdateData(' . $this->InstanceID . ');');
@@ -212,6 +214,13 @@ class KeConnectP30udp extends IPSModule
             return;
         }
 
+        // check hostname;
+        $hostname = $this->ReadPropertyString('hostname');
+        if ($hostname == '') {
+            $this->SetStatus(IS_INACTIVE);
+            return;
+        }
+
         $refs = $this->GetReferenceList();
         foreach ($refs as $ref) {
             $this->UnregisterReference($ref);
@@ -241,6 +250,12 @@ class KeConnectP30udp extends IPSModule
             'type'    => 'CheckBox',
             'name'    => 'module_disable',
             'caption' => 'Disable instance'
+        ];
+
+        $formElements[] = [
+            'type'    => 'ValidationTextBox',
+            'name'    => 'hostname',
+            'caption' => 'Hostname'
         ];
 
         $formElements[] = [
@@ -319,141 +334,6 @@ class KeConnectP30udp extends IPSModule
         return $formActions;
     }
 
-    public function Cycle()
-    {
-        $this->CheckAction();
-        $this->SetTimer();
-    }
-
-    public function SetTimer()
-    {
-        $msec = 0;
-        $sdata = $this->GetBuffer('Queue');
-        if ($sdata != false) {
-            $actions = json_decode($sdata, true);
-            if (count($actions) > 0) {
-                $msec = 60 * 1000;
-            }
-        }
-        $this->SetTimerInterval('Cycle', $msec);
-    }
-
-    public function AddAction(string $cmd)
-    {
-        $this->SendDebug(__FUNCTION__, 'cmd=' . $cmd, 0);
-
-        $time_start = microtime(true);
-        $n_actions = 0;
-        if (IPS_SemaphoreEnter($this->semaphoreID, $this->semaphoreTM)) {
-            $sdata = $this->GetBuffer('Queue');
-            $new_actions = [];
-            if ($sdata != false) {
-                $actions = json_decode($sdata, true);
-                // $this->SendDebug(__FUNCTION__, 'actions#' . count($actions), 0);
-                // $this->SendDebug(__FUNCTION__, 'actions=' . print_r($actions, true), 0);
-                foreach ($actions as $action) {
-                    $exec_ts = isset($action['exec_ts']) ? $action['exec_ts'] : 0;
-                    if ($exec_ts > 0 && $exec_ts < time() - self::$QueueMaxWait) {
-                        continue;
-                    }
-                    $new_actions[] = $action;
-                }
-            }
-            $action = [
-                'creation'  => time(),
-                'cmd'       => $cmd,
-                'exec_ts'   => 0,
-            ];
-            $new_actions[] = $action;
-            // $this->SendDebug(__FUNCTION__, 'new_actions#' . count($new_actions), 0);
-            // $this->SendDebug(__FUNCTION__, 'new_actions=' . print_r($new_actions, true), 0);
-            $sdata = json_encode($new_actions);
-            $this->SetBuffer('Queue', $sdata);
-            IPS_SemaphoreLeave($this->semaphoreID);
-        } else {
-            $this->SendDebug(__FUNCTION__, 'sempahore ' . $this->semaphoreID . ' is not accessable', 0);
-        }
-        $duration = round(microtime(true) - $time_start, 2);
-        if ($duration > 0) {
-            $this->SendDebug(__FUNCTION__, 'duration=' . $duration . 's', 0);
-        }
-    }
-
-    public function DeleteAction()
-    {
-        $time_start = microtime(true);
-        if (IPS_SemaphoreEnter($this->semaphoreID, $this->semaphoreTM)) {
-            $sdata = $this->GetBuffer('Queue');
-            $new_actions = [];
-            if ($sdata != false) {
-                $actions = json_decode($sdata, true);
-                $n_actions = count($actions);
-                // $this->SendDebug(__FUNCTION__, 'actions#' . count($actions), 0);
-                // $this->SendDebug(__FUNCTION__, 'actions=' . print_r($actions, true), 0);
-                for ($i = 1; $i < $n_actions; $i++) {
-                    $new_actions[] = $actions[$i];
-                }
-            }
-            // $this->SendDebug(__FUNCTION__, 'new_actions#' . count($new_actions), 0);
-            // $this->SendDebug(__FUNCTION__, 'new_actions=' . print_r($new_actions, true), 0);
-            $sdata = json_encode($new_actions);
-            $this->SetBuffer('Queue', $sdata);
-            IPS_SemaphoreLeave($this->semaphoreID);
-        } else {
-            $this->SendDebug(__FUNCTION__, 'sempahore ' . $this->semaphoreID . ' is not accessable', 0);
-        }
-        $duration = round(microtime(true) - $time_start, 2);
-        if ($duration > 0) {
-            $this->SendDebug(__FUNCTION__, 'duration=' . $duration . 's', 0);
-        }
-    }
-
-    public function CheckAction()
-    {
-        $n_actions = 0;
-        $time_start = microtime(true);
-        if (IPS_SemaphoreEnter($this->semaphoreID, $this->semaphoreTM)) {
-            $sdata = $this->GetBuffer('Queue');
-            if ($sdata != '') {
-                $actions = json_decode($sdata, true);
-                $n_actions = count($actions);
-                $new_actions = [];
-                if ($n_actions > 0) {
-                    $action = $actions[0];
-                    $this->SendDebug(__FUNCTION__, 'action=' . print_r($action, true), 0);
-                    $exec_ts = isset($action['exec_ts']) ? $action['exec_ts'] : 0;
-                    if ($exec_ts == 0) {
-                        $action['exec_ts'] = time();
-                        $this->SendData($action['cmd']);
-                        $new_actions[] = $action;
-                    } elseif ($exec_ts < time() - self::$QueueMaxWait) {
-                        $s = 'no answer to command "' . $action['cmd'] . '" started ' . date('Y-m-d H:i:s', $action['exec_ts']);
-                        $this->SendDebug(__FUNCTION__, $s, 0);
-                        $this->LogMessage($s, KL_WARNING);
-                    } else {
-                        $new_actions[] = $action;
-                    }
-                    for ($i = 1; $i < $n_actions; $i++) {
-                        $new_actions[] = $actions[$i];
-                    }
-                }
-                $this->SendDebug(__FUNCTION__, 'new_actions#' . count($new_actions), 0);
-                //$this->SendDebug(__FUNCTION__, 'new_actions=' . print_r($new_actions, true), 0);
-                $sdata = json_encode($new_actions);
-                $this->SetBuffer('Queue', $sdata);
-            }
-            IPS_SemaphoreLeave($this->semaphoreID);
-        } else {
-            $this->SendDebug(__FUNCTION__, 'sempahore ' . $this->semaphoreID . ' is not accessable', 0);
-        }
-        $duration = round(microtime(true) - $time_start, 2);
-        if ($duration > 0) {
-            $this->SendDebug(__FUNCTION__, 'duration=' . $duration . 's', 0);
-        }
-
-        return $n_actions > 0 ? true : false;
-    }
-
     protected function SetUpdateInterval()
     {
         $min = $this->ReadPropertyInteger('update_interval');
@@ -485,12 +365,46 @@ class KeConnectP30udp extends IPSModule
             'DataID'     => '{8E4D9B23-E0F2-1E05-41D8-C21EA53B8706}',
             'Buffer'     => utf8_encode($cmd),
             'ClientIP'   => $cfg['Host'],
-            'ClientPort' => $cfg['Port'],
+            'ClientPort' => self::$UnicastPort,
             'Broadcast'  => false,
         ];
         $jdata = json_encode($data);
         $this->SendDebug(__FUNCTION__, 'request data ' . print_r($jdata, true), 0);
         $this->SendDataToParent($jdata);
+    }
+
+    private function ExecuteCmd(string $cmd)
+    {
+        $hostname = $this->ReadPropertyString('hostname');
+        $port = self::$UnicastPort;
+
+        $fp = stream_socket_client("udp://$hostname:$port", $errno, $errstr);
+        if (!$fp) {
+            $this->SendDebug(__FUNCTION__, 'stream_socket_client("udp://' . $hostname . ':' . $port . '") failed, errno=' . $errno, 0);
+            return false;
+        }
+        fwrite($fp, $cmd);
+        $this->SendDebug(__FUNCTION__, 'send cmd "' . $cmd . '"', 0);
+        fclose($fp);
+
+        $socket = @socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
+        if (!$socket) {
+            $this->SendDebug(__FUNCTION__, 'socket_create() failed', 0);
+            return false;
+        }
+        socket_set_option($socket, SOL_SOCKET, SO_REUSEADDR, 1);
+        if (!socket_bind($socket, '0.0.0.0', $port)) {
+            $this->SendDebug(__FUNCTION__, 'socket_bind() failed', 0);
+            return false;
+        }
+        if (($bytes = socket_recv($socket, $buf, 2048, MSG_WAITALL)) == false) {
+            $this->SendDebug(__FUNCTION__, 'socket_recv() failed, reason=' . socket_strerror(socket_last_error($socket)), 0);
+            $buf = false;
+        } else {
+            $this->SendDebug(__FUNCTION__, 'socket_recv(): ' . $bytes . ' bytes, buf="' . $buf . '"', 0);
+        }
+        socket_close($socket);
+        return $buf;
     }
 
     public function UpdateData()
@@ -505,10 +419,13 @@ class KeConnectP30udp extends IPSModule
             $this->LogMessage('has no active parent instance', KL_WARNING);
             return;
         }
-        $this->AddAction('report 1');
-        $this->AddAction('report 2');
-        $this->AddAction('report 3');
-        $this->Cycle();
+
+        foreach (['report 1', 'report 2', 'report 3'] as $cmd) {
+            $buf = $this->ExecuteCmd($cmd);
+            if ($buf != false) {
+                $this->DecodeData($buf);
+            }
+        }
     }
 
     public function DecodeData(string $data)
@@ -692,8 +609,6 @@ class KeConnectP30udp extends IPSModule
             if ($is_changed) {
                 $this->SetValue('LastChange', $now);
             }
-            $this->DeleteAction();
-            $this->Cycle();
         } else {
             $this->SendDebug(__FUNCTION__, 'broadcast message', 0);
 
@@ -768,14 +683,17 @@ class KeConnectP30udp extends IPSModule
 
     public function GetConfigurationForParent()
     {
+        $hostname = $this->ReadPropertyString('hostname');
+
         $r = IPS_GetConfiguration($this->GetConnectionID());
         $this->SendDebug(__FUNCTION__, print_r($r, true), 0);
         $j = [
-            'BindPort'          => 7090,
-            'Port'              => 7090,
-            'EnableBroadcast'   => true,
-            'EnableReuseAddress'=> false,
-
+            'Host'               => $hostname,
+            'Port'               => self::$BroadcastPort,
+            //'BindIP'             => '0.0.0.0',
+            'BindPort'           => self::$BroadcastPort,
+            'EnableBroadcast'    => true,
+            'EnableReuseAddress' => true,
         ];
         $d = json_encode($j);
         $this->SendDebug(__FUNCTION__, print_r($j, true), 0);

@@ -3,6 +3,7 @@
 		"de": {
 			"KEBA KeConnect P30 (UDP)": "KEBA KeConnect P30 (UDP)",
 			"Disable instance": "Instanz deaktivieren",
+			"Hostname": "Hostname",
 			"Update data every X minutes": "Daten alle x Minuten aktualisieren",
 			"Minutes": "Minuten",
 			"Ident": "Identifikation",
