@@ -640,12 +640,12 @@ class KeConnectP30udp extends IPSModule
                         case 'CurrentPhase3':
                         case 'MaxChargingCurrent':
                         case 'MaxSupportedCurrent':
-                        case 'TotalEnergy':
                             $val = floatval($val) / 1000;
                             break;
-						case 'ChargedEnergy':
-							$val = floatval($val) / 10000;
-							break;
+                        case 'TotalEnergy':
+                        case 'ChargedEnergy':
+                            $val = floatval($val) / 10000;
+                            break;
                         case 'ActivePower':
                             $val = floatval($val) / 1000000;
                             break;
@@ -740,9 +740,9 @@ class KeConnectP30udp extends IPSModule
                         case 'MaxChargingCurrent':
                             $val = floatval($val) / 1000;
                             break;
-						case 'ChargedEnergy':
-							$val = floatval($val) / 10000;
-							break;
+                        case 'ChargedEnergy':
+                            $val = floatval($val) / 10000;
+                            break;
                         default:
                             break;
                     }
