@@ -91,7 +91,7 @@ class KeConnectP30udp extends IPSModule
         ],
         [
             'Ident'           => 'TotalEnergy',
-            'Desc'            => 'Power consumption of the current loading session',
+            'Desc'            => 'Total energy',
             'VariableType'    => VARIABLETYPE_FLOAT,
             'VariableProfile' => 'KebaConnect.Energy',
         ],
@@ -121,7 +121,7 @@ class KeConnectP30udp extends IPSModule
         ],
         [
             'Ident'           => 'ChargedEnergy',
-            'Desc'            => 'Charged energy',
+            'Desc'            => 'Power consumption of the current loading session',
             'VariableType'    => VARIABLETYPE_FLOAT,
             'VariableProfile' => 'KebaConnect.Energy',
         ],
