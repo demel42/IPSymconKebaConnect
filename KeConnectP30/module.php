@@ -182,13 +182,13 @@ class KeConnectP30 extends IPSModule
 
         $this->RegisterPropertyString('use_fields', '[]');
 
-        $this->RegisterTimer('UpdateData', 0, 'KebaConnect_UpdateData(' . $this->InstanceID . ');');
-
-        $this->CreateVarProfile('KebaConnect.Current', VARIABLETYPE_FLOAT, ' A', 0, 0, 0, 3, '');
-        $this->CreateVarProfile('KebaConnect.Power', VARIABLETYPE_FLOAT, ' W', 0, 0, 0, 3, '');
-        $this->CreateVarProfile('KebaConnect.Energy', VARIABLETYPE_FLOAT, ' kWh', 0, 0, 0, 1, '');
+        $this->CreateVarProfile('KebaConnect.Current', VARIABLETYPE_FLOAT, ' A', 0, 0, 0, 1, '');
+        $this->CreateVarProfile('KebaConnect.Power', VARIABLETYPE_FLOAT, ' kW', 0, 0, 0, 2, '');
+        $this->CreateVarProfile('KebaConnect.Energy', VARIABLETYPE_FLOAT, ' kWh', 0, 0, 0, 2, '');
         $this->CreateVarProfile('KebaConnect.Voltage', VARIABLETYPE_FLOAT, ' V', 0, 0, 0, 0, '');
-        $this->CreateVarProfile('KebaConnect.Factor', VARIABLETYPE_FLOAT, ' %', 0, 0, 0, 2, '');
+        $this->CreateVarProfile('KebaConnect.PowerFactor', VARIABLETYPE_FLOAT, ' %', 0, 0, 0, 1, '');
+
+        $this->CreateVarProfile('KebaConnect.MaxCurrent', VARIABLETYPE_INTEGER, ' A', 0, 0, 0, 0, '');
 
         $associations = [];
         $associations[] = ['Wert' => 0, 'Name' => $this->Translate('system started'), 'Farbe' => -1];
