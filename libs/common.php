@@ -35,8 +35,11 @@ trait KebaConnectCommonLib
         return $ret;
     }
 
-    private function CreateVarProfile($Name, $ProfileType, $Suffix, $MinValue, $MaxValue, $StepSize, $Digits, $Icon, $Asscociations = '')
+    private function CreateVarProfile($Name, $ProfileType, $Suffix, $MinValue, $MaxValue, $StepSize, $Digits, $Icon, $Asscociations = '', $doReinstall = false)
     {
+        if ($doReinstall && IPS_VariableProfileExists($Name)) {
+            IPS_DeleteVariableProfile($Name);
+        }
         if (!IPS_VariableProfileExists($Name)) {
             IPS_CreateVariableProfile($Name, $ProfileType);
             IPS_SetVariableProfileText($Name, '', $Suffix);
