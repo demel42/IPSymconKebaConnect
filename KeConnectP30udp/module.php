@@ -687,16 +687,13 @@ class KeConnectP30udp extends IPSModule
             $now = time();
             $is_changed = false;
 
-            $reload_report = false;
+            $reload_reports = false;
             foreach ($jdata as $var => $val) {
                 $fnd = true;
                 $ign = false;
                 switch ($var) {
                     case 'State':
                         $ident = 'ChargingState';
-                        if ($this->GetValue($ident) != $val) {
-                            $reload_report = true;
-                        }
                         break;
                     case 'Plug':
                         $ident = 'CableState';
@@ -727,6 +724,12 @@ class KeConnectP30udp extends IPSModule
                 }
                 if ($use) {
                     switch ($ident) {
+                        case 'ChargingState':
+                        case 'CableState':
+                            if ($this->GetValue($ident) != $val) {
+                                $reload_reports = true;
+                            }
+                            break;
                         case 'MaxChargingCurrent':
                         case 'ChargedEnergy':
                             $val = floatval($val) * 0.0001;
@@ -744,7 +747,7 @@ class KeConnectP30udp extends IPSModule
                 $this->SetValue('LastChange', $now);
             }
 
-            if ($reload_report) {
+            if ($reload_reports) {
                 $this->SetStandbyUpdateInterval(1);
             }
             $this->SetChargingUpdateInterval();
