@@ -167,7 +167,7 @@ class KeConnectP30udp extends IPSModule
         $sdata = $this->SetBuffer('Queue', '');
 
         $this->CreateVarProfile('KebaConnect.Current', VARIABLETYPE_FLOAT, ' A', 0, 0, 0, 1, '');
-        $this->CreateVarProfile('KebaConnect.Power', VARIABLETYPE_FLOAT, ' W', 0, 0, 0, 3, '');
+        $this->CreateVarProfile('KebaConnect.Power', VARIABLETYPE_FLOAT, ' kW', 0, 0, 0, 3, '');
         $this->CreateVarProfile('KebaConnect.Energy', VARIABLETYPE_FLOAT, ' kWh', 0, 0, 0, 1, '');
         $this->CreateVarProfile('KebaConnect.Voltage', VARIABLETYPE_FLOAT, ' V', 0, 0, 0, 0, '');
         $this->CreateVarProfile('KebaConnect.PowerFactor', VARIABLETYPE_FLOAT, ' %', 0, 0, 0, 2, '');
@@ -291,7 +291,7 @@ class KeConnectP30udp extends IPSModule
 
         $formElements[] = [
             'type'    => 'Label',
-            'caption' => 'Update data while charging every every X seconds'
+            'caption' => 'Update data while charging every X seconds'
         ];
         $formElements[] = [
             'type'    => 'IntervalBox',
@@ -632,15 +632,20 @@ class KeConnectP30udp extends IPSModule
                         case 'LastBoot':
                             $val = $now - $val;
                             break;
-                        case 'MaxChargingCurrent':
-                        case 'MaxSupportedCurrent':
+                        case 'PowerFactor':
                         case 'CurrentPhase1':
                         case 'CurrentPhase2':
                         case 'CurrentPhase3':
-                        case 'ActivePower':
+                            $val = floatval($val) / 100;
+                            break;
+                        case 'MaxChargingCurrent':
+                        case 'MaxSupportedCurrent':
                         case 'ChargedEnergy':
                         case 'TotalEnergy':
-                            $val = floatval($val) * 0.0001;
+                            $val = floatval($val) / 1000;
+                            break;
+                        case 'ActivePower':
+                            $val = floatval($val) / 100000;
                             break;
                         default:
                             break;
