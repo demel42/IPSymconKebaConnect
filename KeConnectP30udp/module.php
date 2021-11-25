@@ -633,7 +633,7 @@ class KeConnectP30udp extends IPSModule
                             $val = $now - $val;
                             break;
                         case 'PowerFactor':
-                            $val = floatval($val) / 100;
+                            $val = floatval($val) / 10;
                             break;
                         case 'CurrentPhase1':
                         case 'CurrentPhase2':
@@ -645,7 +645,7 @@ class KeConnectP30udp extends IPSModule
                             $val = floatval($val) / 1000;
                             break;
                         case 'ActivePower':
-                            $val = floatval($val) / 100000;
+                            $val = floatval($val) / 1000000;
                             break;
                         default:
                             break;
