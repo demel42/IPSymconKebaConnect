@@ -24,7 +24,7 @@
 			"Voltage phase 1": "Spannung der Phase 1",
 			"Voltage phase 2": "Spannung der Phase 1",
 			"Voltage phase 3": "Spannung der Phase 3",
-			"Active power": "Wirkleistung",
+			"Active power": "Aktuelle Ladeleistung",
 			"Total energy": "Gesamtenergie",
 			"Max charging current": "Maximaler Ladestrom",
 			"Max supported current": "Maximal unterstützter Strom",
