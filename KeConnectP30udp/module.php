@@ -13,6 +13,19 @@ class KeConnectP30udp extends IPSModule
     private static $UnicastPort = 7090;
     private static $BroadcastPort = 7092;
 
+    public static $STATE_SYSTEM_STARTED = 0;
+    public static $STATE_NOTREADY = 1;
+    public static $STATE_READY = 2;
+    public static $STATE_CHARGING = 3;
+    public static $STATE_ERROR = 4;
+    public static $STATE_SUSPENDED = 5;
+
+    public static $CABLE_NOT_PLUGGED = 0;
+    public static $CABLE_PLUGGED_IN_STATION = 1;
+    public static $CABLE_LOCKED_IN_STATION = 3;
+    public static $CABLE_PLUGGED_IN_VEHICLE = 5;
+    public static $CABLE_LOCKED_IN_VEHICLE = 7;
+
     private static $Variables = [
         [
             'Ident'           => 'ChargingState',
@@ -78,26 +91,27 @@ class KeConnectP30udp extends IPSModule
         ],
         [
             'Ident'           => 'TotalEnergy',
-            'Desc'            => 'Total energy',
+            'Desc'            => 'Power consumption of the current loading session',
             'VariableType'    => VARIABLETYPE_FLOAT,
             'VariableProfile' => 'KebaConnect.Energy',
         ],
         [
             'Ident'           => 'MaxChargingCurrent',
             'Desc'            => 'Max charging current',
-            'VariableType'    => VARIABLETYPE_FLOAT,
-            'VariableProfile' => 'KebaConnect.Current',
+            'VariableType'    => VARIABLETYPE_INTEGER,
+            'VariableProfile' => 'KebaConnect.MaxCurrent',
         ],
         [
             'Ident'           => 'MaxSupportedCurrent',
             'Desc'            => 'Max supported current',
-            'VariableType'    => VARIABLETYPE_FLOAT,
-            'VariableProfile' => 'KebaConnect.Current',
+            'VariableType'    => VARIABLETYPE_INTEGER,
+            'VariableProfile' => 'KebaConnect.MaxCurrent',
         ],
         [
             'Ident'           => 'PowerFactor',
             'Desc'            => 'Power factor',
             'VariableType'    => VARIABLETYPE_FLOAT,
+            'VariableProfile' => 'KebaConnect.PowerFactor',
         ],
 
         [
@@ -140,37 +154,41 @@ class KeConnectP30udp extends IPSModule
         parent::Create();
 
         $this->RegisterPropertyBoolean('module_disable', false);
-        $this->RegisterPropertyInteger('update_interval', '5');
 
         $this->RegisterPropertyString('hostname', '');
         $this->RegisterPropertyString('use_fields', '[]');
 
-        $this->RegisterTimer('UpdateData', 0, 'KebaConnect_UpdateData(' . $this->InstanceID . ');');
-        $this->RegisterTimer('Cycle', 0, 'KebaConnect_Cycle(' . $this->InstanceID . ');');
+        $this->RegisterPropertyInteger('standby_update_interval', '5');
+        $this->RegisterPropertyInteger('charging_update_interval', '1');
+
+        $this->RegisterTimer('StandbyUpdate', 0, 'KebaConnect_StandbyUpdate(' . $this->InstanceID . ');');
+        $this->RegisterTimer('ChargingUpdate', 0, 'KebaConnect_ChargingUpdate(' . $this->InstanceID . ');');
 
         $sdata = $this->SetBuffer('Queue', '');
 
-        $this->CreateVarProfile('KebaConnect.Current', VARIABLETYPE_FLOAT, ' A', 0, 0, 0, 3, '');
+        $this->CreateVarProfile('KebaConnect.Current', VARIABLETYPE_FLOAT, ' A', 0, 0, 0, 1, '');
         $this->CreateVarProfile('KebaConnect.Power', VARIABLETYPE_FLOAT, ' W', 0, 0, 0, 3, '');
         $this->CreateVarProfile('KebaConnect.Energy', VARIABLETYPE_FLOAT, ' kWh', 0, 0, 0, 1, '');
         $this->CreateVarProfile('KebaConnect.Voltage', VARIABLETYPE_FLOAT, ' V', 0, 0, 0, 0, '');
-        $this->CreateVarProfile('KebaConnect.Factor', VARIABLETYPE_FLOAT, ' %', 0, 0, 0, 2, '');
+        $this->CreateVarProfile('KebaConnect.PowerFactor', VARIABLETYPE_FLOAT, ' %', 0, 0, 0, 2, '');
+
+        $this->CreateVarProfile('KebaConnect.MaxCurrent', VARIABLETYPE_INTEGER, ' A', 0, 0, 0, 0, '');
 
         $associations = [];
-        $associations[] = ['Wert' => 0, 'Name' => $this->Translate('system started'), 'Farbe' => -1];
-        $associations[] = ['Wert' => 1, 'Name' => $this->Translate('not read for charging'), 'Farbe' => -1];
-        $associations[] = ['Wert' => 2, 'Name' => $this->Translate('read for charging'), 'Farbe' => -1];
-        $associations[] = ['Wert' => 3, 'Name' => $this->Translate('charging'), 'Farbe' => -1];
-        $associations[] = ['Wert' => 4, 'Name' => $this->Translate('error occured'), 'Farbe' => -1];
-        $associations[] = ['Wert' => 5, 'Name' => $this->Translate('charging suspended'), 'Farbe' => -1];
+        $associations[] = ['Wert' => self::$STATE_SYSTEM_STARTED, 'Name' => $this->Translate('system started'), 'Farbe' => -1];
+        $associations[] = ['Wert' => self::$STATE_NOTREADY, 'Name' => $this->Translate('not ready for charging'), 'Farbe' => -1];
+        $associations[] = ['Wert' => self::$STATE_READY, 'Name' => $this->Translate('ready for charging'), 'Farbe' => -1];
+        $associations[] = ['Wert' => self::$STATE_CHARGING, 'Name' => $this->Translate('charging'), 'Farbe' => -1];
+        $associations[] = ['Wert' => self::$STATE_ERROR, 'Name' => $this->Translate('error occured'), 'Farbe' => -1];
+        $associations[] = ['Wert' => self::$STATE_SUSPENDED, 'Name' => $this->Translate('charging suspended'), 'Farbe' => -1];
         $this->CreateVarProfile('KebaConnect.ChargingState', VARIABLETYPE_INTEGER, '', 0, 0, 0, 1, '', $associations);
 
         $associations = [];
-        $associations[] = ['Wert' => 0, 'Name' => $this->Translate('not plugged'), 'Farbe' => -1];
-        $associations[] = ['Wert' => 1, 'Name' => $this->Translate('plugged in station'), 'Farbe' => -1];
-        $associations[] = ['Wert' => 3, 'Name' => $this->Translate('locked in station'), 'Farbe' => -1];
-        $associations[] = ['Wert' => 5, 'Name' => $this->Translate('plugged in vehicle'), 'Farbe' => -1];
-        $associations[] = ['Wert' => 7, 'Name' => $this->Translate('locked in vehicle'), 'Farbe' => -1];
+        $associations[] = ['Wert' => self::$CABLE_NOT_PLUGGED, 'Name' => $this->Translate('not plugged'), 'Farbe' => -1];
+        $associations[] = ['Wert' => self::$CABLE_PLUGGED_IN_STATION, 'Name' => $this->Translate('plugged in station'), 'Farbe' => -1];
+        $associations[] = ['Wert' => self::$CABLE_LOCKED_IN_STATION, 'Name' => $this->Translate('locked in station'), 'Farbe' => -1];
+        $associations[] = ['Wert' => self::$CABLE_PLUGGED_IN_VEHICLE, 'Name' => $this->Translate('plugged in vehicle'), 'Farbe' => -1];
+        $associations[] = ['Wert' => self::$CABLE_LOCKED_IN_VEHICLE, 'Name' => $this->Translate('locked in vehicle'), 'Farbe' => -1];
         $this->CreateVarProfile('KebaConnect.CableState', VARIABLETYPE_INTEGER, '', 0, 0, 0, 1, '', $associations);
 
         $associations = [];
@@ -209,7 +227,8 @@ class KeConnectP30udp extends IPSModule
 
         $module_disable = $this->ReadPropertyBoolean('module_disable');
         if ($module_disable) {
-            $this->SetTimerInterval('UpdateData', 0);
+            $this->SetTimerInterval('StandbyUpdate', 0);
+            $this->SetTimerInterval('ChargingUpdate', 0);
             $this->SetStatus(IS_INACTIVE);
             return;
         }
@@ -217,7 +236,7 @@ class KeConnectP30udp extends IPSModule
         // check hostname;
         $hostname = $this->ReadPropertyString('hostname');
         if ($hostname == '') {
-            $this->SetStatus(IS_INACTIVE);
+            $this->SetStatus(self::$IS_INVALIDCONFIG);
             return;
         }
 
@@ -234,7 +253,9 @@ class KeConnectP30udp extends IPSModule
         }
 
         $this->SetStatus(IS_ACTIVE);
-        $this->SetUpdateInterval();
+
+        $this->SetStandbyUpdateInterval();
+        $this->SetChargingUpdateInterval();
     }
 
     protected function GetFormElements()
@@ -260,12 +281,22 @@ class KeConnectP30udp extends IPSModule
 
         $formElements[] = [
             'type'    => 'Label',
-            'caption' => 'Update data every X minutes'
+            'caption' => 'Update data in standby every X minutes'
         ];
         $formElements[] = [
             'type'    => 'IntervalBox',
-            'name'    => 'update_interval',
+            'name'    => 'standby_update_interval',
             'caption' => 'Minutes'
+        ];
+
+        $formElements[] = [
+            'type'    => 'Label',
+            'caption' => 'Update data while charging every every X seconds'
+        ];
+        $formElements[] = [
+            'type'    => 'IntervalBox',
+            'name'    => 'charging_update_interval',
+            'caption' => 'Seconds'
         ];
 
         foreach (self::$Variables as $var) {
@@ -328,17 +359,37 @@ class KeConnectP30udp extends IPSModule
         $formActions[] = [
             'type'    => 'Button',
             'caption' => 'Update data',
-            'onClick' => 'KebaConnect_UpdateData($id);'
+            'onClick' => 'KebaConnect_StandbyUpdate($id);'
         ];
 
         return $formActions;
     }
 
-    protected function SetUpdateInterval()
+    protected function SetStandbyUpdateInterval(int $sec = null)
     {
-        $min = $this->ReadPropertyInteger('update_interval');
-        $msec = $min > 0 ? $min * 60 * 1000 : 0;
-        $this->SetTimerInterval('UpdateData', $msec);
+        if ($sec > 0) {
+            $this->SendDebug(__FUNCTION__, 'override interval with sec=' . $sec, 0);
+            $msec = $sec * 60 * 1000;
+        } else {
+            $min = $this->ReadPropertyInteger('standby_update_interval');
+            $this->SendDebug(__FUNCTION__, 'default interval with min=' . $min, 0);
+            $msec = $min > 0 ? $min * 60 * 1000 : 0;
+        }
+        $this->SetTimerInterval('StandbyUpdate', $msec);
+    }
+
+    protected function SetChargingUpdateInterval()
+    {
+        $state = $this->GetValue('ChargingState');
+        if ($state == self::$STATE_CHARGING) {
+            $sec = $this->ReadPropertyInteger('charging_update_interval');
+            $this->SendDebug(__FUNCTION__, 'default interval with sec=' . $sec, 0);
+            $msec = $sec > 0 ? $sec * 1000 : 0;
+        } else {
+            $this->SendDebug(__FUNCTION__, 'off', 0);
+            $msec = 0;
+        }
+        $this->SetTimerInterval('ChargingUpdate', $msec);
     }
 
     public function ReceiveData($data)
@@ -349,7 +400,7 @@ class KeConnectP30udp extends IPSModule
         if ($buffer == 'TCHOK :done') {
             // TCHOK fail
             $this->DeleteAction();
-            $this->Cycle();
+            $this->ChargingUpdate();
             $this->SendDebug(__FUNCTION__, 'got command ack', 0);
         } else {
             $this->DecodeData($buffer);
@@ -407,7 +458,7 @@ class KeConnectP30udp extends IPSModule
         return $buf;
     }
 
-    public function UpdateData()
+    public function StandbyUpdate()
     {
         if ($this->CheckStatus() == self::$STATUS_INVALID) {
             $this->SendDebug(__FUNCTION__, $this->GetStatusText() . ' => skip', 0);
@@ -425,6 +476,27 @@ class KeConnectP30udp extends IPSModule
             if ($buf != false) {
                 $this->DecodeData($buf);
             }
+        }
+        $this->SetStandbyUpdateInterval();
+        $this->SetChargingUpdateInterval();
+    }
+
+    public function ChargingUpdate()
+    {
+        if ($this->CheckStatus() == self::$STATUS_INVALID) {
+            $this->SendDebug(__FUNCTION__, $this->GetStatusText() . ' => skip', 0);
+            return;
+        }
+
+        if ($this->HasActiveParent() == false) {
+            $this->SendDebug(__FUNCTION__, 'has no active parent', 0);
+            $this->LogMessage('has no active parent instance', KL_WARNING);
+            return;
+        }
+
+        $buf = $this->ExecuteCmd('report 3');
+        if ($buf != false) {
+            $this->DecodeData($buf);
         }
     }
 
@@ -615,12 +687,16 @@ class KeConnectP30udp extends IPSModule
             $now = time();
             $is_changed = false;
 
+            $reload_report = false;
             foreach ($jdata as $var => $val) {
                 $fnd = true;
                 $ign = false;
                 switch ($var) {
                     case 'State':
                         $ident = 'ChargingState';
+                        if ($this->GetValue($ident) != $val) {
+                            $reload_report = true;
+                        }
                         break;
                     case 'Plug':
                         $ident = 'CableState';
@@ -664,13 +740,14 @@ class KeConnectP30udp extends IPSModule
                     $this->SendDebug(__FUNCTION__, 'ignore field ' . $var . '="' . $val . '"', 0);
                 }
             }
-            // wenn 'State' => "report 2" abrufen, ggfs schneller zyklus
-            // $this->AddAction('report 2');
-            // $this->Cycle();
-
             if ($is_changed) {
                 $this->SetValue('LastChange', $now);
             }
+
+            if ($reload_report) {
+                $this->SetStandbyUpdateInterval(1);
+            }
+            $this->SetChargingUpdateInterval();
         }
     }
 
