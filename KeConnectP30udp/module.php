@@ -167,7 +167,7 @@ class KeConnectP30udp extends IPSModule
         $sdata = $this->SetBuffer('Queue', '');
 
         $this->CreateVarProfile('KebaConnect.Current', VARIABLETYPE_FLOAT, ' A', 0, 0, 0, 1, '');
-        $this->CreateVarProfile('KebaConnect.Power', VARIABLETYPE_FLOAT, ' kW', 0, 0, 0, 3, '');
+        $this->CreateVarProfile('KebaConnect.Power', VARIABLETYPE_FLOAT, ' kW', 0, 0, 0, 2, '');
         $this->CreateVarProfile('KebaConnect.Energy', VARIABLETYPE_FLOAT, ' kWh', 0, 0, 0, 1, '');
         $this->CreateVarProfile('KebaConnect.Voltage', VARIABLETYPE_FLOAT, ' V', 0, 0, 0, 0, '');
         $this->CreateVarProfile('KebaConnect.PowerFactor', VARIABLETYPE_FLOAT, ' %', 0, 0, 0, 2, '');
@@ -633,11 +633,11 @@ class KeConnectP30udp extends IPSModule
                             $val = $now - $val;
                             break;
                         case 'PowerFactor':
+                            $val = floatval($val) / 100;
+                            break;
                         case 'CurrentPhase1':
                         case 'CurrentPhase2':
                         case 'CurrentPhase3':
-                            $val = floatval($val) / 100;
-                            break;
                         case 'MaxChargingCurrent':
                         case 'MaxSupportedCurrent':
                         case 'ChargedEnergy':
