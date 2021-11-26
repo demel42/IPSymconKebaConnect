@@ -27,6 +27,7 @@ class KeConnectP30udp extends IPSModule
     public static $CABLE_LOCKED_IN_VEHICLE = 7;
 
     private static $Variables = [
+        /*
         [
             'Ident'           => 'ChargingState',
             'Desc'            => 'Charging state',
@@ -45,6 +46,7 @@ class KeConnectP30udp extends IPSModule
             'VariableType'    => VARIABLETYPE_INTEGER,
             'VariableProfile' => 'KebaConnect.Error',
         ],
+         */
 
         [
             'Ident'           => 'CurrentPhase1',
@@ -209,6 +211,9 @@ class KeConnectP30udp extends IPSModule
         parent::ApplyChanges();
 
         $vpos = 0;
+        $this->MaintainVariable('ChargingState', $this->Translate('Charging state'), VARIABLETYPE_INTEGER, 'KebaConnect.ChargingState', $vpos++, true);
+        $this->MaintainVariable('CableState', $this->Translate('Cable state'), VARIABLETYPE_INTEGER, 'KebaConnect.CableState', $vpos++, true);
+        $this->MaintainVariable('ErrorCode', $this->Translate('Error code'), VARIABLETYPE_INTEGER, 'KebaConnect.Error', $vpos++, true);
 
         $use_fields = json_decode($this->ReadPropertyString('use_fields'), true);
         foreach (self::$Variables as $var) {
@@ -224,11 +229,20 @@ class KeConnectP30udp extends IPSModule
             $vartype = $var['VariableType'];
             $varprof = isset($var['VariableProfile']) ? $var['VariableProfile'] : '';
             $this->MaintainVariable($ident, $desc, $vartype, $varprof, $vpos++, $use);
+            switch ($ident) {
+                case 'MaxChargingCurrent':
+                    $this->MaintainAction($ident, true);
+                    break;
+            }
         }
 
-        $vpos = 20;
+        $vpos = 50;
         $this->MaintainVariable('LastChange', $this->Translate('Last change'), VARIABLETYPE_INTEGER, '~UnixTimestamp', $vpos++, true);
         $this->MaintainVariable('LastUpdate', $this->Translate('Last update'), VARIABLETYPE_INTEGER, '~UnixTimestamp', $vpos++, true);
+
+        $vpos = 90;
+        $this->MaintainVariable('EnableCharging', $this->Translate('Enable charging'), VARIABLETYPE_BOOLEAN, '~Switch', $vpos++, true);
+        $this->MaintainAction('EnableCharging', true);
 
         $module_disable = $this->ReadPropertyBoolean('module_disable');
         if ($module_disable) {
@@ -261,6 +275,45 @@ class KeConnectP30udp extends IPSModule
 
         $this->SetStandbyUpdateInterval();
         $this->SetChargingUpdateInterval();
+    }
+
+    public function UpdateFields()
+    {
+        $use_fields = json_decode($this->ReadPropertyString('use_fields'), true);
+
+        $chg = false;
+        foreach ($use_fields as $field) {
+            $ident = $field['ident'];
+            $fnd = false;
+            foreach (self::$Variables as $var) {
+                if ($ident == $var['Ident']) {
+                    $fnd = true;
+                    break;
+                }
+            }
+            if ($fnd == false) {
+                $chg = true;
+            }
+        }
+        if ($chg == false) {
+            return;
+        }
+
+        $values = [];
+        foreach (self::$Variables as $var) {
+            $ident = $var['Ident'];
+            $desc = $this->Translate($var['Desc']);
+            $use = false;
+            foreach ($use_fields as $field) {
+                if ($ident == $this->GetArrayElem($field, 'ident', '')) {
+                    $use = (bool) $this->GetArrayElem($field, 'use', false);
+                    break;
+                }
+            }
+            $values[] = ['ident' => $ident, 'desc' => $desc, 'use' => $use];
+        }
+
+        $this->UpdateFormField('use_fields', 'values', json_encode($values));
     }
 
     protected function GetFormElements()
@@ -351,7 +404,8 @@ class KeConnectP30udp extends IPSModule
             'type'     => 'ExpansionPanel',
             'items'    => $items,
             'caption'  => 'Variables',
-            'expanded' => true
+            'expanded' => false,
+            'onClick'  => 'KebaConnect_UpdateFields($id);'
         ];
 
         return $formElements;
@@ -371,6 +425,17 @@ class KeConnectP30udp extends IPSModule
             'type'    => 'Button',
             'caption' => 'Re-install variable-profiles',
             'onClick' => 'KebaConnect_InstallVarProfiles($id, true);'
+        ];
+
+        $formActions[] = [
+            'type'      => 'ExpansionPanel',
+            'caption'   => 'Test area',
+            'expanded ' => false,
+            'items'     => [
+                [
+                    'type'    => 'TestCenter',
+                ]
+            ]
         ];
 
         return $formActions;
@@ -408,14 +473,7 @@ class KeConnectP30udp extends IPSModule
         $this->SendDebug(__FUNCTION__, 'got data "' . $data . '"', 0);
         $jdata = json_decode($data, true);
         $buffer = $jdata['Buffer'];
-        if ($buffer == 'TCHOK :done') {
-            // TCHOK fail
-            $this->DeleteAction();
-            $this->ChargingUpdate();
-            $this->SendDebug(__FUNCTION__, 'got command ack', 0);
-        } else {
-            $this->DecodeData($buffer);
-        }
+        $this->DecodeData($buffer);
     }
 
     private function SendData(string $cmd)
@@ -527,6 +585,7 @@ class KeConnectP30udp extends IPSModule
             foreach ($jdata as $var => $val) {
                 $fnd = true;
                 $ign = false;
+                $use = false;
                 switch ($jdata['ID']) {
                 case '1':
                     switch ($var) {
@@ -557,13 +616,20 @@ class KeConnectP30udp extends IPSModule
                             break;
                         case 'State':
                             $ident = 'ChargingState';
+                            $use = true;
                             break;
                         case 'Plug':
                             $ident = 'CableState';
+                            $use = true;
+                            break;
+                        case 'Enable sys':
+                            $ident = 'EnableCharging';
+                            $use = true;
                             break;
                         case 'Error 1':
                         case 'Error 2':
                             $ign = true;
+                            $use = true;
                             break;
                         case 'Max curr':
                             $ident = 'MaxChargingCurrent';
@@ -628,14 +694,15 @@ class KeConnectP30udp extends IPSModule
                     continue;
                 }
                 if ($fnd == false) {
-                    // $this->SendDebug(__FUNCTION__, 'unused field ' . $var . '="' . $val . '"', 0);
+                    $this->SendDebug(__FUNCTION__, 'unused field ' . $var . '="' . $val . '"', 0);
                     continue;
                 }
-                $use = false;
-                foreach ($use_fields as $field) {
-                    if ($ident == $this->GetArrayElem($field, 'ident', '')) {
-                        $use = (bool) $this->GetArrayElem($field, 'use', false);
-                        break;
+                if ($use == false) {
+                    foreach ($use_fields as $field) {
+                        if ($ident == $this->GetArrayElem($field, 'ident', '')) {
+                            $use = (bool) $this->GetArrayElem($field, 'use', false);
+                            break;
+                        }
                     }
                 }
                 if ($use) {
@@ -709,18 +776,25 @@ class KeConnectP30udp extends IPSModule
             foreach ($jdata as $var => $val) {
                 $fnd = true;
                 $ign = false;
+                $use = false;
                 switch ($var) {
                     case 'State':
                         $ident = 'ChargingState';
+                        $use = true;
                         break;
                     case 'Plug':
                         $ident = 'CableState';
+                        $use = true;
                         break;
                     case 'Max curr':
                         $ident = 'MaxChargingCurrent';
                         break;
                     case 'E pres':
                         $ident = 'ChargedEnergy';
+                        break;
+                    case 'Enable sys':
+                        $ident = 'EnableCharging';
+                        $use = true;
                         break;
                     default:
                         $fnd = false;
@@ -733,11 +807,12 @@ class KeConnectP30udp extends IPSModule
                     $this->SendDebug(__FUNCTION__, 'unused field ' . $var . '="' . $val . '"', 0);
                     continue;
                 }
-                $use = false;
-                foreach ($use_fields as $field) {
-                    if ($ident == $this->GetArrayElem($field, 'ident', '')) {
-                        $use = (bool) $this->GetArrayElem($field, 'use', false);
-                        break;
+                if ($use == false) {
+                    foreach ($use_fields as $field) {
+                        if ($ident == $this->GetArrayElem($field, 'ident', '')) {
+                            $use = (bool) $this->GetArrayElem($field, 'use', false);
+                            break;
+                        }
                     }
                 }
                 if ($use) {
@@ -753,6 +828,9 @@ class KeConnectP30udp extends IPSModule
                             break;
                         case 'ChargedEnergy':
                             $val = floatval($val) / 10000;
+                            break;
+                        case 'EnableCharging':
+                            $val = boolval($val);
                             break;
                         default:
                             break;
@@ -798,6 +876,95 @@ class KeConnectP30udp extends IPSModule
         $d = json_encode($j);
         $this->SendDebug(__FUNCTION__, print_r($j, true), 0);
         return $d;
+    }
+
+    private function checkAction($func, $verbose)
+    {
+        $enabled = false;
+
+        switch ($func) {
+            case 'SwitchEnableCharging':
+                $enabled = true;
+                break;
+            case 'SetMaxChargingCurrent':
+                $enabled = true;
+                break;
+            default:
+                $this->SendDebug(__FUNCTION__, 'unsupported action "' . $func . '"', 0);
+                break;
+        }
+
+        $this->SendDebug(__FUNCTION__, 'action "' . $func . '" is ' . ($enabled ? 'enabled' : 'disabled'), 0);
+        return $enabled;
+    }
+
+    private function CallAction($cmd)
+    {
+        if ($this->CheckStatus() == self::$STATUS_INVALID) {
+            $this->SendDebug(__FUNCTION__, $this->GetStatusText() . ' => skip', 0);
+            return;
+        }
+
+        if ($this->HasActiveParent() == false) {
+            $this->SendDebug(__FUNCTION__, 'has no active parent', 0);
+            $this->LogMessage('has no active parent instance', KL_WARNING);
+            return;
+        }
+
+        $r = $this->ExecuteCmd($cmd);
+        $this->SendDebug(__FUNCTION__, 'cmd=' . $cmd . ' => ' . $r, 0);
+        return $r == "TCH-OK :done\n";
+    }
+
+    private function SwitchEnableCharging(bool $mode)
+    {
+        if (!$this->checkAction(__FUNCTION__, true)) {
+            return false;
+        }
+
+        $cmd = $mode ? 'ena 1' : 'ena 0';
+        return $this->CallAction($cmd);
+    }
+
+    private function SetMaxChargingCurrent(float $curr)
+    {
+        if (!$this->checkAction(__FUNCTION__, true)) {
+            return false;
+        }
+
+        //  6000mA ... 63000mA
+        if ($curr < 6) {
+            $curr = 6;
+        }
+        if ($curr > 63) {
+            $curr = 63;
+        }
+        $c = intval($curr * 1000);
+        $cmd = 'curr ' . $c;
+        return $this->CallAction($cmd);
+    }
+
+    public function RequestAction($Ident, $Value)
+    {
+        if ($this->GetStatus() == IS_INACTIVE) {
+            $this->SendDebug(__FUNCTION__, 'instance is inactive, skip', 0);
+            return;
+        }
+
+        $r = false;
+        switch ($Ident) {
+            case 'EnableCharging':
+                $r = $this->SwitchEnableCharging((bool) $Value);
+                $this->SendDebug(__FUNCTION__, $Ident . '=' . $this->bool2str($Value) . ' => ret=' . $this->bool2str($r), 0);
+                break;
+            case 'MaxChargingCurrent':
+                $r = $this->SetMaxChargingCurrent((float) $Value);
+                $this->SendDebug(__FUNCTION__, $Ident . '=' . $Value . ' => ret=' . $this->bool2str($r), 0);
+                break;
+            default:
+                $this->SendDebug(__FUNCTION__, 'invalid ident ' . $Ident, 0);
+                break;
+        }
     }
 }
 
@@ -853,5 +1020,6 @@ Fehler 8  Der Stecker an der Ladestation liefert einen ungültigen Zustand (rot
 
 Fehler 4003  Überstrom im Fahrzeug erkannt (blau / blau / rot / rot)
 Fehler 8005  Fehlerstrom im Fahrzeug erkannt (blau / rot / blau / rot)
+
 
  */

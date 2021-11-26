@@ -15,6 +15,7 @@
 			"Variables": "Variablen",
 			"Update data": "Daten aktualisieren",
 			"Re-install variable-profiles": "Variablenprofile erneut einrichten",
+			"Test area": "Test-Bereich",
 
 			"Charging state": "Ladestatus",
 			"Cable state": "Kabelstatus",
@@ -23,7 +24,7 @@
 			"Charging current phase 2": "Ladestrom der Phase 2",
 			"Charging current phase 3": "Ladestrom der Phase 3",
 			"Voltage phase 1": "Spannung der Phase 1",
-			"Voltage phase 2": "Spannung der Phase 1",
+			"Voltage phase 2": "Spannung der Phase 2",
 			"Voltage phase 3": "Spannung der Phase 3",
 			"Active power": "Aktuelle Ladeleistung",
 			"Total energy": "Gesamtverbrauch",
@@ -36,6 +37,8 @@
 			"Serial number": "Seriennummer",
 			"Firmware version": "Firmware-Version",
 			"Last boot": "letzter Neustart",
+
+			"Enable charging": "Laden ermöglichen",
 
 			"Last change": "letzte Änderung",
 			"Last update": "letzte Aktualisierung",
