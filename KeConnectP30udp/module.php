@@ -41,7 +41,6 @@ class KeConnectP30udp extends IPSModule
 
         'MaxChargingCurrent',
         'MaxSupportedCurrent',
-        'PowerFactor',
     ];
 
     private static $optionalVariables = [
@@ -63,6 +62,13 @@ class KeConnectP30udp extends IPSModule
             'Desc'            => 'Voltage phase 3',
             'VariableType'    => VARIABLETYPE_FLOAT,
             'VariableProfile' => 'KebaConnect.Voltage',
+        ],
+
+        [
+            'Ident'           => 'PowerFactor',
+            'Desc'            => 'Power factor',
+            'VariableType'    => VARIABLETYPE_FLOAT,
+            'VariableProfile' => 'KebaConnect.PowerFactor',
         ],
 
         [
@@ -167,11 +173,6 @@ class KeConnectP30udp extends IPSModule
         $this->MaintainVariable('CurrentPhase1', $this->Translate('Charging current phase 1'), VARIABLETYPE_FLOAT, 'KebaConnect.Current', $vpos++, true);
         $this->MaintainVariable('CurrentPhase2', $this->Translate('Charging current phase 2'), VARIABLETYPE_FLOAT, 'KebaConnect.Current', $vpos++, true);
         $this->MaintainVariable('CurrentPhase3', $this->Translate('Charging current phase 3'), VARIABLETYPE_FLOAT, 'KebaConnect.Current', $vpos++, true);
-        /*
-        $this->MaintainVariable('VoltagePhase1', $this->Translate('Voltage phase 1'), VARIABLETYPE_FLOAT, 'KebaConnect.Voltage', $vpos++, true);
-        $this->MaintainVariable('VoltagePhase2', $this->Translate('Voltage phase 2'), VARIABLETYPE_FLOAT, 'KebaConnect.Voltage', $vpos++, true);
-        $this->MaintainVariable('VoltagePhase3', $this->Translate('Voltage phase 3'), VARIABLETYPE_FLOAT, 'KebaConnect.Voltage', $vpos++, true);
-         */
 
         $this->MaintainVariable('ActivePower', $this->Translate('Active power'), VARIABLETYPE_FLOAT, 'KebaConnect.Power', $vpos++, true);
         $this->MaintainVariable('ChargedEnergy', $this->Translate('Power consumption of the current loading session'), VARIABLETYPE_FLOAT, 'KebaConnect.Energy', $vpos++, true);
@@ -190,7 +191,6 @@ class KeConnectP30udp extends IPSModule
         $this->MaintainAction('ChargingEnergyLimit', true);
 
         $this->MaintainVariable('MaxSupportedCurrent', $this->Translate('Max supported current'), VARIABLETYPE_INTEGER, 'KebaConnect.MaxCurrent', $vpos++, true);
-        $this->MaintainVariable('PowerFactor', $this->Translate('Power factor'), VARIABLETYPE_FLOAT, 'KebaConnect.PowerFactor', $vpos++, true);
 
         $use_fields = json_decode($this->ReadPropertyString('use_fields'), true);
         foreach (self::$optionalVariables as $var) {
@@ -262,25 +262,29 @@ class KeConnectP30udp extends IPSModule
                 $chg = true;
             }
         }
-        if ($chg == false) {
-            return;
-        }
 
         $values = [];
         foreach (self::$optionalVariables as $var) {
             $ident = $var['Ident'];
-            $desc = $this->Translate($var['Desc']);
             $use = false;
+            $fnd = false;
             foreach ($use_fields as $field) {
                 if ($ident == $this->GetArrayElem($field, 'ident', '')) {
+                    $fnd = true;
                     $use = (bool) $this->GetArrayElem($field, 'use', false);
                     break;
                 }
             }
+            if ($fnd == false) {
+                $chg = true;
+            }
+            $desc = $this->Translate($var['Desc']);
             $values[] = ['ident' => $ident, 'desc' => $desc, 'use' => $use];
         }
 
-        $this->UpdateFormField('use_fields', 'values', json_encode($values));
+        if ($chg == true) {
+            $this->UpdateFormField('use_fields', 'values', json_encode($values));
+        }
     }
 
     protected function GetFormElements()
@@ -371,7 +375,7 @@ class KeConnectP30udp extends IPSModule
         $formElements[] = [
             'type'     => 'ExpansionPanel',
             'items'    => $items,
-            'caption'  => 'Variables',
+            'caption'  => 'Additional variables',
             'expanded' => false,
             'onClick'  => 'KebaConnect_UpdateFields($id);'
         ];
