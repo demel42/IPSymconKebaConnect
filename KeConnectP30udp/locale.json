@@ -3,7 +3,7 @@
 		"de": {
 			"KEBA KeConnect P30 (UDP)": "KEBA KeConnect P30 (UDP)",
 			"Disable instance": "Instanz deaktivieren",
-			"Hostname": "Hostname",
+			"IP address of the wallbox": "IP-Adresse der Wallbox",
 			"Update data in standby every X minutes": "Daten im Ruhezustand alle x Minuten aktualisieren",
 			"Update data while charging every X seconds": "Daten während des Ladevorgangs alle x Sekunden aktualisieren",
 			"Seconds": "Sekunden",
@@ -16,10 +16,16 @@
 			"Update data": "Daten aktualisieren",
 			"Re-install variable-profiles": "Variablenprofile erneut einrichten",
 			"Test area": "Test-Bereich",
+			"Expert area": "Experten-Bereich",
+			"Send text to wallbox (max 23 character) - Test of function \"KebaConnect_SendDisplayText\"":
+				"Text an Wallbox senden (max 23 Zeichen) - Test der Funktion \"KebaConnect_SendDisplayText\"",
+			"Text": "Text",
+			"Send": "Senden",
 
 			"Charging state": "Ladestatus",
 			"Cable state": "Kabelstatus",
 			"Error code": "Fehler",
+			"Error text": "Fehlertext",
 			"Charging current phase 1": "Ladestrom der Phase 1",
 			"Charging current phase 2": "Ladestrom der Phase 2",
 			"Charging current phase 3": "Ladestrom der Phase 3",
@@ -39,6 +45,8 @@
 			"Last boot": "letzter Neustart",
 
 			"Enable charging": "Laden ermöglichen",
+			"Unlock plug": "Stecker entsperren",
+			"Charging energy limit": "verfügbare Energie für den Ladevorgang",
 
 			"Last change": "letzte Änderung",
 			"Last update": "letzte Aktualisierung",
@@ -58,6 +66,17 @@
 
 			"no error": "kein Fehler",
 			"Error 0x%05x": "Fehler 0x%05x",
+
+			"Plug was disconnected during charging": "Stecker wurde während des Ladevorgangs abgesteckt",
+			"Plug was not recognized": "Stecker wurde nicht erkannt",
+			"Temperature cut-off": "Temperaturabschaltung",
+			"Plug could not be locked": "Stecker konnte nicht verriegelt werden",
+			"invalid consumer detected": "unzulässigen Verbraucher erkannt",
+			"Plug at charging station has invalid state": "Stecker der Ladestation hat ungültigen Zustand",
+			"Overcurrent detected in vehicle": "Überstrom im Fahrzeug erkannt",
+			"Fault current detected in vehicle": "Fehlerstrom im Fahrzeug erkannt",
+
+			"no limit": "keine Begrenzung",
 
 			"Instance getting created": "Instanz wird erstellt",
 			"Instance is active": "Instanz ist aktiv",
