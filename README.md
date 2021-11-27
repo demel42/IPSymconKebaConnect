@@ -21,7 +21,9 @@
 ## 2. Voraussetzungen
 
  - IP-Symcon ab Version 6
- - eine Keba KeConnct P30-fähige Wallbox
+ - eine Keba KeConnct P30-fähige Wallbox oder eine BMW Wallbox
+
+Hinweis: es können beliebig viele Keba-Wallboxen gleichzeitig und unabhängig betrieben werden
 
 ## 3. Installation
 
@@ -61,16 +63,40 @@ Anschließend erscheint ein Eintrag für das Modul in der Liste der Instanz _Mod
 
 ### b. Einrichtung des Geräte-Moduls
 
-In IP-Symcon nun unterhalb des Wurzelverzeichnisses die Funktion _Instanz hinzufügen_ (_CTRL+1_) auswählen, als Hersteller _Keba_ und als Gerät _KeConnectP30_ auswählen.
-Es wird automatisch eine I/O-Instanz vom Type Client-IO-Socket und せine Splitter-Instanz vom Type ModBus angelegt und das Konfigurationsformular dieser Instanzen geöffnet.
+In IP-Symcon nun unterhalb des Wurzelverzeichnisses die Funktion _Instanz hinzufügen_ (_CTRL+1_) auswählen, als Hersteller _Keba_ und als Gerät _KeConnectP30udp_ auswählen.
+Es wird automatisch eine I/O-Instanz vom Type _UDP-Client_ angelegt und das Konfigurationsformular dieser Instanz geöffnet.
 
-Folgende Konfiguration
-- Splitter-Instanz: _Geräte-ID_ = 255, _Swap_ = **aus**
-- IO-Instanz: IP-Adresse der Wallbox sowie die _Portnummer_ = **502**
+Die Konfiguration des UDP-Client wird komplett über die Keba-Geräteinstanz gesteuert.
+Hinweis: der UDP-Client dient ausschliesslich zum Emfang von Briadcasts der Wallbox
 
-In dem Konfigurationsformular der KebaConnect-Instanz kann man konfigurieren, welche Variablen übernommen werden sollen.
+In dem Konfigurationsformular der KebaConnect-Instanz kann man u.a. konfigurieren, welche Zusatzvariablen übernommen werden sollen.
 
 ## 4. Funktionsreferenz
+
+`Dyson_UpdateStatus(int $InstanzID)`<br>
+Auslösen einer Aktualisierungs-Anforderug an das Gerät.
+
+
+`StandbyUpdate(int $InstanzID)`<br>
+Abruf aller Daten vom Gerät.
+
+`ChargingUpdate(int $InstanzID)`<br>
+Eingeschränkte Abruf Daten vom Gerät (nur _report 2_).
+
+`SendDisplayText(int $InstanzID, string $txt)`<br>
+Übertragung eines Textes (max. 23 Zeichen) an eine Wallbox mit Display
+
+`SwitchEnableCharging(int $InstanzID, bool $mode)`<br>
+Steuern des Ladevorgangs; aktivieren (LED's blinken grün) oder deaktivieren (LED's blinken blau)
+
+`UnlockPlug(int $InstanzID )`<br>
+Entriegeln des Steckers am Fahrzeug, ein eventuell laufender Ladevorgang wird automatisch beendet.
+
+`SetMaxChargingCurrent(int $InstanzID, float $current)`<br>
+Setzen des maximalen Ladestroms, minimal 6A, maximal 63A soweit nicht durch Geräte-Konfiguration bzw Kabel/Fahrzeug weiter limitiert.
+
+`SetChargingEnergyLimit(int $InstanzID, float $energy)`<br>
+Setzen der für den Ladevorgang verfügbaren Energie
 
 ## 5. Konfiguration
 
@@ -78,29 +104,33 @@ In dem Konfigurationsformular der KebaConnect-Instanz kann man konfigurieren, we
 
 | Eigenschaft                           | Typ      | Standardwert | Beschreibung |
 | :------------------------------------ | :------  | :----------- | :----------- |
+| host                                  | string   |              | IP-Adresse der Wallbox |
 |                                       |          |              | |
+| standby_update_interval               | integer  |              | Datenabruf im Ruhezustand in Minuten |
+| charging_update_interval              | integer  |              | Datenabruf während des Ladens in Sekunden |
+
 
 #### Variablenprofile
 
 Es werden folgende Variablenprofile angelegt:
 * Integer<br>
-KebaConnect.ChargingState, KebaConnect.CableState, KebaConnect.Error
+KebaConnect.CableState, KebaConnect.ChargingState, KebaConnect.Error, KebaConnect.MaxCurrent
 
 * Float<br>
-KebaConnect.Current, KebaConnect.Power, KebaConnect.Energy, KebaConnect.Voltage, KebaConnect.Factor
+KebaConnect.Current, KebaConnect.Power, KebaConnect.Energy, KebaConnect.Voltage, KebaConnect.PowerFactor, KebaConnect.EnergyLimit
 
 ## 6. Anhang
 
 GUIDs
 - Modul: `{7BEA54BE-F767-1B83-A462-CC7F86941D12}`
 - Instanzen:
-  - KeConnectP30: `{9751633B-9E5C-CA9C-9096-9E0031F48E7E}`
+  - KeConnectP30udp: `{A84E350B-55B7-2841-A6F1-C0B17FA0C4CD}`
 
 Referenzen
 
-https://www.keba.com/download/x/dea7ae6b84/kecontactp30modbustcp_pgen.pdf
+[KeContact P20 / P30 UDP Programmers Guide](https://www.keba.com/file/downloads/e-mobility/KeContact_P20_P30_UDP_ProgrGuide_en.pdf)
 
 ## 7. Versions-Historie
 
-- 1.0 @ 27.11.2021 17:25 (beta)
+- 1.0 @ 27.11.2021 18:19 (beta)
   - Initiale Version

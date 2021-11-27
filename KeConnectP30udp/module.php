@@ -41,6 +41,9 @@ class KeConnectP30udp extends IPSModule
 
         'MaxChargingCurrent',
         'MaxSupportedCurrent',
+
+        'EnableCharging',
+        'ChargingEnergyLimit',
     ];
 
     private static $optionalVariables = [
@@ -603,7 +606,7 @@ class KeConnectP30udp extends IPSModule
         }
     }
 
-    public function DecodeReport(string $data)
+    private function DecodeReport(string $data)
     {
         $jdata = json_decode($data, true);
         $this->SendDebug(__FUNCTION__, 'jdata=' . print_r($jdata, true), 0);
@@ -666,6 +669,9 @@ class KeConnectP30udp extends IPSModule
                             break;
                         case 'Curr HW':
                             $ident = 'MaxSupportedCurrent';
+                            break;
+                        case 'Setenergy':
+                            $ident = 'ChargingEnergyLimit';
                             break;
                         case 'Serial':
                         case 'Sec':
@@ -802,7 +808,7 @@ class KeConnectP30udp extends IPSModule
         }
     }
 
-    public function DecodeBroadcast(string $data)
+    private function DecodeBroadcast(string $data)
     {
         $jdata = json_decode($data, true);
         $this->SendDebug(__FUNCTION__, 'jdata=' . print_r($jdata, true), 0);
