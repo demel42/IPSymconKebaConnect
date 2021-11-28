@@ -529,7 +529,7 @@ class KeConnectP30udp extends IPSModule
             $clientIP = $jdata['ClientIP'];
             $host = $this->ReadPropertyString('host');
             if ($clientIP != $host) {
-                $thiѕ->SendDebug(__FUNCTION__, 'ignore broadcast from IP ' . $clientIP, 0);
+                $this->SendDebug(__FUNCTION__, 'ignore broadcast from IP ' . $clientIP, 0);
             }
         }
         $buffer = $jdata['Buffer'];
@@ -1033,7 +1033,7 @@ class KeConnectP30udp extends IPSModule
         }
 
         if ($this->GetValue('EnableCharging') == true) {
-            $thix - ÂSendDebug(__FUNCTION__, 'force disable charging', 0);
+            $this->SendDebug(__FUNCTION__, 'force disable charging', 0);
             $this->CallAction('ena 0');
             IPS_Sleep(250);
         }
