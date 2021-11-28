@@ -113,6 +113,10 @@ Setzen der für den Ladevorgang verfügbaren Energie
 #### Variablenprofile
 
 Es werden folgende Variablenprofile angelegt:
+
+* Boolean<br>
+KebaConnect.EnableCharging, KebaConnect.UnlockPlug
+
 * Integer<br>
 KebaConnect.CableState, KebaConnect.ChargingState, KebaConnect.Error, KebaConnect.MaxCurrent
 
@@ -132,5 +136,5 @@ Referenzen
 
 ## 7. Versions-Historie
 
-- 1.0 @ 27.11.2021 18:19 (beta)
+- 1.0.1 @ 28.11.2021 15:03 (beta)
   - Initiale Version

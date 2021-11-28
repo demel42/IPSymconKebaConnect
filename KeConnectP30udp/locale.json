@@ -67,6 +67,11 @@
 			"no error": "kein Fehler",
 			"Error 0x%05x": "Fehler 0x%05x",
 
+			"unlock": "entriegeln",
+
+			"yes": "ja",
+			"no": "nein",
+
 			"Plug was disconnected during charging": "Stecker wurde während des Ladevorgangs abgesteckt",
 			"Plug was not recognized": "Stecker wurde nicht erkannt",
 			"Temperature cut-off": "Temperaturabschaltung",

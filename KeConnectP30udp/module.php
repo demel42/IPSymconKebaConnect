@@ -31,10 +31,6 @@ class KeConnectP30udp extends IPSModule
         'CableState',
         'ErrorCode',
 
-        'CurrentPhase1',
-        'CurrentPhase2',
-        'CurrentPhase3',
-
         'ActivePower',
         'ChargedEnergy',
         'TotalEnergy',
@@ -47,6 +43,24 @@ class KeConnectP30udp extends IPSModule
     ];
 
     private static $optionalVariables = [
+        [
+            'Ident'           => 'CurrentPhase1',
+            'Desc'            => 'Charging current phase 1',
+            'VariableType'    => VARIABLETYPE_FLOAT,
+            'VariableProfile' => 'KebaConnect.Current',
+        ],
+        [
+            'Ident'           => 'CurrentPhase2',
+            'Desc'            => 'Charging current phase 2',
+            'VariableType'    => VARIABLETYPE_FLOAT,
+            'VariableProfile' => 'KebaConnect.Current',
+        ],
+        [
+            'Ident'           => 'CurrentPhase3',
+            'Desc'            => 'Charging current phase 3',
+            'VariableType'    => VARIABLETYPE_FLOAT,
+            'VariableProfile' => 'KebaConnect.Current',
+        ],
 
         [
             'Ident'           => 'VoltagePhase1',
@@ -141,6 +155,16 @@ class KeConnectP30udp extends IPSModule
         $associations[] = ['Wert' => 0, 'Name' => $this->Translate('no limit'), 'Farbe' => -1];
         $associations[] = ['Wert' => 1, 'Name' => $this->Translate('%0.0f kWh'), 'Farbe' => -1];
         $this->CreateVarProfile('KebaConnect.EnergyLimit', VARIABLETYPE_FLOAT, '', 0, 100, 1, 0, '', $associations, $reInstall);
+
+        $associations = [];
+        $associations[] = ['Wert' => false, 'Name' => $this->Translate('no'), 'Farbe' => -1];
+        $associations[] = ['Wert' => true, 'Name' => $this->Translate('yes'), 'Farbe' => -1];
+        $this->CreateVarProfile('KebaConnect.EnableCharging', VARIABLETYPE_BOOLEAN, '', 0, 0, 0, 0, '', $associations, $reInstall);
+
+        $associations = [];
+        $associations[] = ['Wert' => false, 'Name' => $this->Translate('-'), 'Farbe' => -1];
+        $associations[] = ['Wert' => true, 'Name' => $this->Translate('unlock'), 'Farbe' => -1];
+        $this->CreateVarProfile('KebaConnect.UnlockPlug', VARIABLETYPE_BOOLEAN, '', 0, 0, 0, 0, '', $associations, $reInstall);
     }
 
     public function Create()
@@ -173,18 +197,16 @@ class KeConnectP30udp extends IPSModule
         $this->MaintainVariable('ErrorCode', $this->Translate('Error code'), VARIABLETYPE_INTEGER, 'KebaConnect.Error', $vpos++, true);
         $this->MaintainVariable('ErrorText', $this->Translate('Error text'), VARIABLETYPE_STRING, '', $vpos++, true);
 
-        $this->MaintainVariable('CurrentPhase1', $this->Translate('Charging current phase 1'), VARIABLETYPE_FLOAT, 'KebaConnect.Current', $vpos++, true);
-        $this->MaintainVariable('CurrentPhase2', $this->Translate('Charging current phase 2'), VARIABLETYPE_FLOAT, 'KebaConnect.Current', $vpos++, true);
-        $this->MaintainVariable('CurrentPhase3', $this->Translate('Charging current phase 3'), VARIABLETYPE_FLOAT, 'KebaConnect.Current', $vpos++, true);
-
+        $vpos = 10;
         $this->MaintainVariable('ActivePower', $this->Translate('Active power'), VARIABLETYPE_FLOAT, 'KebaConnect.Power', $vpos++, true);
         $this->MaintainVariable('ChargedEnergy', $this->Translate('Power consumption of the current loading session'), VARIABLETYPE_FLOAT, 'KebaConnect.Energy', $vpos++, true);
         $this->MaintainVariable('TotalEnergy', $this->Translate('Total energy'), VARIABLETYPE_FLOAT, 'KebaConnect.Energy', $vpos++, true);
 
-        $this->MaintainVariable('EnableCharging', $this->Translate('Enable charging'), VARIABLETYPE_BOOLEAN, '~Switch', $vpos++, true);
+        $vpos = 20;
+        $this->MaintainVariable('EnableCharging', $this->Translate('Enable charging'), VARIABLETYPE_BOOLEAN, 'KebaConnect.EnableCharging', $vpos++, true);
         $this->MaintainAction('EnableCharging', true);
 
-        $this->MaintainVariable('UnlockPlug', $this->Translate('Unlock plug'), VARIABLETYPE_BOOLEAN, '~Switch', $vpos++, true);
+        $this->MaintainVariable('UnlockPlug', $this->Translate('Unlock plug'), VARIABLETYPE_BOOLEAN, 'KebaConnect.UnlockPlug', $vpos++, true);
         $this->MaintainAction('UnlockPlug', true);
 
         $this->MaintainVariable('MaxChargingCurrent', $this->Translate('Max charging current'), VARIABLETYPE_INTEGER, 'KebaConnect.MaxCurrent', $vpos++, true);
@@ -195,6 +217,7 @@ class KeConnectP30udp extends IPSModule
 
         $this->MaintainVariable('MaxSupportedCurrent', $this->Translate('Max supported current'), VARIABLETYPE_INTEGER, 'KebaConnect.MaxCurrent', $vpos++, true);
 
+        $vpos = 40;
         $use_fields = json_decode($this->ReadPropertyString('use_fields'), true);
         foreach (self::$optionalVariables as $var) {
             $ident = $var['Ident'];
@@ -211,7 +234,7 @@ class KeConnectP30udp extends IPSModule
             $this->MaintainVariable($ident, $desc, $vartype, $varprof, $vpos++, $use);
         }
 
-        $vpos = 50;
+        $vpos = 90;
         $this->MaintainVariable('LastChange', $this->Translate('Last change'), VARIABLETYPE_INTEGER, '~UnixTimestamp', $vpos++, true);
         $this->MaintainVariable('LastUpdate', $this->Translate('Last update'), VARIABLETYPE_INTEGER, '~UnixTimestamp', $vpos++, true);
 
@@ -540,9 +563,15 @@ class KeConnectP30udp extends IPSModule
             $this->SendDebug(__FUNCTION__, 'stream_socket_client("udp://' . $host . ':' . $port . '") failed, errno=' . $errno, 0);
             return false;
         }
+        stream_set_timeout($fp, 5);
         fwrite($fp, $cmd);
-        $this->SendDebug(__FUNCTION__, 'send cmd "' . $cmd . '"', 0);
+        $info = stream_get_meta_data($fp);
         fclose($fp);
+        if ($info['timed_out']) {
+            $this->SendDebug(__FUNCTION__, 'send cmd "' . $cmd . '" timeout', 0);
+            return false;
+        }
+        $this->SendDebug(__FUNCTION__, 'send cmd "' . $cmd . '"', 0);
 
         $socket = @socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
         if (!$socket) {
@@ -550,6 +579,7 @@ class KeConnectP30udp extends IPSModule
             return false;
         }
         socket_set_option($socket, SOL_SOCKET, SO_REUSEADDR, 1);
+        socket_set_option($socket, SOL_SOCKET, SO_RCVTIMEO, ['sec'=>5, 'usec'=>0]);
         if (!socket_bind($socket, '0.0.0.0', $port)) {
             $this->SendDebug(__FUNCTION__, 'socket_bind() failed', 0);
             return false;
@@ -560,7 +590,6 @@ class KeConnectP30udp extends IPSModule
         } else {
             $this->SendDebug(__FUNCTION__, 'socket_recv(): ' . $bytes . ' bytes, buf="' . $buf . '"', 0);
         }
-        socket_close($socket);
         return $buf;
     }
 
@@ -775,6 +804,7 @@ class KeConnectP30udp extends IPSModule
                 $this->SendDebug(__FUNCTION__, 'ignore field ' . $var . '="' . $val . '"', 0);
             }
         }
+
         switch ($jdata['ID']) {
             case '1':
                 $product = $this->GetArrayElem($jdata, 'Product', '');
@@ -799,6 +829,21 @@ class KeConnectP30udp extends IPSModule
                 $this->SendDebug(__FUNCTION__, 'set variable ' . $ident . ' to "' . $val . '" from field "' . $var . '"', 0);
                 $this->SaveValue($ident, $val, $is_changed);
                 $this->SetValue('ErrorText', $this->ErrorCode2Text($val));
+
+                $b = $this->checkAction('SwitchEnableCharging', false);
+                $this->MaintainAction('EnableCharging', $b);
+
+                $b = $this->checkAction('SetMaxChargingCurrent', false);
+                $this->MaintainAction('MaxChargingCurrent', $b);
+
+                $b = $this->checkAction('SetChargingEnergyLimit', false);
+                $this->MaintainAction('ChargingEnergyLimit', $b);
+
+                $cable = $this->GetValue('CableState');
+                $b = ($cable == self::$CABLE_LOCKED_IN_VEHICLE);
+                $this->SetValue('UnlockPlug', $b);
+                $b = $this->checkAction('UnlockPlug', false);
+                $this->MaintainAction('UnlockPlug', $b);
                 break;
             }
 
@@ -903,6 +948,22 @@ class KeConnectP30udp extends IPSModule
 
         switch ($func) {
             case 'SwitchEnableCharging':
+                /*
+                $state = $this->GetValue('ChargingState');
+                switch ($state) {
+                    case self::$STATE_READY:
+                    case self::$STATE_READY:
+                    case self::$STATE_CHARGING:
+                    case self::$STATE_SUSPENDED:
+                        $enabled = true;
+                        break;
+                    default:
+                        if ($verbose) {
+                            $this->SendDebug(__FUNCTION__, 'wrong ChargingState ' . $state, 0);
+                        }
+                        break;
+                }
+                 */
                 $enabled = true;
                 break;
             case 'SetMaxChargingCurrent':
@@ -913,10 +974,15 @@ class KeConnectP30udp extends IPSModule
                 break;
             case 'UnlockPlug':
                 $cable = $this->GetValue('CableState');
-                if ($cable != self::$CABLE_LOCKED_IN_VEHICLE) {
-                    $this->SendDebug(__FUNCTION__, 'wrong CableState ' . $cable, 0);
-                } else {
-                    $enabled = true;
+                switch ($cable) {
+                    case self::$CABLE_LOCKED_IN_VEHICLE:
+                        $enabled = true;
+                        break;
+                    default:
+                        if ($verbose) {
+                            $this->SendDebug(__FUNCTION__, 'wrong CableState ' . $cable, 0);
+                        }
+                        break;
                 }
                 break;
             default:
@@ -924,7 +990,9 @@ class KeConnectP30udp extends IPSModule
                 break;
         }
 
-        $this->SendDebug(__FUNCTION__, 'action "' . $func . '" is ' . ($enabled ? 'enabled' : 'disabled'), 0);
+        if ($verbose) {
+            $this->SendDebug(__FUNCTION__, 'action "' . $func . '" is ' . ($enabled ? 'enabled' : 'disabled'), 0);
+        }
         return $enabled;
     }
 
@@ -960,11 +1028,10 @@ class KeConnectP30udp extends IPSModule
 
     public function UnlockPlug()
     {
-        if (!$this->checkAction(__FUNCTION__, true)) {
+        if ($this->checkAction(__FUNCTION__, true) == false) {
             return false;
         }
 
-        $this->SendDebug(__FUNCTION__, '', 0);
         if ($this->GetValue('EnableCharging') == true) {
             $thix - ÂSendDebug(__FUNCTION__, 'force disable charging', 0);
             $this->CallAction('ena 0');
@@ -975,7 +1042,7 @@ class KeConnectP30udp extends IPSModule
 
     public function SwitchEnableCharging(bool $mode)
     {
-        if (!$this->checkAction(__FUNCTION__, true)) {
+        if ($this->checkAction(__FUNCTION__, true) == false) {
             return false;
         }
 
@@ -988,7 +1055,7 @@ class KeConnectP30udp extends IPSModule
 
     public function SetMaxChargingCurrent(float $current)
     {
-        if (!$this->checkAction(__FUNCTION__, true)) {
+        if ($this->checkAction(__FUNCTION__, true) == false) {
             return false;
         }
 
@@ -1011,7 +1078,7 @@ class KeConnectP30udp extends IPSModule
 
     public function SetChargingEnergyLimit(float $energy)
     {
-        if (!$this->checkAction(__FUNCTION__, true)) {
+        if ($this->checkAction(__FUNCTION__, true) == false) {
             return false;
         }
 
