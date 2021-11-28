@@ -639,6 +639,14 @@ class KeConnectP30udp extends IPSModule
     {
         $jdata = json_decode($data, true);
         $this->SendDebug(__FUNCTION__, 'jdata=' . print_r($jdata, true), 0);
+        if ($jdata == false) {
+            $this->SendDebug(__FUNCTION__, 'invalid json-data, data=' . $data, 0);
+            return;
+        }
+        if (isset($jdata['ID']) == false) {
+            $this->SendDebug(__FUNCTION__, 'missind "ID" in json-data, data=' . $data, 0);
+            return;
+        }
 
         $use_fields = json_decode($this->ReadPropertyString('use_fields'), true);
 
