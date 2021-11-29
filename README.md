@@ -64,7 +64,7 @@ Steuern des Ladevorgangs; aktivieren (LED's blinken grün) oder deaktivieren (LE
 Entriegeln des Steckers am Fahrzeug, ein eventuell laufender Ladevorgang wird automatisch beendet.
 
 `KebaConnect_SetMaxChargingCurrent(int $InstanzID, float $current)`<br>
-Setzen des maximalen Ladestroms, minimal 6A, maximal 63A soweit nicht durch Geräte-Konfiguration bzw Kabel/Fahrzeug weiter limitiert.
+Setzen des maximalen Ladestroms, zwischen minimal 6A und maximal 63A (soweit nicht durch Geräte-Konfiguration bzw Kabel/Fahrzeug weiter limitiert).
 
 `KebaConnect_SetChargingEnergyLimit(int $InstanzID, float $energy)`<br>
 Setzen der für den Ladevorgang verfügbaren Energie
@@ -107,5 +107,5 @@ Referenzen
 
 ## 7. Versions-Historie
 
-- 1.0.4 @ 29.11.2021 18:34 (beta)
+- 1.0.4 @ 29.11.2021 18:36 (beta)
   - Initiale Version
