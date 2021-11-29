@@ -48,29 +48,25 @@ In dem Konfigurationsformular der KebaConnect-Instanz kann man u.a. konfiguriere
 
 ## 4. Funktionsreferenz
 
-`Dyson_UpdateStatus(int $InstanzID)`<br>
-Auslösen einer Aktualisierungs-Anforderug an das Gerät.
-
-
-`StandbyUpdate(int $InstanzID)`<br>
+`KebaConnect_StandbyUpdate(int $InstanzID)`<br>
 Abruf aller Daten vom Gerät.
 
-`ChargingUpdate(int $InstanzID)`<br>
+`KebaConnect_ChargingUpdate(int $InstanzID)`<br>
 Eingeschränkte Abruf Daten vom Gerät (nur _report 2_).
 
-`SendDisplayText(int $InstanzID, string $txt)`<br>
+`KebaConnect_SendDisplayText(int $InstanzID, string $txt)`<br>
 Übertragung eines Textes (max. 23 Zeichen) an eine Wallbox mit Display
 
-`SwitchEnableCharging(int $InstanzID, bool $mode)`<br>
+`KebaConnect_SwitchEnableCharging(int $InstanzID, bool $mode)`<br>
 Steuern des Ladevorgangs; aktivieren (LED's blinken grün) oder deaktivieren (LED's blinken blau)
 
-`UnlockPlug(int $InstanzID )`<br>
+`KebaConnect_UnlockPlug(int $InstanzID )`<br>
 Entriegeln des Steckers am Fahrzeug, ein eventuell laufender Ladevorgang wird automatisch beendet.
 
-`SetMaxChargingCurrent(int $InstanzID, float $current)`<br>
+`KebaConnect_SetMaxChargingCurrent(int $InstanzID, float $current)`<br>
 Setzen des maximalen Ladestroms, minimal 6A, maximal 63A soweit nicht durch Geräte-Konfiguration bzw Kabel/Fahrzeug weiter limitiert.
 
-`SetChargingEnergyLimit(int $InstanzID, float $energy)`<br>
+`KebaConnect_SetChargingEnergyLimit(int $InstanzID, float $energy)`<br>
 Setzen der für den Ladevorgang verfügbaren Energie
 
 ## 5. Konfiguration
@@ -111,5 +107,5 @@ Referenzen
 
 ## 7. Versions-Historie
 
-- 1.0.3 @ 28.11.2021 19:25 (beta)
+- 1.0.4 @ 29.11.2021 18:34 (beta)
   - Initiale Version
