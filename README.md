@@ -1,6 +1,6 @@
 # IPSymconKebaConnect
 
-[![IPS-Version](https://img.shields.io/badge/Symcon_Version-5.3+-red.svg)](https://www.symcon.de/service/dokumentation/entwicklerbereich/sdk-tools/sdk-php/)
+[![IPS-Version](https://img.shields.io/badge/Symcon_Version-6.0+-red.svg)](https://www.symcon.de/service/dokumentation/entwicklerbereich/sdk-tools/sdk-php/)
 ![Code](https://img.shields.io/badge/Code-PHP-blue.svg)
 [![License](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-green.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 
@@ -20,8 +20,8 @@
 
 ## 2. Voraussetzungen
 
- - IP-Symcon ab Version 6
- - eine Keba KeConnct P30-fähige Wallbox oder eine BMW Wallbox
+- IP-Symcon ab Version 6.0
+- eine Keba KeConnct P30-fähige Wallbox oder eine BMW Wallbox
 
 Hinweis: es können beliebig viele Keba-Wallboxen gleichzeitig und unabhängig betrieben werden
 
@@ -30,44 +30,19 @@ Hinweis: es können beliebig viele Keba-Wallboxen gleichzeitig und unabhängig b
 ### a. Laden des Moduls
 
 Die Webconsole von IP-Symcon mit _http://\<IP-Symcon IP\>:3777/console/_ öffnen.
+Den Modulstore öffnen und im Suchfeld nun _KebaConnect_ eingeben, das Modul auswählen und auf _Installieren_ drücken.
 
-Anschließend oben rechts auf das Symbol für den Modulstore (IP-Symcon > 5.1) klicken
-
-![Store](docs/de/img/store_icon.png?raw=true "open store")
-
-Im Suchfeld nun _KebaConnect_ eingeben, das Modul auswählen und auf _Installieren_ drücken.
-
-#### Alternatives Installieren über Modules Instanz (IP-Symcon < 5.1)
-
-Die Webconsole von IP-Symcon mit _http://\<IP-Symcon IP\>:3777/console/_ aufrufen.
-
-Anschließend den Objektbaum _öffnen_.
-
-![Objektbaum](docs/de/img/objektbaum.png?raw=true "Objektbaum")
-
-Die Instanz _Modules_ unterhalb von Kerninstanzen im Objektbaum von IP-Symcon mit einem Doppelklick öffnen und das  _Plus_ Zeichen drücken.
-
-![Modules](docs/de/img/Modules.png?raw=true "Modules")
-
-![Plus](docs/de/img/plus.png?raw=true "Plus")
-
-![ModulURL](docs/de/img/add_module.png?raw=true "Add Module")
-
-Im Feld die folgende URL eintragen und mit _OK_ bestätigen:
-
-```
-https://github.com/demel42/IPSymconKebaConnect.git
-```
-
+Alternativ kann das Modul auch über ModulCOntrol (_Kern_ -> _Modules_) installiert werden, als URL muss `https://github.com/demel42/IPSymconKebaConnect` angegeben werden,
 Anschließend erscheint ein Eintrag für das Modul in der Liste der Instanz _Modules_.
 
 ### b. Einrichtung des Geräte-Moduls
 
-In IP-Symcon nun unterhalb des Wurzelverzeichnisses die Funktion _Instanz hinzufügen_ (_CTRL+1_) auswählen, als Hersteller _Keba_ und als Gerät _KeConnectP30udp_ auswählen.
+In IP-Symcon nun unterhalb des Wurzelverzeichnisses die Funktion _Instanz hinzufügen_ auswählen, als Hersteller _Keba_ und als Gerät _KeConnectP30udp_ auswählen.
+
 Es wird automatisch eine I/O-Instanz vom Type _UDP-Client_ angelegt und das Konfigurationsformular dieser Instanz geöffnet.
 
 Die Konfiguration des UDP-Client wird komplett über die Keba-Geräteinstanz gesteuert.
-Hinweis: der UDP-Client dient ausschliesslich zum Emfang von Briadcasts der Wallbox
+Hinweis: der UDP-Client dient ausschliesslich zum Empfang von Broadcasts der Wallbox
 
 In dem Konfigurationsformular der KebaConnect-Instanz kann man u.a. konfigurieren, welche Zusatzvariablen übernommen werden sollen.
 

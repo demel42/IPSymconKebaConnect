@@ -509,8 +509,8 @@ class KeConnectP30udp extends IPSModule
 
     protected function SetChargingUpdateInterval()
     {
-        $state = $this->GetValue('ChargingState');
-        if ($state == self::$STATE_CHARGING) {
+        $chargingState = $this->GetValue('ChargingState');
+        if ($chargingState == self::$STATE_CHARGING) {
             $sec = $this->ReadPropertyInteger('charging_update_interval');
             $this->SendDebug(__FUNCTION__, 'default interval with sec=' . $sec, 0);
             $msec = $sec > 0 ? $sec * 1000 : 0;
@@ -847,11 +847,6 @@ class KeConnectP30udp extends IPSModule
                 $b = $this->checkAction('SetChargingEnergyLimit', false);
                 $this->MaintainAction('ChargingEnergyLimit', $b);
 
-                /*
-                $cable = $this->GetValue('CableState');
-                $b = ($cable == self::$CABLE_LOCKED_IN_VEHICLE);
-                $this->SetValue('UnlockPlug', $b);
-                 */
                 $b = $this->checkAction('UnlockPlug', false);
                 $this->MaintainAction('UnlockPlug', $b);
                 break;
@@ -959,8 +954,8 @@ class KeConnectP30udp extends IPSModule
         switch ($func) {
             case 'SwitchEnableCharging':
                 /*
-                $state = $this->GetValue('ChargingState');
-                switch ($state) {
+                $chargingState = $this->GetValue('ChargingState');
+                switch ($chargingState) {
                     case self::$STATE_READY:
                     case self::$STATE_READY:
                     case self::$STATE_CHARGING:
@@ -969,7 +964,7 @@ class KeConnectP30udp extends IPSModule
                         break;
                     default:
                         if ($verbose) {
-                            $this->SendDebug(__FUNCTION__, 'wrong ChargingState ' . $state, 0);
+                            $this->SendDebug(__FUNCTION__, 'wrong ChargingState ' . $chargingState, 0);
                         }
                         break;
                 }
@@ -983,14 +978,14 @@ class KeConnectP30udp extends IPSModule
                 $enabled = true;
                 break;
             case 'UnlockPlug':
-                $cable = $this->GetValue('CableState');
-                switch ($cable) {
+                $cableState = $this->GetValue('CableState');
+                switch ($cableState) {
                     case self::$CABLE_LOCKED_IN_VEHICLE:
                         $enabled = true;
                         break;
                     default:
                         if ($verbose) {
-                            $this->SendDebug(__FUNCTION__, 'wrong CableState ' . $cable, 0);
+                            $this->SendDebug(__FUNCTION__, 'wrong CableState ' . $cableState, 0);
                         }
                         break;
                 }
@@ -1056,7 +1051,7 @@ class KeConnectP30udp extends IPSModule
             return false;
         }
 
-        // enable state
+        // enable charging
         // 0 = Disabled; is indicated with a blue flashing LED
         // 1 = Enabled
         $cmd = 'ena ' . ($mode ? '1' : '0');
