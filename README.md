@@ -107,5 +107,5 @@ Referenzen
 
 ## 7. Versions-Historie
 
-- 1.0.4 @ 29.11.2021 18:36 (beta)
+- 1.0.5 @ 10.12.2021 17:10 (beta)
   - Initiale Version

@@ -3,6 +3,7 @@
 		"de": {
 			"KEBA KeConnect P30 (UDP)": "KEBA KeConnect P30 (UDP)",
 			"Disable instance": "Instanz deaktivieren",
+			"Basic configuration": "Basis-Konfiguration",
 			"IP address of the wallbox": "IP-Adresse der Wallbox",
 			"Update data in standby every X minutes": "Daten im Ruhezustand alle x Minuten aktualisieren",
 			"Update data while charging every X seconds": "Daten während des Ladevorgangs alle x Sekunden aktualisieren",

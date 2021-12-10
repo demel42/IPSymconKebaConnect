@@ -29,7 +29,6 @@ class KeConnectP30udp extends IPSModule
     public static $fixedVariables = [
         'ChargingState',
         'CableState',
-        'ErrorCode',
 
         'ActivePower',
         'ChargedEnergy',
@@ -115,6 +114,18 @@ class KeConnectP30udp extends IPSModule
             'VariableType'    => VARIABLETYPE_INTEGER,
             'VariableProfile' => '~UnixTimestamp',
         ],
+
+        [
+            'Ident'           => 'ErrorCode',
+            'Desc'            => 'Error code',
+            'VariableType'    => VARIABLETYPE_INTEGER,
+            'VariableProfile' => 'KebaConnect.Error',
+        ],
+        [
+            'Ident'           => 'ErrorText',
+            'Desc'            => 'Error text',
+            'VariableType'    => VARIABLETYPE_STRING,
+        ],
     ];
 
     public function InstallVarProfiles(bool $reInstall = false)
@@ -194,8 +205,6 @@ class KeConnectP30udp extends IPSModule
         $vpos = 0;
         $this->MaintainVariable('ChargingState', $this->Translate('Charging state'), VARIABLETYPE_INTEGER, 'KebaConnect.ChargingState', $vpos++, true);
         $this->MaintainVariable('CableState', $this->Translate('Cable state'), VARIABLETYPE_INTEGER, 'KebaConnect.CableState', $vpos++, true);
-        $this->MaintainVariable('ErrorCode', $this->Translate('Error code'), VARIABLETYPE_INTEGER, 'KebaConnect.Error', $vpos++, true);
-        $this->MaintainVariable('ErrorText', $this->Translate('Error text'), VARIABLETYPE_STRING, '', $vpos++, true);
 
         $vpos = 10;
         $this->MaintainVariable('ActivePower', $this->Translate('Active power'), VARIABLETYPE_FLOAT, 'KebaConnect.Power', $vpos++, true);
@@ -328,31 +337,39 @@ class KeConnectP30udp extends IPSModule
             'caption' => 'Disable instance'
         ];
 
-        $formElements[] = [
+        $items = [];
+        $items[] = [
             'type'     => 'ValidationTextBox',
             'name'     => 'host',
             'caption'  => 'IP address of the wallbox',
             'validate' => '^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$',
         ];
 
-        $formElements[] = [
+        $items[] = [
             'type'    => 'Label',
             'caption' => 'Update data in standby every X minutes'
         ];
-        $formElements[] = [
+        $items[] = [
             'type'    => 'IntervalBox',
             'name'    => 'standby_update_interval',
             'caption' => 'Minutes'
         ];
 
-        $formElements[] = [
+        $items[] = [
             'type'    => 'Label',
             'caption' => 'Update data while charging every X seconds'
         ];
-        $formElements[] = [
+        $items[] = [
             'type'    => 'IntervalBox',
             'name'    => 'charging_update_interval',
             'caption' => 'Seconds'
+        ];
+
+        $formElements[] = [
+            'type'     => 'ExpansionPanel',
+            'items'    => $items,
+            'caption'  => 'Basic configuration',
+            'expanded' => false,
         ];
 
         foreach (self::$optionalVariables as $var) {
@@ -463,6 +480,17 @@ class KeConnectP30udp extends IPSModule
                     ],
                 ],
             ]
+        ];
+
+        $formActions[] = [
+            'type'    => 'ExpansionPanel',
+            'caption' => 'Information',
+            'items'   => [
+                [
+                    'type'    => 'Label',
+                    'caption' => $this->InstanceInfo($this->InstanceID),
+                ],
+            ],
         ];
 
         return $formActions;
@@ -834,9 +862,29 @@ class KeConnectP30udp extends IPSModule
                     $var = 'Error 1';
                     $val = $error2;
                 }
-                $this->SendDebug(__FUNCTION__, 'set variable ' . $ident . ' to "' . $val . '" from field "' . $var . '"', 0);
-                $this->SaveValue($ident, $val, $is_changed);
-                $this->SetValue('ErrorText', $this->ErrorCode2Text($val));
+                $use = false;
+                foreach ($use_fields as $field) {
+                    if ($ident == $this->GetArrayElem($field, 'ident', '')) {
+                        $use = (bool) $this->GetArrayElem($field, 'use', false);
+                        break;
+                    }
+                }
+                if ($use) {
+                    $this->SendDebug(__FUNCTION__, 'set variable ' . $ident . ' to "' . $val . '" from field "' . $var . '"', 0);
+                    $this->SaveValue($ident, $val, $is_changed);
+                }
+
+                $ident = 'ErrorText';
+                $use = false;
+                foreach ($use_fields as $field) {
+                    if ($ident == $this->GetArrayElem($field, 'ident', '')) {
+                        $use = (bool) $this->GetArrayElem($field, 'use', false);
+                        break;
+                    }
+                }
+                if ($use) {
+                    $this->SetValue($ident, $this->ErrorCode2Text($val));
+                }
 
                 $b = $this->checkAction('SwitchEnableCharging', false);
                 $this->MaintainAction('EnableCharging', $b);
