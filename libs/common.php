@@ -288,7 +288,7 @@ trait KebaConnectCommonLib
                     case 'main':
                         break;
                     default:
-                        $src .= '/' . $branch;
+                        $src .= ' [' . $branch . ']';
                         break;
                 }
                 break;
