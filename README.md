@@ -107,7 +107,7 @@ Referenzen
 
 ## 7. Versions-Historie
 
-- 1.0.7 @ 16.12.2021 10:43 (beta)
+- 1.0.7 @ 16.12.2021 13:53 (beta)
   - Absicherung der Anzeige der Modul/Bibliotheks-Informationen
 
 - 1.0.6 @ 14.12.2021 14:01
