@@ -827,6 +827,7 @@ class KeConnectP30udp extends IPSModule
                         case 'MaxSupportedCurrent':
                             $val = floatval($val) / 1000;
                             break;
+                        case 'Setenergy':
                         case 'TotalEnergy':
                         case 'ChargedEnergy':
                             $val = floatval($val) / 10000;

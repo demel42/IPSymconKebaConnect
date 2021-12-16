@@ -109,6 +109,7 @@ Referenzen
 
 - 1.0.8 @ 16.12.2021 19:00 (beta)
   - ClientIp des Broadcast wurde nicht korrekt ausgewertet
+  - Feld "Setenergy" wird in 0.1 Wh übertragen,muss also durch 10.000 geteilt werden um 10 KWh zu bekommen
 
 - 1.0.7 @ 16.12.2021 13:53
   - Absicherung der Anzeige der Modul/Bibliotheks-Informationen
