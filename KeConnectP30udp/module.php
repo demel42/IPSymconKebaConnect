@@ -558,6 +558,7 @@ class KeConnectP30udp extends IPSModule
             $host = $this->ReadPropertyString('host');
             if ($clientIP != $host) {
                 $this->SendDebug(__FUNCTION__, 'ignore broadcast from IP ' . $clientIP, 0);
+                return;
             }
         }
         $buffer = $jdata['Buffer'];
