@@ -1140,7 +1140,7 @@ class KeConnectP30udp extends IPSModule
         }
 
         // Charging energy limit in 0,1Wh
-        $e = $energy * 10000;
+        $e = $energy / 10000;
         $cmd = 'setenergy ' . $e;
         return $this->CallAction($cmd);
     }
