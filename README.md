@@ -107,7 +107,10 @@ Referenzen
 
 ## 7. Versions-Historie
 
-- 1.0.8 @ 16.12.2021 20:14 (beta)
+- 1.0.9 @ 18.12.2021 10:13 (beta)
+  - Vereinfachung der Socket-Kommunikation
+
+- 1.0.8 @ 16.12.2021 20:14
   - ClientIp des Broadcast wurde nicht korrekt ausgewertet
   - Feld "Setenergy" wird in 0.1 Wh übertragen,muss also durch 10.000 geteilt werden um 10 KWh zu bekommen
 

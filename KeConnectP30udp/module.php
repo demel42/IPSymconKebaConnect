@@ -587,39 +587,32 @@ class KeConnectP30udp extends IPSModule
         $host = $this->ReadPropertyString('host');
         $port = self::$UnicastPort;
 
-        $fp_w = stream_socket_client("udp://$host:$port", $errno, $errstr);
-        if (!$fp_w) {
-            $this->SendDebug(__FUNCTION__, 'stream_socket_client("udp://' . $host . ':' . $port . '") failed, errno=' . $errno, 0);
+        $fp = @socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
+        if (!$fp) {
+            $this->SendDebug(__FUNCTION__, 'socket_create() failed, reason=' . socket_strerror(socket_last_error($fp)), 0);
             return false;
         }
-        stream_set_timeout($fp_w, 5);
-        fwrite($fp_w, $cmd);
-        $info = stream_get_meta_data($fp_w);
-        fclose($fp_w);
-        if ($info['timed_out']) {
-            $this->SendDebug(__FUNCTION__, 'send cmd "' . $cmd . '" timeout', 0);
+        socket_set_option($fp, SOL_SOCKET, SO_REUSEADDR, 1);
+        socket_set_option($fp, SOL_SOCKET, SO_SNDTIMEO, ['sec' => 5, 'usec' => 0]);
+        socket_set_option($fp, SOL_SOCKET, SO_RCVTIMEO, ['sec' => 5, 'usec' => 0]);
+        if (!socket_bind($fp, '0.0.0.0', $port)) {
+            $this->SendDebug(__FUNCTION__, 'socket_bind() failed, reason=' . socket_strerror(socket_last_error($fp)), 0);
+            socket_close($fp);
             return false;
         }
-        $this->SendDebug(__FUNCTION__, 'send cmd "' . $cmd . '"', 0);
-
-        $fp_r = @socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
-        if (!$fp_r) {
-            $this->SendDebug(__FUNCTION__, 'socket_create() failed', 0);
+        $this->SendDebug(__FUNCTION__, 'send ' . strlen($cmd) . ' bytes, cmd="' . $cmd . '"', 0);
+        if (socket_sendto($fp, $cmd, strlen($cmd), 0, $host, $port) == false) {
+            $this->SendDebug(__FUNCTION__, 'socket_sendto() failed, reason=' . socket_strerror(socket_last_error($fp)), 0);
+            socket_close($fp);
             return false;
         }
-        socket_set_option($fp_r, SOL_SOCKET, SO_REUSEADDR, 1);
-        socket_set_option($fp_r, SOL_SOCKET, SO_RCVTIMEO, ['sec'=>5, 'usec'=>0]);
-        if (!socket_bind($fp_r, '0.0.0.0', $port)) {
-            $this->SendDebug(__FUNCTION__, 'socket_bind() failed', 0);
+        if (($bytes = socket_recv($fp, $buf, 2048, 0)) == false) {
+            $this->SendDebug(__FUNCTION__, 'socket_recv() failed, reason=' . socket_strerror(socket_last_error($fp)), 0);
+            socket_close($fp);
             return false;
         }
-        if (($bytes = socket_recv($fp_r, $buf, 2048, 0)) == false) {
-            $this->SendDebug(__FUNCTION__, 'socket_recv() failed, reason=' . socket_strerror(socket_last_error($fp_r)), 0);
-            $buf = false;
-        } else {
-            $this->SendDebug(__FUNCTION__, 'socket_recv(): ' . $bytes . ' bytes, buf="' . $buf . '"', 0);
-        }
-        socket_close($fp_r);
+        $this->SendDebug(__FUNCTION__, 'received ' . $bytes . ' bytes, buf="' . $buf . '"', 0);
+        socket_close($fp);
 
         return $buf;
     }
