@@ -88,12 +88,6 @@ class KeConnectP30udp extends IPSModule
         ],
 
         [
-            'Ident'           => 'RFID',
-            'Desc'            => 'RFID card',
-            'VariableType'    => VARIABLETYPE_STRING,
-        ],
-
-        [
             'Ident'           => 'ProductType',
             'Desc'            => 'Product type',
             'VariableType'    => VARIABLETYPE_STRING,
@@ -113,6 +107,24 @@ class KeConnectP30udp extends IPSModule
             'Desc'            => 'Last boot',
             'VariableType'    => VARIABLETYPE_INTEGER,
             'VariableProfile' => '~UnixTimestamp',
+        ],
+
+        [
+            'Ident'           => 'ChargingStarted',
+            'Desc'            => 'Charging started',
+            'VariableType'    => VARIABLETYPE_INTEGER,
+            'VariableProfile' => '~UnixTimestamp',
+        ],
+        [
+            'Ident'           => 'ChargingEnded',
+            'Desc'            => 'Charging ended',
+            'VariableType'    => VARIABLETYPE_INTEGER,
+            'VariableProfile' => '~UnixTimestamp',
+        ],
+        [
+            'Ident'           => 'RFID',
+            'Desc'            => 'RFID card',
+            'VariableType'    => VARIABLETYPE_STRING,
         ],
 
         [
@@ -187,6 +199,10 @@ class KeConnectP30udp extends IPSModule
         $this->RegisterPropertyString('host', '');
         $this->RegisterPropertyString('use_fields', '[]');
 
+        $this->RegisterPropertyBoolean('save_history', false);
+        $this->RegisterPropertyBoolean('show_history', false);
+        $this->RegisterPropertyInteger('history_age', 90);
+
         $this->RegisterPropertyInteger('standby_update_interval', '5');
         $this->RegisterPropertyInteger('charging_update_interval', '1');
 
@@ -241,6 +257,12 @@ class KeConnectP30udp extends IPSModule
             $vartype = $var['VariableType'];
             $varprof = isset($var['VariableProfile']) ? $var['VariableProfile'] : '';
             $this->MaintainVariable($ident, $desc, $vartype, $varprof, $vpos++, $use);
+        }
+
+        $vpos = 80;
+        $show_history = $this->ReadPropertyBoolean('show_history');
+        if ($show_history) {
+            $this->MaintainVariable('History', $this->Translate('Charging history'), VARIABLETYPE_STRING, '~HTML', $vpos++, true);
         }
 
         $vpos = 90;
@@ -381,29 +403,7 @@ class KeConnectP30udp extends IPSModule
             ];
         }
 
-        $columns = [];
-        $columns[] = [
-            'caption' => 'Ident',
-            'name'    => 'ident',
-            'width'   => '200px',
-            'save'    => true
-        ];
-        $columns[] = [
-            'caption' => 'Description',
-            'name'    => 'desc',
-            'width'   => 'auto'
-        ];
-        $columns[] = [
-            'caption' => 'use',
-            'name'    => 'use',
-            'width'   => '100px',
-            'edit'    => [
-                'type' => 'CheckBox'
-            ]
-        ];
-
         $items = [];
-
         $items[] = [
             'type'     => 'List',
             'name'     => 'use_fields',
@@ -411,16 +411,60 @@ class KeConnectP30udp extends IPSModule
             'rowCount' => count($values),
             'add'      => false,
             'delete'   => false,
-            'columns'  => $columns,
+            'columns'  => [
+                [
+                    'caption' => 'Ident',
+                    'name'    => 'ident',
+                    'width'   => '200px',
+                    'save'    => true
+                ],
+                [
+                    'caption' => 'Description',
+                    'name'    => 'desc',
+                    'width'   => 'auto'
+                ],
+                [
+                    'caption' => 'use',
+                    'name'    => 'use',
+                    'width'   => '100px',
+                    'edit'    => [
+                        'type' => 'CheckBox'
+                    ],
+                ],
+            ],
             'values'   => $values
         ];
-
         $formElements[] = [
             'type'     => 'ExpansionPanel',
             'items'    => $items,
             'caption'  => 'Additional variables',
             'expanded' => false,
             'onClick'  => 'KebaConnect_UpdateFields($id);'
+        ];
+
+        $items = [];
+        $items[] = [
+            'type'    => 'CheckBox',
+            'name'    => 'save_history',
+            'caption' => 'save charging history entries'
+        ];
+        $items[] = [
+            'type'    => 'NumberSpinner',
+            'minimum' => 0,
+            'suffix'  => 'days',
+            'name'    => 'history_age',
+            'caption' => 'maximun age of history entries'
+        ];
+        $items[] = [
+            'type'    => 'CheckBox',
+            'name'    => 'show_history',
+            'caption' => 'show table of charging history'
+        ];
+        $formElements[] = [
+            'type'     => 'ExpansionPanel',
+            'items'    => $items,
+            'caption'  => 'Charging history',
+            'expanded' => false,
         ];
 
         return $formElements;
@@ -512,7 +556,6 @@ class KeConnectP30udp extends IPSModule
         $j = [
             'Host'               => $host,
             'Port'               => self::$BroadcastPort,
-            //'BindIP'             => '0.0.0.0',
             'BindPort'           => self::$BroadcastPort,
             'EnableBroadcast'    => true,
             'EnableReuseAddress' => true,
@@ -588,14 +631,14 @@ class KeConnectP30udp extends IPSModule
         $port = self::$UnicastPort;
 
         $fp = @socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
-        if (!$fp) {
+        if ($fp == false) {
             $this->SendDebug(__FUNCTION__, 'socket_create() failed, reason=' . socket_strerror(socket_last_error($fp)), 0);
             return false;
         }
         socket_set_option($fp, SOL_SOCKET, SO_REUSEADDR, 1);
         socket_set_option($fp, SOL_SOCKET, SO_SNDTIMEO, ['sec' => 5, 'usec' => 0]);
         socket_set_option($fp, SOL_SOCKET, SO_RCVTIMEO, ['sec' => 5, 'usec' => 0]);
-        if (!socket_bind($fp, '0.0.0.0', $port)) {
+        if (socket_bind($fp, '0.0.0.0', $port) == false) {
             $this->SendDebug(__FUNCTION__, 'socket_bind() failed, reason=' . socket_strerror(socket_last_error($fp)), 0);
             socket_close($fp);
             return false;
@@ -630,12 +673,22 @@ class KeConnectP30udp extends IPSModule
             return;
         }
 
-        foreach (['report 1', 'report 2', 'report 3'] as $cmd) {
+        foreach (['report 1', 'report 2', 'report 3', 'report 100'] as $cmd) {
             $buf = $this->ExecuteCmd($cmd);
             if ($buf != false) {
                 $this->DecodeReport($buf);
             }
         }
+
+        $save_history = $this->ReadPropertyBoolean('save_history');
+        if ($save_history) {
+            for ($i = 1; $i <= 30; $i++) {
+                $cmd = 'report ' . strval(100 + $i);
+                $buf = $this->ExecuteCmd($cmd);
+                $this->SendDebug(__FUNCTION__, $cmd . '=' . json_encode(json_decode($buf, true)), 0);
+            }
+        }
+
         $this->SetStandbyUpdateInterval();
         $this->SetChargingUpdateInterval();
     }
@@ -653,7 +706,7 @@ class KeConnectP30udp extends IPSModule
             return;
         }
 
-        $buf = $this->ExecuteCmd('report 3');
+        $buf = $this->ExecuteCmd('report 3', 'report 100');
         if ($buf != false) {
             $this->DecodeReport($buf);
         }
@@ -668,234 +721,228 @@ class KeConnectP30udp extends IPSModule
             return;
         }
         if (isset($jdata['ID']) == false) {
-            $this->SendDebug(__FUNCTION__, 'missind "ID" in json-data, data=' . $data, 0);
+            $this->SendDebug(__FUNCTION__, 'missing "ID" in json-data, data=' . $data, 0);
             return;
         }
 
-        $use_fields = json_decode($this->ReadPropertyString('use_fields'), true);
+        $report_id = intval($jdata['ID']);
+        $this->SendDebug(__FUNCTION__, 'report ' . $report_id, 0);
 
-        $this->SendDebug(__FUNCTION__, 'report ' . $jdata['ID'], 0);
+        $use_idents = self::$fixedVariables;
+        $use_fields = json_decode($this->ReadPropertyString('use_fields'), true);
+        foreach ($use_fields as $field) {
+            $ident = $this->GetArrayElem($field, 'ident', '');
+            $use = (bool) $this->GetArrayElem($field, 'use', false);
+            if ($use && $ident != false) {
+                $use_idents[] = $ident;
+            }
+        }
 
         $now = time();
         $is_changed = false;
 
-        foreach ($jdata as $var => $val) {
-            $fnd = true;
-            $ign = false;
-            $use = false;
-            switch ($jdata['ID']) {
-                case '1':
-                    switch ($var) {
-                        case 'ID':
-                            $ign = true;
-                            break;
-                        case 'Product':
-                            $ident = 'ProductType';
-                            break;
-                        case 'Serial':
-                            $ident = 'SerialNumber';
-                            break;
-                        case 'Firmware':
-                            $ident = 'FirmwareVersion';
-                            break;
-                        case 'Sec':
-                            $ident = 'LastBoot';
-                            break;
-                        default:
-                            $fnd = false;
-                            break;
-                    }
-                    break;
-                case '2':
-                    switch ($var) {
-                        case 'ID':
-                            $ign = true;
-                            break;
-                        case 'State':
-                            $ident = 'ChargingState';
-                            break;
-                        case 'Plug':
-                            $ident = 'CableState';
-                            break;
-                        case 'Enable sys':
-                            $ident = 'EnableCharging';
-                            break;
-                        case 'Error 1':
-                        case 'Error 2':
-                            $ign = true;
-                            $use = true;
-                            break;
-                        case 'Max curr':
-                            $ident = 'MaxChargingCurrent';
-                            break;
-                        case 'Curr HW':
-                            $ident = 'MaxSupportedCurrent';
-                            break;
-                        case 'Setenergy':
-                            $ident = 'ChargingEnergyLimit';
-                            break;
-                        case 'Serial':
-                        case 'Sec':
-                            $ign = true;
-                            break;
-                        default:
-                            $fnd = false;
-                            break;
-                    }
-                    break;
-                case '3':
-                    switch ($var) {
-                        case 'ID':
-                            $ign = true;
-                            break;
-                        case 'I1':
-                            $ident = 'CurrentPhase1';
-                            break;
-                        case 'I2':
-                            $ident = 'CurrentPhase2';
-                            break;
-                        case 'I3':
-                            $ident = 'CurrentPhase3';
-                            break;
-                        case 'U1':
-                            $ident = 'VoltagePhase1';
-                            break;
-                        case 'U2':
-                            $ident = 'VoltagePhase2';
-                            break;
-                        case 'U3':
-                            $ident = 'VoltagePhase3';
-                            break;
-                        case 'P':
-                            $ident = 'ActivePower';
-                            break;
-                        case 'PF':
-                            $ident = 'PowerFactor';
-                            break;
-                        case 'E pres':
-                            $ident = 'ChargedEnergy';
-                            break;
-                        case 'E total':
-                            $ident = 'TotalEnergy';
-                            break;
-                        case 'Serial':
-                        case 'Sec':
-                            $ign = true;
-                            break;
-                        default:
-                            $fnd = false;
-                            break;
-                    }
-                }
-            if ($ign) {
-                continue;
+        if ($report_id == 1) {
+            $product = $this->GetArrayElem($jdata, 'Product', '');
+            $serial = $this->GetArrayElem($jdata, 'Serial', '');
+            $this->SetSummary($product . ' (#' . $serial . ')');
+
+            if (in_array('ProductType', $use_idents)) {
+                $this->SaveValue('ProductType', $product, $is_changed);
+                $this->SendDebug(__FUNCTION__, 'set variable "ProductType" to "' . $product . '" from field "Product"', 0);
             }
-            if ($fnd == false) {
-                $this->SendDebug(__FUNCTION__, 'unused field ' . $var . '="' . $val . '"', 0);
-                continue;
+            if (in_array('SerialNumber', $use_idents)) {
+                $this->SaveValue('SerialNumber', $serial, $is_changed);
+                $this->SendDebug(__FUNCTION__, 'set variable "SerialNumber" to "' . $serial . '" from field "Serial"', 0);
             }
-            if ($use == false) {
-                $use = in_array($ident, self::$fixedVariables);
+            if (in_array('FirmwareVersion', $use_idents)) {
+                $firmware = $this->GetArrayElem($jdata, 'Firmware', '');
+                $this->SaveValue('FirmwareVersion', $firmware, $is_changed);
+                $this->SendDebug(__FUNCTION__, 'set variable "FirmwareVersion" to "' . $firmware . '" from field "Firmware"', 0);
             }
-            if ($use == false) {
-                foreach ($use_fields as $field) {
-                    if ($ident == $this->GetArrayElem($field, 'ident', '')) {
-                        $use = (bool) $this->GetArrayElem($field, 'use', false);
-                        break;
-                    }
-                }
-            }
-            if ($use) {
-                switch ($ident) {
-                        case 'LastBoot':
-                            $val = $now - $val;
-                            break;
-                        case 'PowerFactor':
-                            $val = floatval($val) / 10;
-                            break;
-                        case 'CurrentPhase1':
-                        case 'CurrentPhase2':
-                        case 'CurrentPhase3':
-                        case 'MaxChargingCurrent':
-                        case 'MaxSupportedCurrent':
-                            $val = floatval($val) / 1000;
-                            break;
-                        case 'TotalEnergy':
-                        case 'ChargedEnergy':
-                        case 'ChargingEnergyLimit':
-                            $val = floatval($val) / 10000;
-                            break;
-                        case 'ActivePower':
-                            $val = floatval($val) / 1000000;
-                            break;
-                        default:
-                            break;
-                    }
-                $this->SendDebug(__FUNCTION__, 'set variable ' . $ident . ' to "' . $val . '" from field "' . $var . '"', 0);
-                $this->SaveValue($ident, $val, $is_changed);
-            } else {
-                $this->SendDebug(__FUNCTION__, 'ignore field ' . $var . '="' . $val . '"', 0);
+            if (in_array('LastBoot', $use_idents)) {
+                $sec = intval($this->GetArrayElem($jdata, 'Sec', 0));
+                $ts = $now - $sec;
+                $this->SaveValue('LastBoot', $ts, $is_changed);
+                $this->SendDebug(__FUNCTION__, 'set variable "LastBoot" to ' . date('d.m.Y H:i:s', $ts) . ' from field "Sec"', 0);
             }
         }
 
-        switch ($jdata['ID']) {
-            case '1':
-                $product = $this->GetArrayElem($jdata, 'Product', '');
-                $serial = $this->GetArrayElem($jdata, 'Serial', '');
-                $s = $product . ' (#' . $serial . ')';
-                $this->SetSummary($s);
-                break;
-            case '2':
-                $ident = 'ErrorCode';
-                $error1 = $this->GetArrayElem($jdata, 'Error 1', 0);
-                $error2 = $this->GetArrayElem($jdata, 'Error 2', 0);
-                if ($error1 > 0 && $error2 > 0) {
-                    $this->LogMessage('got both error: Error 1=' . $error1 . ', Error 2=' . $error, KL_WARNING);
-                }
-                if ($error2 > 0) {
-                    $var = 'Error 2';
-                    $val = $error2;
-                } else {
-                    $var = 'Error 1';
-                    $val = $error2;
-                }
-                $use = false;
-                foreach ($use_fields as $field) {
-                    if ($ident == $this->GetArrayElem($field, 'ident', '')) {
-                        $use = (bool) $this->GetArrayElem($field, 'use', false);
-                        break;
-                    }
-                }
-                if ($use) {
-                    $this->SendDebug(__FUNCTION__, 'set variable ' . $ident . ' to "' . $val . '" from field "' . $var . '"', 0);
-                    $this->SaveValue($ident, $val, $is_changed);
-                }
-
-                $ident = 'ErrorText';
-                $use = false;
-                foreach ($use_fields as $field) {
-                    if ($ident == $this->GetArrayElem($field, 'ident', '')) {
-                        $use = (bool) $this->GetArrayElem($field, 'use', false);
-                        break;
-                    }
-                }
-                if ($use) {
-                    $this->SetValue($ident, $this->ErrorCode2Text($val));
-                }
-
-                $b = $this->checkAction('SwitchEnableCharging', false);
-                $this->MaintainAction('EnableCharging', $b);
-
-                $b = $this->checkAction('SetMaxChargingCurrent', false);
-                $this->MaintainAction('MaxChargingCurrent', $b);
-
-                $b = $this->checkAction('SetChargingEnergyLimit', false);
-                $this->MaintainAction('ChargingEnergyLimit', $b);
-
-                $b = $this->checkAction('UnlockPlug', false);
-                $this->MaintainAction('UnlockPlug', $b);
-                break;
+        if ($report_id == 2) {
+            if (in_array('ChargingState', $use_idents)) {
+                $charging_state = $this->GetArrayElem($jdata, 'State', 0);
+                $this->SaveValue('ChargingState', $charging_state, $is_changed);
+                $this->SendDebug(__FUNCTION__, 'set variable "ChargingState" to ' . $charging_state . ' from field "State"', 0);
             }
+            if (in_array('CableState', $use_idents)) {
+                $cable_state = $this->GetArrayElem($jdata, 'Plug', 0);
+                $this->SaveValue('ChargingState', $cable_state, $is_changed);
+                $this->SendDebug(__FUNCTION__, 'set variable "CableState" to ' . $cable_state . ' from field "CableState"', 0);
+            }
+            if (in_array('EnableCharging', $use_idents)) {
+                $enable_sys = boolval($this->GetArrayElem($jdata, 'Enable sys', false));
+                $this->SaveValue('EnableCharging', $enable_sys, $is_changed);
+                $this->SendDebug(__FUNCTION__, 'set variable "EnableCharging" to ' . $enable_sys . ' from field "Enable sys"', 0);
+            }
+
+            $error1 = $this->GetArrayElem($jdata, 'Error 1', 0);
+            $error2 = $this->GetArrayElem($jdata, 'Error 2', 0);
+            if ($error1 > 0 && $error2 > 0) {
+                $this->LogMessage('got both error: Error 1=' . $error1 . ', Error 2=' . $error, KL_WARNING);
+            }
+            if ($error2) {
+                $error = $error2;
+                $fld = 'Error 2';
+            } else {
+                $error = $error1;
+                $fld = 'Error 1';
+            }
+            if (in_array('ErrorCode', $use_idents)) {
+                $this->SaveValue('ErrorCode', $error, $is_changed);
+                $this->SendDebug(__FUNCTION__, 'set variable "ErrorCode" to ' . $error . ' from field "' . $fld . '"', 0);
+            }
+            if (in_array('ErrorText', $use_idents)) {
+                $this->SetValue('ErrorText', $this->ErrorCode2Text($error));
+            }
+
+            if (in_array('MaxChargingCurrent', $use_idents)) {
+                $max_curr = floatval($this->GetArrayElem($jdata, 'Max curr', 0));
+                $max_curr /= 1000;
+                $this->SaveValue('MaxChargingCurrent', $max_curr, $is_changed);
+                $this->SendDebug(__FUNCTION__, 'set variable "MaxChargingCurrent" to ' . $max_curr . ' from field "Max curr"', 0);
+            }
+            if (in_array('MaxSupportedCurrent', $use_idents)) {
+                $curr_hw = floatval($this->GetArrayElem($jdata, 'Curr HW', 0));
+                $curr_hw /= 1000;
+                $this->SaveValue('MaxSupportedCurrent', $curr_hw, $is_changed);
+                $this->SendDebug(__FUNCTION__, 'set variable "MaxSupportedCurrent" to ' . $curr_hw . ' from field "Curr HW"', 0);
+            }
+            if (in_array('ChargingEnergyLimit', $use_idents)) {
+                $setenergy = floatval($this->GetArrayElem($jdata, 'Setenergy', 0));
+                $setenergy /= 10000;
+                $this->SaveValue('ChargingEnergyLimit', $setenergy, $is_changed);
+                $this->SendDebug(__FUNCTION__, 'set variable "ChargingEnergyLimit" to ' . $setenergy . ' from field "Setenergy"', 0);
+            }
+
+            $b = $this->checkAction('SwitchEnableCharging', false);
+            $this->MaintainAction('EnableCharging', $b);
+
+            $b = $this->checkAction('SetMaxChargingCurrent', false);
+            $this->MaintainAction('MaxChargingCurrent', $b);
+
+            $b = $this->checkAction('SetChargingEnergyLimit', false);
+            $this->MaintainAction('ChargingEnergyLimit', $b);
+
+            $b = $this->checkAction('UnlockPlug', false);
+            $this->MaintainAction('UnlockPlug', $b);
+        }
+
+        if ($report_id == 3) {
+            if (in_array('CurrentPhase1', $use_idents)) {
+                $curr1 = floatval($this->GetArrayElem($jdata, 'I1', 0));
+                $curr1 /= 1000;
+                $this->SaveValue('CurrentPhase1', $curr1, $is_changed);
+                $this->SendDebug(__FUNCTION__, 'set variable "CurrentPhase1" to ' . $curr1 . ' from field "I1"', 0);
+            }
+            if (in_array('CurrentPhase2', $use_idents)) {
+                $curr2 = floatval($this->GetArrayElem($jdata, 'I2', 0));
+                $curr2 /= 1000;
+                $this->SaveValue('CurrentPhase2', $curr2, $is_changed);
+                $this->SendDebug(__FUNCTION__, 'set variable "CurrentPhase2" to ' . $curr2 . ' from field "I2"', 0);
+            }
+            if (in_array('CurrentPhase3', $use_idents)) {
+                $curr3 = floatval($this->GetArrayElem($jdata, 'I3', 0));
+                $curr3 /= 1000;
+                $this->SaveValue('CurrentPhase3', $curr3, $is_changed);
+                $this->SendDebug(__FUNCTION__, 'set variable "CurrentPhase3" to ' . $curr3 . ' from field "I3"', 0);
+            }
+            if (in_array('VoltagePhase1', $use_idents)) {
+                $volt1 = floatval($this->GetArrayElem($jdata, 'U1', 0));
+                $this->SaveValue('VoltagePhase1', $volt1, $is_changed);
+                $this->SendDebug(__FUNCTION__, 'set variable "VoltagePhase1" to ' . $volt1 . ' from field "U1"', 0);
+            }
+            if (in_array('VoltagePhase2', $use_idents)) {
+                $volt2 = floatval($this->GetArrayElem($jdata, 'U2', 0));
+                $this->SaveValue('VoltagePhase2', $volt2, $is_changed);
+                $this->SendDebug(__FUNCTION__, 'set variable "VoltagePhase2" to ' . $volt2 . ' from field "U2"', 0);
+            }
+            if (in_array('VoltagePhase3', $use_idents)) {
+                $volt3 = floatval($this->GetArrayElem($jdata, 'U3', 0));
+                $this->SaveValue('VoltagePhase3', $volt3, $is_changed);
+                $this->SendDebug(__FUNCTION__, 'set variable "VoltagePhase3" to ' . $volt3 . ' from field "U3"', 0);
+            }
+            if (in_array('ActivePower', $use_idents)) {
+                $power = floatval($this->GetArrayElem($jdata, 'P', 0));
+                $power /= 1000000;
+                $this->SaveValue('ActivePower', $power, $is_changed);
+                $this->SendDebug(__FUNCTION__, 'set variable "ActivePower" to ' . $power . ' from field "P"', 0);
+            }
+            if (in_array('PowerFactor', $use_idents)) {
+                $pf = floatval($this->GetArrayElem($jdata, 'PF', 0));
+                $pf /= 10;
+                $this->SaveValue('PowerFactor', $pf, $is_changed);
+                $this->SendDebug(__FUNCTION__, 'set variable "PowerFactor" to ' . $pf . ' from field "PF"', 0);
+            }
+            if (in_array('ChargedEnergy', $use_idents)) {
+                $e_pres = floatval($this->GetArrayElem($jdata, 'E pres', 0));
+                $e_pres /= 10000;
+                $this->SaveValue('ChargedEnergy', $e_pres, $is_changed);
+                $this->SendDebug(__FUNCTION__, 'set variable "ChargedEnergy" to ' . $e_pres . ' from field "E pres"', 0);
+            }
+            if (in_array('TotalEnergy', $use_idents)) {
+                $e_total = floatval($this->GetArrayElem($jdata, 'E total', 0));
+                $e_total /= 10000;
+                $this->SaveValue('TotalEnergy', $e_total, $is_changed);
+                $this->SendDebug(__FUNCTION__, 'set variable "TotalEnergy" to ' . $e_total . ' from field "E total"', 0);
+            }
+        }
+
+        if ($report_id == 100) {
+            $session_id = $this->GetArrayElem($jdata, 'Session ID', 0);
+            if ($session_id <= 0) {
+                $this->SendDebug(__FUNCTION__, 'ignore zero "Session ID"', 0);
+                return;
+            }
+
+            if (in_array('RFID', $use_idents)) {
+                $tag = $this->GetArrayElem($jdata, 'RFID tag', 0);
+                if (preg_match('/^[0]+$/', $tag)) {
+                    $tag = '';
+                }
+                $this->SaveValue('RFID', $tag, $is_changed);
+                $this->SendDebug(__FUNCTION__, 'set variable "RFID" to "' . $tag . '" from field "RFID tag"', 0);
+            }
+
+            if (in_array('ChargingStarted', $use_idents)) {
+                $s = $this->GetArrayElem($jdata, 'started', '');
+                $ts = 0;
+                if ($s != false) {
+                    $d = DateTime::createFromFormat('Y-m-d H:i:s.v', $s, new DateTimeZone('UTC'));
+                    if ($d == false) {
+                        $this->SendDebug(__FUNCTION__, 'field "endєd": parse failed ' . print_r(DateTime::getLastErrors(), true), 0);
+                    } else {
+                        $ts = intval($d->format('U'));
+                    }
+                }
+                $this->SaveValue('ChargingStarted', $ts, $is_changed);
+                $s = $ts ? date('d.m.Y H:i:s', $ts) : '-';
+                $this->SendDebug(__FUNCTION__, 'set variable "ChargingStarted" to ' . $s . ' from field "started"', 0);
+            }
+            if (in_array('ChargingEnded', $use_idents)) {
+                $s = $this->GetArrayElem($jdata, 'ended', '');
+                $ts = 0;
+                if ($s != false) {
+                    $d = DateTime::createFromFormat('Y-m-d H:i:s.v', $s, new DateTimeZone('UTC'));
+                    if ($d == false) {
+                        $this->SendDebug(__FUNCTION__, 'field "endєd": parse failed ' . print_r(DateTime::getLastErrors(), true), 0);
+                    } else {
+                        $ts = intval($d->format('U'));
+                    }
+                }
+                $this->SaveValue('ChargingEnded', $ts, $is_changed);
+                $s = $ts ? date('d.m.Y H:i:s', $ts) : '-';
+                $this->SendDebug(__FUNCTION__, 'set variable "ChargingEnded" to ' . $s . ' from field "ended"', 0);
+            }
+        }
 
         $this->SetValue('LastUpdate', $now);
         if ($is_changed) {
@@ -908,80 +955,59 @@ class KeConnectP30udp extends IPSModule
         $jdata = json_decode($data, true);
         $this->SendDebug(__FUNCTION__, 'jdata=' . print_r($jdata, true), 0);
 
+        $use_idents = self::$fixedVariables;
         $use_fields = json_decode($this->ReadPropertyString('use_fields'), true);
+        foreach ($use_fields as $field) {
+            $ident = $this->GetArrayElem($field, 'ident', '');
+            $use = (bool) $this->GetArrayElem($field, 'use', false);
+            if ($use && $ident != false) {
+                $use_idents[] = $ident;
+            }
+        }
 
         $now = time();
         $is_changed = false;
 
         $reload_reports = false;
-        foreach ($jdata as $var => $val) {
-            $fnd = true;
-            $ign = false;
-            $use = false;
-            switch ($var) {
-                case 'State':
-                    $ident = 'ChargingState';
-                    break;
-                case 'Plug':
-                    $ident = 'CableState';
-                    break;
-                case 'Max curr':
-                    $ident = 'MaxChargingCurrent';
-                    break;
-                case 'E pres':
-                    $ident = 'ChargedEnergy';
-                    break;
-                case 'Enable sys':
-                    $ident = 'EnableCharging';
-                    break;
-                default:
-                    $fnd = false;
-                    break;
+
+        if (in_array('ChargingState', $use_idents)) {
+            $charging_state = $this->GetArrayElem($jdata, 'State', 0);
+            $chg = false;
+            $this->SaveValue('ChargingState', $charging_state, $chg);
+            if ($chg) {
+                $is_changed = true;
+                $reload_reports = true;
             }
-            if ($ign) {
-                continue;
-            }
-            if ($fnd == false) {
-                $this->SendDebug(__FUNCTION__, 'unused field ' . $var . '="' . $val . '"', 0);
-                continue;
-            }
-            if ($use == false) {
-                $use = in_array($ident, self::$fixedVariables);
-            }
-            if ($use == false) {
-                foreach ($use_fields as $field) {
-                    if ($ident == $this->GetArrayElem($field, 'ident', '')) {
-                        $use = (bool) $this->GetArrayElem($field, 'use', false);
-                        break;
-                    }
-                }
-            }
-            if ($use) {
-                switch ($ident) {
-                        case 'ChargingState':
-                        case 'CableState':
-                            if ($this->GetValue($ident) != $val) {
-                                $reload_reports = true;
-                            }
-                            break;
-                        case 'MaxChargingCurrent':
-                            $val = floatval($val) / 1000;
-                            break;
-                        case 'ChargedEnergy':
-                            $val = floatval($val) / 10000;
-                            break;
-                        case 'EnableCharging':
-                            $val = boolval($val);
-                            break;
-                        default:
-                            break;
-                    }
-                $this->SendDebug(__FUNCTION__, 'set variable ' . $ident . ' to "' . $val . '" from field "' . $var . '"', 0);
-                $this->SaveValue($ident, $val, $is_changed);
-            } else {
-                $this->SendDebug(__FUNCTION__, 'ignore field ' . $var . '="' . $val . '"', 0);
-            }
+            $this->SendDebug(__FUNCTION__, 'set variable "ChargingState" to ' . $charging_state . ' from field "State"', 0);
         }
+        if (in_array('CableState', $use_idents)) {
+            $cable_state = $this->GetArrayElem($jdata, 'Plug', 0);
+            $chg = false;
+            $this->SaveValue('ChargingState', $cable_state, $chg);
+            if ($chg) {
+                $is_changed = true;
+                $reload_reports = true;
+            }
+            $this->SendDebug(__FUNCTION__, 'set variable "CableState" to ' . $cable_state . ' from field "CableState"', 0);
+        }
+        if (in_array('MaxChargingCurrent', $use_idents)) {
+            $max_curr = floatval($this->GetArrayElem($jdata, 'Max curr', 0));
+            $max_curr /= 1000;
+            $this->SaveValue('MaxChargingCurrent', $max_curr, $is_changed);
+            $this->SendDebug(__FUNCTION__, 'set variable "MaxChargingCurrent" to ' . $max_curr . ' from field "Max curr"', 0);
+        }
+        if (in_array('ChargedEnergy', $use_idents)) {
+            $e_pres = floatval($this->GetArrayElem($jdata, 'E pres', 0));
+            $e_pres /= 10000;
+            $this->SaveValue('ChargedEnergy', $e_pres, $is_changed);
+            $this->SendDebug(__FUNCTION__, 'set variable "ChargedEnergy" to ' . $e_pres . ' from field "E pres"', 0);
+        }
+        if (in_array('EnableCharging', $use_idents)) {
+            $enable_sys = boolval($this->GetArrayElem($jdata, 'Enable sys', false));
+            $this->SaveValue('EnableCharging', $enable_sys, $is_changed);
+            $this->SendDebug(__FUNCTION__, 'set variable "EnableCharging" to ' . $enable_sys . ' from field "Enable sys"', 0);
+        }
+
         if ($is_changed) {
             $this->SetValue('LastChange', $now);
         }

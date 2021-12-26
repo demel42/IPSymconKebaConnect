@@ -107,7 +107,10 @@ Referenzen
 
 ## 7. Versions-Historie
 
-- 1.0.9 @ 18.12.2021 10:13 (beta)
+- 1.0.10 @ 26.12.2021 21:07 (beta)
+  - Vorbereitung Lode-Historie
+
+- 1.0.9 @ 18.12.2021 10:13
   - Vereinfachung der Socket-Kommunikation
 
 - 1.0.8 @ 16.12.2021 20:14

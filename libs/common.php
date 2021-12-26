@@ -182,6 +182,40 @@ trait KebaConnectCommonLib
         return $value;
     }
 
+    private function GetMediaData($Name)
+    {
+        $mediaName = $this->Translate($Name);
+        @$mediaID = IPS_GetMediaIDByName($mediaName, $this->InstanceID);
+        if ($mediaID == false) {
+            $this->SendDebug(__FUNCTION__, 'missing media-object ' . $Name, 0);
+            return false;
+        }
+        $data = base64_decode(IPS_GetMediaContent($mediaID));
+        return $data;
+    }
+
+    private function SetMediaData($Name, $data, $Mediatyp, $Extension, $Cached)
+    {
+        $n = strlen(base64_encode($data));
+        $this->SendDebug(__FUNCTION__, 'write ' . $n . ' bytes to media-object ' . $Name, 0);
+        $mediaName = $this->Translate($Name);
+        @$mediaID = IPS_GetMediaIDByName($mediaName, $this->InstanceID);
+        if ($mediaID == false) {
+            $mediaID = IPS_CreateMedia($Mediatyp);
+            if ($mediaID == false) {
+                $this->SendDebug(__FUNCTION__, 'unable to create media-object ' . $Name, 0);
+                return false;
+            }
+            $filename = 'media' . DIRECTORY_SEPARATOR . $this->InstanceID . '-' . $Name . $Extension;
+            IPS_SetMediaFile($mediaID, $filename, false);
+            IPS_SetName($mediaID, $mediaName);
+            IPS_SetParent($mediaID, $this->InstanceID);
+            $this->SendDebug(__FUNCTION__, 'media-object ' . $Name . ' created, filename=' . $filename, 0);
+        }
+        IPS_SetMediaCached($mediaID, $Cached);
+        IPS_SetMediaContent($mediaID, base64_encode($data));
+    }
+
     private function bool2str($bval)
     {
         if (is_bool($bval)) {
