@@ -107,7 +107,7 @@ Referenzen
 
 ## 7. Versions-Historie
 
-- 1.0.10 @ 26.12.2021 21:07 (beta)
+- 1.0.10 @ 27.12.2021 09:42 (beta)
   - Vorbereitung Lode-Historie
 
 - 1.0.9 @ 18.12.2021 10:13

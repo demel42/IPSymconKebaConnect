@@ -262,7 +262,7 @@ class KeConnectP30udp extends IPSModule
         $vpos = 80;
         $show_history = $this->ReadPropertyBoolean('show_history');
         if ($show_history) {
-            $this->MaintainVariable('History', $this->Translate('Charging history'), VARIABLETYPE_STRING, '~HTML', $vpos++, true);
+            $this->MaintainVariable('History', $this->Translate('Charging history'), VARIABLETYPE_STRING, '~HTMLBox', $vpos++, true);
         }
 
         $vpos = 90;
