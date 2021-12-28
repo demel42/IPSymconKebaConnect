@@ -630,6 +630,10 @@ class KeConnectP30udp extends IPSModule
         $host = $this->ReadPropertyString('host');
         $port = self::$UnicastPort;
 
+        // min 100MS zwischend zwei UDP-Kommandos
+
+        IPS_Sleep(100);
+
         $fp = @socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
         if ($fp == false) {
             $this->SendDebug(__FUNCTION__, 'socket_create() failed, reason=' . socket_strerror(socket_last_error($fp)), 0);
@@ -685,7 +689,9 @@ class KeConnectP30udp extends IPSModule
             for ($i = 1; $i <= 30; $i++) {
                 $cmd = 'report ' . strval(100 + $i);
                 $buf = $this->ExecuteCmd($cmd);
-                $this->SendDebug(__FUNCTION__, $cmd . '=' . json_encode(json_decode($buf, true)), 0);
+                if ($buf != false) {
+                    $this->SendDebug(__FUNCTION__, $cmd . '=' . json_encode(json_decode($buf, true)), 0);
+                }
             }
         }
 
