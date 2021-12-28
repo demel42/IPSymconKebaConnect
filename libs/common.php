@@ -240,6 +240,21 @@ trait KebaConnectCommonLib
         return $form;
     }
 
+    private function GetStatusText()
+    {
+        $txt = false;
+        $status = $this->GetStatus();
+        $formStatus = $this->GetFormStatus();
+        foreach ($formStatus as $item) {
+            if ($item['code'] == $status) {
+                $txt = $item['caption'];
+                break;
+            }
+        }
+
+        return $txt;
+    }
+
     public function HasActiveParent()
     {
         $result = parent::HasActiveParent();

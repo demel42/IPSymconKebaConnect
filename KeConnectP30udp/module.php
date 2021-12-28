@@ -647,7 +647,7 @@ class KeConnectP30udp extends IPSModule
             socket_close($fp);
             return false;
         }
-        $this->SendDebug(__FUNCTION__, 'send ' . strlen($cmd) . ' bytes, cmd="' . $cmd . '"', 0);
+        $this->SendDebug(__FUNCTION__, 'send ' . strlen($cmd) . ' bytes to ' . $host . ':' . $port . ', cmd="' . $cmd . '"', 0);
         if (socket_sendto($fp, $cmd, strlen($cmd), 0, $host, $port) == false) {
             $this->SendDebug(__FUNCTION__, 'socket_sendto() failed, reason=' . socket_strerror(socket_last_error($fp)), 0);
             socket_close($fp);
