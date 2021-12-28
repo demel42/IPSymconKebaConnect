@@ -608,23 +608,6 @@ class KeConnectP30udp extends IPSModule
         $this->DecodeBroadcast($buffer);
     }
 
-    private function SendData(string $cmd)
-    {
-        $r = IPS_GetConfiguration($this->GetConnectionID());
-        $cfg = json_decode($r, true);
-
-        $data = [
-            'DataID'     => '{8E4D9B23-E0F2-1E05-41D8-C21EA53B8706}',
-            'Buffer'     => utf8_encode($cmd),
-            'ClientIP'   => $cfg['Host'],
-            'ClientPort' => self::$UnicastPort,
-            'Broadcast'  => false,
-        ];
-        $jdata = json_encode($data);
-        $this->SendDebug(__FUNCTION__, 'request data ' . print_r($jdata, true), 0);
-        $this->SendDataToParent($jdata);
-    }
-
     private function ExecuteCmd(string $cmd)
     {
         $host = $this->ReadPropertyString('host');
@@ -686,17 +669,192 @@ class KeConnectP30udp extends IPSModule
 
         $save_history = $this->ReadPropertyBoolean('save_history');
         if ($save_history) {
-            for ($i = 1; $i <= 30; $i++) {
-                $cmd = 'report ' . strval(100 + $i);
-                $buf = $this->ExecuteCmd($cmd);
-                if ($buf != false) {
-                    $this->SendDebug(__FUNCTION__, $cmd . '=' . json_encode(json_decode($buf, true)), 0);
-                }
-            }
+            $this->GetChargingHistory();
         }
 
         $this->SetStandbyUpdateInterval();
         $this->SetChargingUpdateInterval();
+    }
+
+    private function cmp_entries($a, $b)
+    {
+        $a_sessionID = $a['Session ID'];
+        $b_sessionID = $b['Session ID'];
+        return ($a_sessionID > $b_sessionID) ? -1 : 1;
+    }
+
+    private function GetChargingHistory()
+    {
+        $save_history = $this->ReadPropertyBoolean('save_history');
+        if ($save_history == false) {
+            return;
+        }
+
+        $old_entries = false;
+        $old_s = $this->GetMediaData('ChargingHistory');
+        if ($old_s != false) {
+            $old_entries = json_decode((string) $old_s, true);
+        }
+        if ($old_entries != false) {
+            usort($old_entries, ['KeConnectP30udp', 'cmp_entries']);
+            $lastSessionID = $old_entries[0]['Session ID'];
+        } else {
+            $old_entries = [];
+            $lastSessionID = 0;
+        }
+
+        $this->SendDebug(__FUNCTION__, 'old_entries=' . print_r($old_entries, true), 0);
+        $this->SendDebug(__FUNCTION__, 'lastSessionID=' . $lastSessionID, 0);
+
+        $new_entries = [];
+        for ($i = 1; $i <= 30; $i++) {
+            $cmd = 'report ' . strval(100 + $i);
+            $buf = $this->ExecuteCmd($cmd);
+            if ($buf == false) {
+                continue;
+            }
+            $jdata = json_decode($buf, true);
+            $this->SendDebug(__FUNCTION__, 'entry=' . print_r($jdata, true), 0);
+
+            $sessionID = $this->GetArrayElem($jdata, 'Session ID', '');
+            if ($sessionID <= 0) {
+                $this->SendDebug(__FUNCTION__, 'all valid reports processed', 0);
+                break;
+            }
+
+            $started = 0;
+            $s = $this->GetArrayElem($jdata, 'started', '');
+            if ($s != false) {
+                $d = DateTime::createFromFormat('Y-m-d H:i:s.v', $s, new DateTimeZone('UTC'));
+                if ($d == false) {
+                    $this->SendDebug(__FUNCTION__, 'field "endєd": parse failed ' . print_r(DateTime::getLastErrors(), true), 0);
+                } else {
+                    $started = intval($d->format('U'));
+                }
+            }
+
+            $ended = 0;
+            $s = $this->GetArrayElem($jdata, 'ended', '');
+            if ($s != false) {
+                $d = DateTime::createFromFormat('Y-m-d H:i:s.v', $s, new DateTimeZone('UTC'));
+                if ($d == false) {
+                    $this->SendDebug(__FUNCTION__, 'field "endєd": parse failed ' . print_r(DateTime::getLastErrors(), true), 0);
+                } else {
+                    $ended = intval($d->format('U'));
+                }
+            }
+
+            $tag = $this->GetArrayElem($jdata, 'RFID tag', 0);
+            if (preg_match('/^[0]+$/', $tag)) {
+                $tag = '';
+            }
+
+            $curr_hw = floatval($this->GetArrayElem($jdata, 'Curr HW', 0));
+            $curr_hw /= 1000;
+
+            $e_start = floatval($this->GetArrayElem($jdata, 'E start', 0));
+            $e_start /= 10000;
+
+            $e_pres = floatval($this->GetArrayElem($jdata, 'E pres', 0));
+            $e_pres /= 10000;
+
+            $entry = [
+                'Session ID'  => $sessionID,
+                'started'     => $started,
+                'ended'       => $ended,
+                'RFID tag'    => $tag,
+                'Curr HW'     => $curr_hw,
+                'E start'     => $e_start,
+                'E pres'      => $e_pres,
+                'reason'      => $jdata['reason'],
+            ];
+            $new_entries[] = $entry;
+
+            if ($sessionID <= $lastSessionID) {
+                $this->SendDebug(__FUNCTION__, 'all new reports processed', 0);
+                break;
+            }
+        }
+        foreach ($old_entries as $entry) {
+            $fnd = false;
+            foreach ($new_entries as $e) {
+                if ($entry['Session ID'] == $e['Session ID']) {
+                    $fnd = true;
+                    break;
+                }
+            }
+            if ($fnd == false) {
+                $new_entries[] = $entry;
+            }
+        }
+
+        if ($new_entries != []) {
+            usort($new_entries, ['KeConnectP30udp', 'cmp_entries']);
+            $n = count($new_entries);
+            $new_s = json_encode($new_entries);
+        } else {
+            $n = 0;
+            $new_s = '';
+        }
+        if ($new_s != $old_s) {
+            $this->SendDebug(__FUNCTION__, $n . ' entries=' . print_r($new_entries, true), 0);
+            $this->SetMediaData('ChargingHistory', $new_s, MEDIATYPE_DOCUMENT, '.dat', false);
+        } else {
+            $this->SendDebug(__FUNCTION__, 'entries not changed', 0);
+        }
+
+        $show_history = $this->ReadPropertyBoolean('show_history');
+        if ($show_history) {
+            $use_idents = self::$fixedVariables;
+            $use_fields = json_decode($this->ReadPropertyString('use_fields'), true);
+            foreach ($use_fields as $field) {
+                $ident = $this->GetArrayElem($field, 'ident', '');
+                $use = (bool) $this->GetArrayElem($field, 'use', false);
+                if ($use && $ident != false) {
+                    $use_idents[] = $ident;
+                }
+            }
+            $use_rfid = in_array('RFID', $use_idents);
+
+            $tbl = '';
+            foreach ($new_entries as $entry) {
+                $s = date('d.m. H:i:s', $entry['started']);
+                $e = date('d.m. H:i:s', $entry['ended']);
+                $e_pres = GetValueFormattedEx($this->GetIDForIdent('ChargedEnergy'), $entry['E pres']);
+                $tbl .= '<tr>' . PHP_EOL;
+                $tbl .= '<td>' . $entry['Session ID'] . '</td>' . PHP_EOL;
+                $tbl .= '<td>' . $s . '</td>' . PHP_EOL;
+                $tbl .= '<td>' . $e . '</td>' . PHP_EOL;
+                $tbl .= '<td style=\'text-align: right\'>' . $e_pres . '</td>' . PHP_EOL;
+                if ($use_rfid) {
+                    $tbl .= '<td>' . $entry['RFID tag'] . '</td>' . PHP_EOL;
+                }
+                $tbl .= '</tr>' . PHP_EOL;
+            }
+            if ($tbl != '') {
+                $html = '<style>' . PHP_EOL;
+                $html .= 'th, td { padding: 2px 10px; text-align: left; }' . PHP_EOL;
+                $html .= '</style>' . PHP_EOL;
+                $html .= '<table>' . PHP_EOL;
+                $html .= '<tr>' . PHP_EOL;
+                $html .= '<th>' . $this->Translate('Session ID') . '</th>' . PHP_EOL;
+                $html .= '<th>' . $this->Translate('Started') . '</th>' . PHP_EOL;
+                $html .= '<th>' . $this->Translate('Ended') . '</th>' . PHP_EOL;
+                $html .= '<th style=\'text-align: right\'>' . $this->Translate('Energy') . '</th>' . PHP_EOL;
+                if ($use_rfid) {
+                    $html .= '<th>' . $this->Translate('RFID card') . '</th>' . PHP_EOL;
+                }
+                $html .= '</tr>' . PHP_EOL;
+                $html .= $tbl;
+                $html .= '</table>' . PHP_EOL;
+            } else {
+                $html = $this->Translate('there are no charging sessions present');
+            }
+
+            if ($this->GetValue('History') != $html) {
+                $this->SetValue('History', $html);
+            }
+        }
     }
 
     public function ChargingUpdate()
@@ -919,12 +1077,12 @@ class KeConnectP30udp extends IPSModule
             }
 
             if (in_array('ChargingStarted', $use_idents)) {
-                $s = $this->GetArrayElem($jdata, 'started', '');
                 $ts = 0;
+                $s = $this->GetArrayElem($jdata, 'started', '');
                 if ($s != false) {
                     $d = DateTime::createFromFormat('Y-m-d H:i:s.v', $s, new DateTimeZone('UTC'));
                     if ($d == false) {
-                        $this->SendDebug(__FUNCTION__, 'field "endєd": parse failed ' . print_r(DateTime::getLastErrors(), true), 0);
+                        $this->SendDebug(__FUNCTION__, 'field "started": parse failed ' . print_r(DateTime::getLastErrors(), true), 0);
                     } else {
                         $ts = intval($d->format('U'));
                     }
@@ -934,12 +1092,12 @@ class KeConnectP30udp extends IPSModule
                 $this->SendDebug(__FUNCTION__, 'set variable "ChargingStarted" to ' . $s . ' from field "started"', 0);
             }
             if (in_array('ChargingEnded', $use_idents)) {
-                $s = $this->GetArrayElem($jdata, 'ended', '');
                 $ts = 0;
+                $s = $this->GetArrayElem($jdata, 'ended', '');
                 if ($s != false) {
                     $d = DateTime::createFromFormat('Y-m-d H:i:s.v', $s, new DateTimeZone('UTC'));
                     if ($d == false) {
-                        $this->SendDebug(__FUNCTION__, 'field "endєd": parse failed ' . print_r(DateTime::getLastErrors(), true), 0);
+                        $this->SendDebug(__FUNCTION__, 'field "ended": parse failed ' . print_r(DateTime::getLastErrors(), true), 0);
                     } else {
                         $ts = intval($d->format('U'));
                     }

@@ -91,6 +91,12 @@
 
 			"no limit": "keine Begrenzung",
 
+			"Session ID": "ID",
+			"Started": "gestartet",
+			"Ended": "beendet",
+			"Energy": "Energie",
+			"there are no charging sessions present": "es sind keine Ladevorgänge vorhanden",
+
 			"Instance getting created": "Instanz wird erstellt",
 			"Instance is active": "Instanz ist aktiv",
 			"Instance is deleted": "Instanz wird gelöscht",
