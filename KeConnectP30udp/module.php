@@ -781,7 +781,7 @@ class KeConnectP30udp extends IPSModule
             }
             if (in_array('CableState', $use_idents)) {
                 $cable_state = $this->GetArrayElem($jdata, 'Plug', 0);
-                $this->SaveValue('ChargingState', $cable_state, $is_changed);
+                $this->SaveValue('CableState', $cable_state, $is_changed);
                 $this->SendDebug(__FUNCTION__, 'set variable "CableState" to ' . $cable_state . ' from field "CableState"', 0);
             }
             if (in_array('EnableCharging', $use_idents)) {
@@ -989,7 +989,7 @@ class KeConnectP30udp extends IPSModule
         if (in_array('CableState', $use_idents)) {
             $cable_state = $this->GetArrayElem($jdata, 'Plug', 0);
             $chg = false;
-            $this->SaveValue('ChargingState', $cable_state, $chg);
+            $this->SaveValue('CableState', $cable_state, $chg);
             if ($chg) {
                 $is_changed = true;
                 $reload_reports = true;
