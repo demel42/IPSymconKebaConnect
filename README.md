@@ -69,6 +69,9 @@ Setzen des maximalen Ladestroms, zwischen minimal 6A und maximal 63A (soweit nic
 `KebaConnect_SetChargingEnergyLimit(int $InstanzID, float $energy)`<br>
 Setzen der für den Ladevorgang verfügbaren Energie
 
+`KebaConnect_GetHistory(int $InstanzID)`<br>
+Liefert die Lade-Historie gemäß den Einstellungen in der Instanz-Konfiguⅹation als json-kodierte Liste von Einträgen.
+
 ## 5. Konfiguration
 
 #### Properties
@@ -107,7 +110,7 @@ Referenzen
 
 ## 7. Versions-Historie
 
-- 1.0.10 @ 28.12.2021 18:22 (beta)
+- 1.0.10 @ 29.12.2021 12:13 (beta)
   - Vorbereitung Lade-Historie
 
 - 1.0.9 @ 18.12.2021 10:13

@@ -218,6 +218,14 @@ class KeConnectP30udp extends IPSModule
     {
         parent::ApplyChanges();
 
+        $save_history = $this->ReadPropertyBoolean('save_history');
+        $show_history = $this->ReadPropertyBoolean('show_history');
+        if ($show_history && $save_history == false) {
+            $this->SendDebug(__FUNCTION__, '"show_history" needs "save_history"', 0);
+            $show_history = false;
+            $status = self::$IS_INVALIDCONFIG;
+        }
+
         $vpos = 0;
         $this->MaintainVariable('ChargingState', $this->Translate('Charging state'), VARIABLETYPE_INTEGER, 'KebaConnect.ChargingState', $vpos++, true);
         $this->MaintainVariable('CableState', $this->Translate('Cable state'), VARIABLETYPE_INTEGER, 'KebaConnect.CableState', $vpos++, true);
@@ -262,7 +270,7 @@ class KeConnectP30udp extends IPSModule
         $vpos = 80;
         $show_history = $this->ReadPropertyBoolean('show_history');
         if ($show_history) {
-            $this->MaintainVariable('History', $this->Translate('Charging history'), VARIABLETYPE_STRING, '~HTMLBox', $vpos++, true);
+            $this->MaintainVariable('History', $this->Translate('Charging history'), VARIABLETYPE_STRING, '~HTMLBox', $vpos++, $show_history);
         }
 
         $vpos = 90;
@@ -1397,5 +1405,10 @@ class KeConnectP30udp extends IPSModule
             $s = sprintf($this->Translate('Error 0x%05x'), $code);
         }
         return $s;
+    }
+
+    public function GetHistory()
+    {
+        return $this->GetMediaData('ChargingHistory');
     }
 }
