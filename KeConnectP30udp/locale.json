@@ -28,6 +28,12 @@
 			"Text": "Text",
 			"Send": "Senden",
 
+			"The following points of the configuration are incorrect":
+				"Die folgenden Punkte der Konfiguration sind fehlerhaft",
+			"to be able to display the charging history, it must be saved":
+				"um den Ladeverlauf anzeigen zu können, muss er gespeichert werden",
+			"Host must be specified": "Host muss angegeben werden",
+
 			"Active power": "Aktuelle Ladeleistung",
 			"Cable state": "Kabelstatus",
 			"Charging current phase 1": "Ladestrom der Phase 1",

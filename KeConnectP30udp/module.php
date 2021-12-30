@@ -214,17 +214,37 @@ class KeConnectP30udp extends IPSModule
         $this->RequireParent('{82347F20-F541-41E1-AC5B-A636FD3AE2D8}');
     }
 
-    public function ApplyChanges()
+    private function CheckConfiguration()
     {
-        parent::ApplyChanges();
+        $s = '';
+        $r = [];
+
+        $host = $this->ReadPropertyString('host');
+        if ($host == '') {
+            $this->SendDebug(__FUNCTION__, '"host" is needed', 0);
+            $r[] = $this->Translate('Host must be specified');
+        }
 
         $save_history = $this->ReadPropertyBoolean('save_history');
         $show_history = $this->ReadPropertyBoolean('show_history');
         if ($show_history && $save_history == false) {
             $this->SendDebug(__FUNCTION__, '"show_history" needs "save_history"', 0);
-            $show_history = false;
-            $status = self::$IS_INVALIDCONFIG;
+            $r[] = $this->Translate('to be able to display the charging history, it must be saved');
         }
+
+        if ($r != []) {
+            $s = $this->Translate('The following points of the configuration are incorrect') . ':' . PHP_EOL;
+            foreach ($r as $p) {
+                $s .= '- ' . $p . PHP_EOL;
+            }
+        }
+
+        return $s;
+    }
+
+    public function ApplyChanges()
+    {
+        parent::ApplyChanges();
 
         $vpos = 0;
         $this->MaintainVariable('ChargingState', $this->Translate('Charging state'), VARIABLETYPE_INTEGER, 'KebaConnect.ChargingState', $vpos++, true);
@@ -277,20 +297,6 @@ class KeConnectP30udp extends IPSModule
         $this->MaintainVariable('LastChange', $this->Translate('Last change'), VARIABLETYPE_INTEGER, '~UnixTimestamp', $vpos++, true);
         $this->MaintainVariable('LastUpdate', $this->Translate('Last update'), VARIABLETYPE_INTEGER, '~UnixTimestamp', $vpos++, true);
 
-        $module_disable = $this->ReadPropertyBoolean('module_disable');
-        if ($module_disable) {
-            $this->SetTimerInterval('StandbyUpdate', 0);
-            $this->SetTimerInterval('ChargingUpdate', 0);
-            $this->SetStatus(IS_INACTIVE);
-            return;
-        }
-
-        $host = $this->ReadPropertyString('host');
-        if ($host == '') {
-            $this->SetStatus(self::$IS_INVALIDCONFIG);
-            return;
-        }
-
         $refs = $this->GetReferenceList();
         foreach ($refs as $ref) {
             $this->UnregisterReference($ref);
@@ -301,6 +307,21 @@ class KeConnectP30udp extends IPSModule
             if ($oid > 0) {
                 $this->RegisterReference($oid);
             }
+        }
+
+        $module_disable = $this->ReadPropertyBoolean('module_disable');
+        if ($module_disable) {
+            $this->SetTimerInterval('StandbyUpdate', 0);
+            $this->SetTimerInterval('ChargingUpdate', 0);
+            $this->SetStatus(IS_INACTIVE);
+            return;
+        }
+
+        if ($this->CheckConfiguration() != false) {
+            $this->SetTimerInterval('StandbyUpdate', 0);
+            $this->SetTimerInterval('ChargingUpdate', 0);
+            $this->SetStatus(self::$IS_INVALIDCONFIG);
+            return;
         }
 
         $this->SetStatus(IS_ACTIVE);
@@ -360,6 +381,17 @@ class KeConnectP30udp extends IPSModule
             'type'    => 'Label',
             'caption' => 'KEBA KeConnect P30 (UDP)'
         ];
+
+        $s = $this->CheckConfiguration();
+        if ($s != '') {
+            $formElements[] = [
+                'type'    => 'Label',
+                'caption' => $s
+            ];
+            $formElements[] = [
+                'type'    => 'Label',
+            ];
+        }
 
         $formElements[] = [
             'type'    => 'CheckBox',
