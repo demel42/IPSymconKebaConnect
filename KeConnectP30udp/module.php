@@ -767,7 +767,7 @@ class KeConnectP30udp extends IPSModule
             if ($s != false) {
                 $d = DateTime::createFromFormat('Y-m-d H:i:s.v', $s, new DateTimeZone('UTC'));
                 if ($d == false) {
-                    $this->SendDebug(__FUNCTION__, 'field "endєd": parse failed ' . print_r(DateTime::getLastErrors(), true), 0);
+                    $this->SendDebug(__FUNCTION__, 'field "started": parse failed ' . print_r(DateTime::getLastErrors(), true), 0);
                 } else {
                     $started = intval($d->format('U'));
                 }
@@ -778,7 +778,7 @@ class KeConnectP30udp extends IPSModule
             if ($s != false) {
                 $d = DateTime::createFromFormat('Y-m-d H:i:s.v', $s, new DateTimeZone('UTC'));
                 if ($d == false) {
-                    $this->SendDebug(__FUNCTION__, 'field "endєd": parse failed ' . print_r(DateTime::getLastErrors(), true), 0);
+                    $this->SendDebug(__FUNCTION__, 'field "ended": parse failed ' . print_r(DateTime::getLastErrors(), true), 0);
                 } else {
                     $ended = intval($d->format('U'));
                 }
