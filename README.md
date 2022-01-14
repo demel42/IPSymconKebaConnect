@@ -30,10 +30,10 @@ Hinweis: es können beliebig viele Keba-Wallboxen gleichzeitig und unabhängig b
 ### a. Laden des Moduls
 
 Die Webconsole von IP-Symcon mit _http://\<IP-Symcon IP\>:3777/console/_ öffnen.
-Den Modulstore öffnen und im Suchfeld nun _KebaConnect_ eingeben, das Modul auswählen und auf _Installieren_ drücken.
 
-Alternativ kann das Modul auch über ModulCOntrol (_Kern_ -> _Modules_) installiert werden, als URL muss `https://github.com/demel42/IPSymconKebaConnect` angegeben werden,
-Anschließend erscheint ein Eintrag für das Modul in der Liste der Instanz _Modules_.
+Den **Modulstore** öffnen und im Suchfeld nun `KebaConnect` eingeben, das Modul auswählen und auf _Installieren_ auswählen.
+Alternativ kann das Modul auch über **ModulControl** (im Objektbaum innerhalb _Kern Instanzen_ die Instanz _Modules_) installiert werden,
+als URL muss `https://github.com/demel42/IPSymconKebaConnect` angegeben werden.
 
 ### b. Einrichtung des Geräte-Moduls
 
@@ -80,9 +80,12 @@ Liefert die Lade-Historie gemäß den Einstellungen in der Instanz-Konfiguⅹati
 | :------------------------------------ | :------  | :----------- | :----------- |
 | host                                  | string   |              | IP-Adresse der Wallbox |
 |                                       |          |              | |
+| save_history                          | boolean  | false        | Ladehistorie sichern |
+| show_history                          | boolean  | false        | Ladehistorie in HTML-Box darstellen |
+| history_age                           | integer  | 90           | maximales Alter eines Ladevorgangs in Tagen |
+|                                       |          |              | |
 | standby_update_interval               | integer  |              | Datenabruf im Ruhezustand in Minuten |
 | charging_update_interval              | integer  |              | Datenabruf während des Ladens in Sekunden |
-
 
 #### Variablenprofile
 
@@ -110,8 +113,8 @@ Referenzen
 
 ## 7. Versions-Historie
 
-- 1.0.10 @ 29.12.2021 12:13 (beta)
-  - Vorbereitung Lade-Historie
+- 1.0.10 @ 14.01.2022 17:13 (beta)
+  - Lade-Historie
 
 - 1.0.9 @ 18.12.2021 10:13
   - Vereinfachung der Socket-Kommunikation

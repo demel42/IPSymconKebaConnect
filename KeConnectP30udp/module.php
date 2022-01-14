@@ -815,8 +815,19 @@ class KeConnectP30udp extends IPSModule
                 break;
             }
         }
+
+        $history_age = $this->ReadPropertyInteger('history_age');
+        if ($history_age > 0) {
+            $reftstamp = time() - ($history_age * 60 * 60 * 24);
+        } else {
+            $reftstamp = 0;
+        }
+
         foreach ($old_entries as $entry) {
             $fnd = false;
+            if ($entry['started'] < $reftstamp) {
+                continue;
+            }
             foreach ($new_entries as $e) {
                 if ($entry['Session ID'] == $e['Session ID']) {
                     $fnd = true;
