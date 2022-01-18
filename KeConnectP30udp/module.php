@@ -197,6 +197,7 @@ class KeConnectP30udp extends IPSModule
         $this->RegisterPropertyBoolean('module_disable', false);
 
         $this->RegisterPropertyString('host', '');
+        $this->RegisterPropertyString('serialnumber', '');
         $this->RegisterPropertyString('use_fields', '[]');
 
         $this->RegisterPropertyBoolean('save_history', false);
@@ -405,6 +406,11 @@ class KeConnectP30udp extends IPSModule
             'name'     => 'host',
             'caption'  => 'IP address of the wallbox',
             'validate' => '^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$',
+        ];
+        $items[] = [
+            'type'     => 'ValidationTextBox',
+            'name'     => 'serialnumber',
+            'caption'  => 'Serial number (optional)',
         ];
 
         $items[] = [
@@ -746,6 +752,8 @@ class KeConnectP30udp extends IPSModule
         $this->SendDebug(__FUNCTION__, 'old_entries=' . print_r($old_entries, true), 0);
         $this->SendDebug(__FUNCTION__, 'lastSessionID=' . $lastSessionID, 0);
 
+        $serialnumber = $this->ReadPropertyString('serialnumber');
+
         $new_entries = [];
         for ($i = 1; $i <= 30; $i++) {
             $cmd = 'report ' . strval(100 + $i);
@@ -760,6 +768,16 @@ class KeConnectP30udp extends IPSModule
             if ($sessionID <= 0) {
                 $this->SendDebug(__FUNCTION__, 'all valid reports processed', 0);
                 break;
+            }
+
+            if ($serialnumber != false) {
+                $serial = $this->GetArrayElem($jdata, 'Serial', '');
+                if ($serial == '') {
+                    $this->SendDebug(__FUNCTION__, 'missing "Serial" in json-data - unable to check', 0);
+                } elseif ($serial != $serialnumber) {
+                    $this->SendDebug(__FUNCTION__, 'serial number "' . $serial . '" don\'t match', 0);
+                    continue;
+                }
             }
 
             $started = 0;
@@ -942,6 +960,17 @@ class KeConnectP30udp extends IPSModule
 
         $report_id = intval($jdata['ID']);
         $this->SendDebug(__FUNCTION__, 'report ' . $report_id, 0);
+
+        $serialnumber = $this->ReadPropertyString('serialnumber');
+        if ($serialnumber != false) {
+            $serial = $this->GetArrayElem($jdata, 'Serial', '');
+            if ($serial == '') {
+                $this->SendDebug(__FUNCTION__, 'missing "Serial" in json-data - ignore check', 0);
+            } elseif ($serial != $serialnumber) {
+                $this->SendDebug(__FUNCTION__, 'serial number "' . $serial . '" don\'t match', 0);
+                return;
+            }
+        }
 
         $use_idents = self::$fixedVariables;
         $use_fields = json_decode($this->ReadPropertyString('use_fields'), true);

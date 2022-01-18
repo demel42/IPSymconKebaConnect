@@ -79,6 +79,7 @@ Liefert die Lade-Historie gemäß den Einstellungen in der Instanz-Konfiguⅹati
 | Eigenschaft                           | Typ      | Standardwert | Beschreibung |
 | :------------------------------------ | :------  | :----------- | :----------- |
 | host                                  | string   |              | IP-Adresse der Wallbox |
+| serialnumber                          | string   |              | Seriennummer der Wallbox |
 |                                       |          |              | |
 | save_history                          | boolean  | false        | Ladehistorie sichern |
 | show_history                          | boolean  | false        | Ladehistorie in HTML-Box darstellen |
@@ -86,6 +87,9 @@ Liefert die Lade-Historie gemäß den Einstellungen in der Instanz-Konfiguⅹati
 |                                       |          |              | |
 | standby_update_interval               | integer  |              | Datenabruf im Ruhezustand in Minuten |
 | charging_update_interval              | integer  |              | Datenabruf während des Ladens in Sekunden |
+
+* Seriennummer der Wallbox<br>
+die Angabe der Seriennummer scheint erforderlich zu sein, wenn mehrere Wallboxen im Verband genutzt werden- 
 
 #### Variablenprofile
 
@@ -113,7 +117,10 @@ Referenzen
 
 ## 7. Versions-Historie
 
-- 1.0.10 @ 14.01.2022 17:13 (beta)
+- 1.0.11 @ 18.01.2022 12:22 (beta)
+  - optionale Angabe der Seriennummer der Wallbox
+
+- 1.0.10 @ 14.01.2022 17:13
   - Lade-Historie
 
 - 1.0.9 @ 18.12.2021 10:13
