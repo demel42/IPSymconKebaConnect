@@ -20,6 +20,7 @@
 			"maximun age of history entries": "maxinales Alter von Lade-Einträgen",
 			"days": "Tage",
 			"show table of charging history": "Status der Lade-Historie anzeigen",
+			"save power consumtion per RFID": "Speichern des Stromverbrauchs pro RFID",
 			"Update data": "Daten aktualisieren",
 			"Re-install variable-profiles": "Variablenprofile erneut einrichten",
 			"Test area": "Test-Bereich",
@@ -33,6 +34,8 @@
 				"Die folgenden Punkte der Konfiguration sind fehlerhaft",
 			"to be able to display the charging history, it must be saved":
 				"um den Ladeverlauf anzeigen zu können, muss er gespeichert werden",
+			"to save consumption per RFID, history must be saved":
+				"um den Verbrauch pro RFID zu speichern, muss die Historie gespeichert werden",
 			"Host must be specified": "Host muss angegeben werden",
 
 			"Active power": "Aktuelle Ladeleistung",
@@ -62,6 +65,7 @@
 			"Voltage phase 3": "Spannung der Phase 3",
 			"Unlock plug": "Stecker entriegeln",
 			"Charging energy limit": "verfügbare Energie für den Ladevorgang",
+			"Total power consumption of RFID": "Gesamtstromverbrauch von RFID",
 
 			"Last change": "letzte Änderung",
 			"Last update": "letzte Aktualisierung",

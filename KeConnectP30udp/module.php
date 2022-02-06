@@ -203,6 +203,7 @@ class KeConnectP30udp extends IPSModule
         $this->RegisterPropertyBoolean('save_history', false);
         $this->RegisterPropertyBoolean('show_history', false);
         $this->RegisterPropertyInteger('history_age', 90);
+        $this->RegisterPropertyBoolean('save_per_rfid', false);
 
         $this->RegisterPropertyInteger('standby_update_interval', '5');
         $this->RegisterPropertyInteger('charging_update_interval', '1');
@@ -231,6 +232,12 @@ class KeConnectP30udp extends IPSModule
         if ($show_history && $save_history == false) {
             $this->SendDebug(__FUNCTION__, '"show_history" needs "save_history"', 0);
             $r[] = $this->Translate('to be able to display the charging history, it must be saved');
+        }
+
+        $save_per_rfid = $this->ReadPropertyBoolean('save_per_rfid');
+        if ($save_per_rfid && $save_history == false) {
+            $this->SendDebug(__FUNCTION__, '"save_per_rfid" needs "save_history"', 0);
+            $r[] = $this->Translate('to save consumption per RFID, history must be saved');
         }
 
         if ($r != []) {
@@ -488,29 +495,34 @@ class KeConnectP30udp extends IPSModule
             'onClick'  => 'KebaConnect_UpdateFields($id);'
         ];
 
-        $items = [];
-        $items[] = [
-            'type'    => 'CheckBox',
-            'name'    => 'save_history',
-            'caption' => 'save charging history entries'
-        ];
-        $items[] = [
-            'type'    => 'NumberSpinner',
-            'minimum' => 0,
-            'suffix'  => 'days',
-            'name'    => 'history_age',
-            'caption' => 'maximun age of history entries'
-        ];
-        $items[] = [
-            'type'    => 'CheckBox',
-            'name'    => 'show_history',
-            'caption' => 'show table of charging history'
-        ];
         $formElements[] = [
             'type'     => 'ExpansionPanel',
-            'items'    => $items,
             'caption'  => 'Charging history',
             'expanded' => false,
+            'items'    => [
+				[
+					'type'    => 'CheckBox',
+					'name'    => 'save_history',
+					'caption' => 'save charging history entries'
+				],
+				[
+					'type'    => 'NumberSpinner',
+					'minimum' => 0,
+					'suffix'  => 'days',
+					'name'    => 'history_age',
+					'caption' => 'maximun age of history entries'
+				],
+				[
+					'type'    => 'CheckBox',
+					'name'    => 'show_history',
+					'caption' => 'show table of charging history'
+				],
+				[
+					'type'    => 'CheckBox',
+					'name'    => 'save_per_rfid',
+					'caption' => 'save power consumtion per RFID'
+				],
+			],
         ];
 
         return $formElements;
@@ -827,6 +839,25 @@ class KeConnectP30udp extends IPSModule
                 'reason'      => $jdata['reason'],
             ];
             $new_entries[] = $entry;
+
+            $save_per_rfid = $this->ReadPropertyBoolean('save_per_rfid');
+            if ($save_per_rfid && $tag != '') {
+                $ident = 'ChargedEnergy_' . $tag;
+                @$varID = $this->GetIDForIdent($ident);
+                if ($varID == false) {
+                    $name = $this->Translate('Total power consumption of RFID') . ' ' . $tag;
+                    $this->MaintainVariable($ident, $name, VARIABLETYPE_FLOAT, 'KebaConnect.Energy', 1000, true);
+                    $varID = $this->GetIDForIdent($ident);
+                    $archivID = IPS_GetInstanceListByModuleID('{43192F0B-135B-4CE7-A0A7-1475603F3060}')[0];
+                    AC_SetLoggingStatus($archivID, $varID, true);
+                    AC_SetAggregationType($archivID, $varID, 1 /* Zähler */);
+                    $this->SendDebug(__FUNCTION__, 'create var ' . $ident, 0);
+                }
+                $old = parent::GetValue($ident);
+                $new += $e_pres;
+                $this->SetValue($ident, $new);
+                $this->SendDebug(__FUNCTION__, 'increment var ' . $ident . ' from ' . $old . ' with ' . $e_pre . ' to ' . $new, 0);
+            }
 
             if ($sessionID <= $lastSessionID) {
                 $this->SendDebug(__FUNCTION__, 'all new reports processed', 0);

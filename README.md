@@ -85,11 +85,18 @@ Liefert die Lade-Historie gemäß den Einstellungen in der Instanz-Konfiguⅹati
 | show_history                          | boolean  | false        | Ladehistorie in HTML-Box darstellen |
 | history_age                           | integer  | 90           | maximales Alter eines Ladevorgangs in Tagen |
 |                                       |          |              | |
+| save_per_rfid                         | boolean  | false        | Speicherung des Energieverbrauchs pro RFID |
+|                                       |          |              | |
 | standby_update_interval               | integer  |              | Datenabruf im Ruhezustand in Minuten |
 | charging_update_interval              | integer  |              | Datenabruf während des Ladens in Sekunden |
 
 * Seriennummer der Wallbox<br>
-die Angabe der Seriennummer scheint erforderlich zu sein, wenn mehrere Wallboxen im Verband genutzt werden- 
+die Angabe der Seriennummer scheint erforderlich zu sein, wenn mehrere Wallboxen im Verband genutzt werden
+
+* Speicherung des Energieverbrauchs pro RFID<br>
+es wird für jede erkannte RFID eine eigene Variable als Aggregation vom Typ _Zähler_ angelegt (Ident *ChargedEnergy_\<RFID-Tag\>*) und nach
+jedem Ladeborgang um den jeweiligen Wert erhöht; der Energieverbrauch wird aus der Ladehistorie der Wallbox ermittelt.
+Hierfür ist die Speicherung der Ladehistorie erforderlich.
 
 #### Variablenprofile
 
@@ -117,7 +124,10 @@ Referenzen
 
 ## 7. Versions-Historie
 
-- 1.0.11 @ 18.01.2022 12:22 (beta)
+- 1.0.12 @ 06.02.2022 14:56 (beta)
+  - optionale Speicherung des Verbrauchs pro RFID
+
+- 1.0.11 @ 18.01.2022 12:22
   - optionale Angabe der Seriennummer der Wallbox
 
 - 1.0.10 @ 14.01.2022 17:13
