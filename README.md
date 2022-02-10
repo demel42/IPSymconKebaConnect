@@ -124,7 +124,10 @@ Referenzen
 
 ## 7. Versions-Historie
 
-- 1.0.12 @ 06.02.2022 14:56 (beta)
+- 1.0.13 @ 10.02.2022 10:53 (beta)
+  - Verbesserung der Auswertung des Broadcast
+
+- 1.0.12 @ 06.02.2022 14:56
   - optionale Speicherung des Verbrauchs pro RFID
 
 - 1.0.11 @ 18.01.2022 12:22

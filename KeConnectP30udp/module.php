@@ -500,29 +500,29 @@ class KeConnectP30udp extends IPSModule
             'caption'  => 'Charging history',
             'expanded' => false,
             'items'    => [
-				[
-					'type'    => 'CheckBox',
-					'name'    => 'save_history',
-					'caption' => 'save charging history entries'
-				],
-				[
-					'type'    => 'NumberSpinner',
-					'minimum' => 0,
-					'suffix'  => 'days',
-					'name'    => 'history_age',
-					'caption' => 'maximun age of history entries'
-				],
-				[
-					'type'    => 'CheckBox',
-					'name'    => 'show_history',
-					'caption' => 'show table of charging history'
-				],
-				[
-					'type'    => 'CheckBox',
-					'name'    => 'save_per_rfid',
-					'caption' => 'save power consumtion per RFID'
-				],
-			],
+                [
+                    'type'    => 'CheckBox',
+                    'name'    => 'save_history',
+                    'caption' => 'save charging history entries'
+                ],
+                [
+                    'type'    => 'NumberSpinner',
+                    'minimum' => 0,
+                    'suffix'  => 'days',
+                    'name'    => 'history_age',
+                    'caption' => 'maximun age of history entries'
+                ],
+                [
+                    'type'    => 'CheckBox',
+                    'name'    => 'show_history',
+                    'caption' => 'show table of charging history'
+                ],
+                [
+                    'type'    => 'CheckBox',
+                    'name'    => 'save_per_rfid',
+                    'caption' => 'save power consumtion per RFID'
+                ],
+            ],
         ];
 
         return $formElements;
@@ -1245,8 +1245,8 @@ class KeConnectP30udp extends IPSModule
 
         $reload_reports = false;
 
-        if (in_array('ChargingState', $use_idents)) {
-            $charging_state = $this->GetArrayElem($jdata, 'State', 0);
+        if (in_array('ChargingState', $use_idents) && isset($jdata['State'])) {
+            $charging_state = $jdata['State'];
             $chg = false;
             $this->SaveValue('ChargingState', $charging_state, $chg);
             if ($chg) {
@@ -1255,8 +1255,8 @@ class KeConnectP30udp extends IPSModule
             }
             $this->SendDebug(__FUNCTION__, 'set variable "ChargingState" to ' . $charging_state . ' from field "State"', 0);
         }
-        if (in_array('CableState', $use_idents)) {
-            $cable_state = $this->GetArrayElem($jdata, 'Plug', 0);
+        if (in_array('CableState', $use_idents) && isset($jdata['Plug'])) {
+            $cable_state = $jdata['Plug'];
             $chg = false;
             $this->SaveValue('CableState', $cable_state, $chg);
             if ($chg) {
@@ -1265,20 +1265,20 @@ class KeConnectP30udp extends IPSModule
             }
             $this->SendDebug(__FUNCTION__, 'set variable "CableState" to ' . $cable_state . ' from field "CableState"', 0);
         }
-        if (in_array('MaxChargingCurrent', $use_idents)) {
-            $max_curr = floatval($this->GetArrayElem($jdata, 'Max curr', 0));
+        if (in_array('MaxChargingCurrent', $use_idents) && isset($jdata['Max curr'])) {
+            $max_curr = floatval($jdata['Max curr']);
             $max_curr /= 1000;
             $this->SaveValue('MaxChargingCurrent', $max_curr, $is_changed);
             $this->SendDebug(__FUNCTION__, 'set variable "MaxChargingCurrent" to ' . $max_curr . ' from field "Max curr"', 0);
         }
-        if (in_array('ChargedEnergy', $use_idents)) {
-            $e_pres = floatval($this->GetArrayElem($jdata, 'E pres', 0));
+        if (in_array('ChargedEnergy', $use_idents) && isset($jdata['E pres'])) {
+            $e_pres = floatval($jdata['E pres']);
             $e_pres /= 10000;
             $this->SaveValue('ChargedEnergy', $e_pres, $is_changed);
             $this->SendDebug(__FUNCTION__, 'set variable "ChargedEnergy" to ' . $e_pres . ' from field "E pres"', 0);
         }
-        if (in_array('EnableCharging', $use_idents)) {
-            $enable_sys = boolval($this->GetArrayElem($jdata, 'Enable sys', false));
+        if (in_array('EnableCharging', $use_idents) && isset($jdata['Enable sys'])) {
+            $enable_sys = boolval($jdata['Enable sys']);
             $this->SaveValue('EnableCharging', $enable_sys, $is_changed);
             $this->SendDebug(__FUNCTION__, 'set variable "EnableCharging" to ' . $enable_sys . ' from field "Enable sys"', 0);
         }
