@@ -856,7 +856,7 @@ class KeConnectP30udp extends IPSModule
                 $old = parent::GetValue($ident);
                 $new = $old + $e_pres;
                 $this->SetValue($ident, $new);
-                $this->SendDebug(__FUNCTION__, 'increment var ' . $ident . ' from ' . $old . ' with ' . $e_pre . ' to ' . $new, 0);
+                $this->SendDebug(__FUNCTION__, 'increment var ' . $ident . ' from ' . $old . ' with ' . $e_pres . ' to ' . $new, 0);
             }
 
             if ($sessionID <= $lastSessionID) {
