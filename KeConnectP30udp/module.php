@@ -425,7 +425,7 @@ class KeConnectP30udp extends IPSModule
             'caption' => 'Update data in standby every X minutes'
         ];
         $items[] = [
-            'type'    => 'IntervalBox',
+            'type'    => 'NumberSpinner',
             'name'    => 'standby_update_interval',
             'caption' => 'Minutes'
         ];
@@ -435,7 +435,7 @@ class KeConnectP30udp extends IPSModule
             'caption' => 'Update data while charging every X seconds'
         ];
         $items[] = [
-            'type'    => 'IntervalBox',
+            'type'    => 'NumberSpinner',
             'name'    => 'charging_update_interval',
             'caption' => 'Seconds'
         ];
