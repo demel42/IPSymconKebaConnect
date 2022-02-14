@@ -1,0 +1,18 @@
+{
+    "id": "{394666A8-C8A5-38C5-DC90-1E3147C28EF7}",
+    "caption": "Disable charging",
+    "form": [ ],
+    "action": "KebaConnect_SwitchEnableCharging($_IPS['TARGET'], 0);",
+    "restrictions": {
+        "objectType": [ 1 ],
+        "moduleID": [ "{A84E350B-55B7-2841-A6F1-C0B17FA0C4CD}" ],
+        "includeEnvironments": [ "TestCommands", "Default" ]
+    },
+    "priority": 10,
+    "category": "target",
+    "locale": {
+        "de": {
+            "Disable charging": "Laden deaktivieren"
+        }
+    }
+}

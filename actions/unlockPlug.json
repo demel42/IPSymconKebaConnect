@@ -1,0 +1,19 @@
+{
+    "id": "{C2A28975-C12C-36F7-11FE-71FC1B23CF32}",
+    "caption": "Unlock plug",
+    "form": [ ],
+    "action": "KebaConnect_UnlockPlug($_IPS['TARGET']);",
+    "restrictions": {
+        "objectType": [ 1 ],
+        "moduleID": [ "{A84E350B-55B7-2841-A6F1-C0B17FA0C4CD}" ],
+        "includeEnvironments": [ "TestCommands", "Default" ]
+    },
+    "priority": 10,
+    "category": "target",
+    "locale": {
+        "de": {
+            "Unlock plug": "Stecker entriegeln",
+            "Unlock": "Entriegeln"
+        }
+    }
+}

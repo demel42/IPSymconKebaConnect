@@ -124,7 +124,10 @@ Referenzen
 
 ## 7. Versions-Historie
 
-- 1.0.14 @ 12.02.2022 07:39 (beta)
+- 1.0.15 @ 14.02.2022 11:09 (beta)
+  - Aktionen hinzugefügt
+
+- 1.0.14 @ 12.02.2022 07:39
   - Korrektur zu 1.0.12
 
 - 1.0.13 @ 10.02.2022 10:53
