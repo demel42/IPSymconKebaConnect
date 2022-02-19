@@ -124,8 +124,9 @@ Referenzen
 
 ## 7. Versions-Historie
 
-- 1.0.15 @ 14.02.2022 11:09 (beta)
+- 1.0.15 @ 16.02.2022 10:57 (beta)
   - Aktionen hinzugefügt
+  - Anpassungen an IPS 6.1 (Prüfung auf ungültige ID's)
 
 - 1.0.14 @ 12.02.2022 07:39
   - Korrektur zu 1.0.12

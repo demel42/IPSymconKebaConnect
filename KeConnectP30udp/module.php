@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/../libs/common.php'; // globale Funktionen
+require_once __DIR__ . '/../libs/CommonStubs/common.php'; // globale Funktionen
 require_once __DIR__ . '/../libs/local.php';  // lokale Funktionen
 
 class KeConnectP30udp extends IPSModule
 {
-    use KebaConnectCommonLib;
+    use StubsCommonLib;
     use KebaConnectLocalLib;
 
     private static $UnicastPort = 7090;
@@ -142,7 +142,9 @@ class KeConnectP30udp extends IPSModule
 
     public function InstallVarProfiles(bool $reInstall = false)
     {
-        $this->SendDebug(__FUNCTION__, 'reInstall=' . $this->bool2str($reInstall), 0);
+        if ($reInstall) {
+            $this->SendDebug(__FUNCTION__, 'reInstall=' . $this->bool2str($reInstall), 0);
+        }
 
         $this->CreateVarProfile('KebaConnect.Current', VARIABLETYPE_FLOAT, ' A', 0, 0, 0, 1, '', '', $reInstall);
         $this->CreateVarProfile('KebaConnect.Power', VARIABLETYPE_FLOAT, ' kW', 0, 0, 0, 2, '', '', $reInstall);
@@ -312,7 +314,7 @@ class KeConnectP30udp extends IPSModule
         $propertyNames = [];
         foreach ($propertyNames as $name) {
             $oid = $this->ReadPropertyInteger($name);
-            if ($oid > 0) {
+            if ($oid >= 10000) {
                 $this->RegisterReference($oid);
             }
         }
@@ -584,25 +586,9 @@ class KeConnectP30udp extends IPSModule
             ]
         ];
 
-        $formActions[] = [
-            'type'    => 'ExpansionPanel',
-            'caption' => 'Information',
-            'items'   => [
-                [
-                    'type'    => 'Label',
-                    'caption' => $this->InstanceInfo($this->InstanceID),
-                ],
-            ],
-        ];
+        $formActions[] = $this->GetInformationForm();
 
         return $formActions;
-    }
-
-    private function GetConnectionID()
-    {
-        $inst = IPS_GetInstance($this->InstanceID);
-        $cID = $inst['ConnectionID'];
-        return $cID;
     }
 
     public function GetConfigurationForParent()
