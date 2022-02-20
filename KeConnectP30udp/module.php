@@ -1301,22 +1301,6 @@ class KeConnectP30udp extends IPSModule
 
         switch ($func) {
             case 'SwitchEnableCharging':
-                /*
-                $chargingState = $this->GetValue('ChargingState');
-                switch ($chargingState) {
-                    case self::$STATE_READY:
-                    case self::$STATE_READY:
-                    case self::$STATE_CHARGING:
-                    case self::$STATE_SUSPENDED:
-                        $enabled = true;
-                        break;
-                    default:
-                        if ($verbose) {
-                            $this->SendDebug(__FUNCTION__, 'wrong ChargingState ' . $chargingState, 0);
-                        }
-                        break;
-                }
-                 */
                 $enabled = true;
                 break;
             case 'SetMaxChargingCurrent':
