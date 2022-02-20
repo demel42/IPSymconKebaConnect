@@ -826,25 +826,6 @@ class KeConnectP30udp extends IPSModule
             ];
             $new_entries[] = $entry;
 
-            $save_per_rfid = $this->ReadPropertyBoolean('save_per_rfid');
-            if ($save_per_rfid && $tag != '') {
-                $ident = 'ChargedEnergy_' . $tag;
-                @$varID = $this->GetIDForIdent($ident);
-                if ($varID == false) {
-                    $name = $this->Translate('Total power consumption of RFID') . ' ' . $tag;
-                    $this->MaintainVariable($ident, $name, VARIABLETYPE_FLOAT, 'KebaConnect.Energy', 1000, true);
-                    $varID = $this->GetIDForIdent($ident);
-                    $archivID = IPS_GetInstanceListByModuleID('{43192F0B-135B-4CE7-A0A7-1475603F3060}')[0];
-                    AC_SetLoggingStatus($archivID, $varID, true);
-                    AC_SetAggregationType($archivID, $varID, 1 /* Zähler */);
-                    $this->SendDebug(__FUNCTION__, 'create var ' . $ident, 0);
-                }
-                $old = parent::GetValue($ident);
-                $new = $old + $e_pres;
-                $this->SetValue($ident, $new);
-                $this->SendDebug(__FUNCTION__, 'increment var ' . $ident . ' from ' . $old . ' with ' . $e_pres . ' to ' . $new, 0);
-            }
-
             if ($sessionID <= $lastSessionID) {
                 $this->SendDebug(__FUNCTION__, 'all new reports processed', 0);
                 break;
@@ -871,6 +852,28 @@ class KeConnectP30udp extends IPSModule
             }
             if ($fnd == false) {
                 $new_entries[] = $entry;
+
+                $tag = $entry['RFID tag'];
+                $save_per_rfid = $this->ReadPropertyBoolean('save_per_rfid');
+                if ($save_per_rfid && $tag != '') {
+                    $ident = 'ChargedEnergy_' . $tag;
+                    @$varID = $this->GetIDForIdent($ident);
+                    if ($varID == false) {
+                        $name = $this->Translate('Total power consumption of RFID') . ' ' . $tag;
+                        $this->MaintainVariable($ident, $name, VARIABLETYPE_FLOAT, 'KebaConnect.Energy', 1000, true);
+                        $varID = $this->GetIDForIdent($ident);
+                        $archivID = IPS_GetInstanceListByModuleID('{43192F0B-135B-4CE7-A0A7-1475603F3060}')[0];
+                        AC_SetLoggingStatus($archivID, $varID, true);
+                        AC_SetAggregationType($archivID, $varID, 1 /* Zähler */);
+                        $this->SendDebug(__FUNCTION__, 'create var ' . $ident, 0);
+                    }
+                    $sessionID = $entry['Session ID'];
+                    $e_pres = $entry['E pres'];
+                    $old = $this->GetValue($ident);
+                    $new = old + $e_pres;
+                    $this->SetValue($ident, $new);
+                    $this->SendDebug(__FUNCTION__, 'sessionID=' . $sessionID . ': increment var ' . $ident . ' from ' . $old . ' with ' . $e_pres . ' to ' . $new, 0);
+                }
             }
         }
 
