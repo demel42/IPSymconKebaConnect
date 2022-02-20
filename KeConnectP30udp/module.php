@@ -870,7 +870,7 @@ class KeConnectP30udp extends IPSModule
                     $sessionID = $entry['Session ID'];
                     $e_pres = $entry['E pres'];
                     $old = $this->GetValue($ident);
-                    $new = old + $e_pres;
+                    $new = $old + $e_pres;
                     $this->SetValue($ident, $new);
                     $this->SendDebug(__FUNCTION__, 'sessionID=' . $sessionID . ': increment var ' . $ident . ' from ' . $old . ' with ' . $e_pres . ' to ' . $new, 0);
                 }
