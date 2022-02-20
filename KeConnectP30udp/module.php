@@ -839,6 +839,41 @@ class KeConnectP30udp extends IPSModule
             $reftstamp = 0;
         }
 
+        $save_per_rfid = $this->ReadPropertyBoolean('save_per_rfid');
+        if ($save_per_rfid) {
+            foreach ($new_entries as $entries) {
+                $fnd = false;
+                foreach ($old_entries as $e) {
+                    if ($entry['Session ID'] == $e['Session ID']) {
+                        $fnd = true;
+                        break;
+                    }
+                }
+                if ($fnd == false) {
+                    $tag = $entry['RFID tag'];
+                    if ($tag != '') {
+                        $ident = 'ChargedEnergy_' . $tag;
+                        @$varID = $this->GetIDForIdent($ident);
+                        if ($varID == false) {
+                            $name = $this->Translate('Total power consumption of RFID') . ' ' . $tag;
+                            $this->MaintainVariable($ident, $name, VARIABLETYPE_FLOAT, 'KebaConnect.Energy', 1000, true);
+                            $varID = $this->GetIDForIdent($ident);
+                            $archivID = IPS_GetInstanceListByModuleID('{43192F0B-135B-4CE7-A0A7-1475603F3060}')[0];
+                            AC_SetLoggingStatus($archivID, $varID, true);
+                            AC_SetAggregationType($archivID, $varID, 1 /* Zähler */);
+                            $this->SendDebug(__FUNCTION__, 'create var ' . $ident, 0);
+                        }
+                        $sessionID = $entry['Session ID'];
+                        $e_pres = $entry['E pres'];
+                        $old = $this->GetValue($ident);
+                        $new = $old + $e_pres;
+                        $this->SetValue($ident, $new);
+                        $this->SendDebug(__FUNCTION__, 'sessionID=' . $sessionID . ': increment var ' . $ident . ' from ' . $old . ' with ' . $e_pres . ' to ' . $new, 0);
+                    }
+                }
+            }
+        }
+
         foreach ($old_entries as $entry) {
             $fnd = false;
             if ($entry['started'] < $reftstamp) {
@@ -852,28 +887,6 @@ class KeConnectP30udp extends IPSModule
             }
             if ($fnd == false) {
                 $new_entries[] = $entry;
-
-                $tag = $entry['RFID tag'];
-                $save_per_rfid = $this->ReadPropertyBoolean('save_per_rfid');
-                if ($save_per_rfid && $tag != '') {
-                    $ident = 'ChargedEnergy_' . $tag;
-                    @$varID = $this->GetIDForIdent($ident);
-                    if ($varID == false) {
-                        $name = $this->Translate('Total power consumption of RFID') . ' ' . $tag;
-                        $this->MaintainVariable($ident, $name, VARIABLETYPE_FLOAT, 'KebaConnect.Energy', 1000, true);
-                        $varID = $this->GetIDForIdent($ident);
-                        $archivID = IPS_GetInstanceListByModuleID('{43192F0B-135B-4CE7-A0A7-1475603F3060}')[0];
-                        AC_SetLoggingStatus($archivID, $varID, true);
-                        AC_SetAggregationType($archivID, $varID, 1 /* Zähler */);
-                        $this->SendDebug(__FUNCTION__, 'create var ' . $ident, 0);
-                    }
-                    $sessionID = $entry['Session ID'];
-                    $e_pres = $entry['E pres'];
-                    $old = $this->GetValue($ident);
-                    $new = $old + $e_pres;
-                    $this->SetValue($ident, $new);
-                    $this->SendDebug(__FUNCTION__, 'sessionID=' . $sessionID . ': increment var ' . $ident . ' from ' . $old . ' with ' . $e_pres . ' to ' . $new, 0);
-                }
             }
         }
 
