@@ -814,7 +814,7 @@ class KeConnectP30udp extends IPSModule
             $e_pres = floatval($this->GetArrayElem($jdata, 'E pres', 0));
             $e_pres /= 10000;
 
-            $entry = [
+            $new_entry = [
                 'Session ID'  => $sessionID,
                 'started'     => $started,
                 'ended'       => $ended,
@@ -824,7 +824,7 @@ class KeConnectP30udp extends IPSModule
                 'E pres'      => $e_pres,
                 'reason'      => $jdata['reason'],
             ];
-            $new_entries[] = $entry;
+            $new_entries[] = $new_entry;
 
             if ($sessionID <= $lastSessionID) {
                 $this->SendDebug(__FUNCTION__, 'all new reports processed', 0);
@@ -841,16 +841,20 @@ class KeConnectP30udp extends IPSModule
 
         $save_per_rfid = $this->ReadPropertyBoolean('save_per_rfid');
         if ($save_per_rfid) {
-            foreach ($new_entries as $entries) {
+            foreach ($new_entries as $new_entry) {
+                $this->SendDebug(__FUNCTION__, 'new_entry=' . print_r($new_entry, true), 0);
                 $fnd = false;
-                foreach ($old_entries as $e) {
-                    if ($entry['Session ID'] == $e['Session ID']) {
+                foreach ($old_entries as $old_entry) {
+                    $this->SendDebug(__FUNCTION__, 'old_entry=' . print_r($old_entry, true), 0);
+                    if ($new_entry['Session ID'] == $old_entriy['Session ID']) {
                         $fnd = true;
                         break;
                     }
                 }
+                $this->SendDebug(__FUNCTION__, 'fnd=' . $this->bool2str($fnd), 0);
                 if ($fnd == false) {
-                    $tag = $entry['RFID tag'];
+                    $tag = $new_entry['RFID tag'];
+                    $this->SendDebug(__FUNCTION__, 'tag=' . $tag, 0);
                     if ($tag != '') {
                         $ident = 'ChargedEnergy_' . $tag;
                         @$varID = $this->GetIDForIdent($ident);
@@ -863,8 +867,8 @@ class KeConnectP30udp extends IPSModule
                             AC_SetAggregationType($archivID, $varID, 1 /* Zähler */);
                             $this->SendDebug(__FUNCTION__, 'create var ' . $ident, 0);
                         }
-                        $sessionID = $entry['Session ID'];
-                        $e_pres = $entry['E pres'];
+                        $sessionID = $new_entry['Session ID'];
+                        $e_pres = $new_entry['E pres'];
                         $old = $this->GetValue($ident);
                         $new = $old + $e_pres;
                         $this->SetValue($ident, $new);
@@ -874,19 +878,19 @@ class KeConnectP30udp extends IPSModule
             }
         }
 
-        foreach ($old_entries as $entry) {
+        foreach ($old_entries as $old_entry) {
             $fnd = false;
-            if ($entry['started'] < $reftstamp) {
+            if ($old_entry['started'] < $reftstamp) {
                 continue;
             }
-            foreach ($new_entries as $e) {
-                if ($entry['Session ID'] == $e['Session ID']) {
+            foreach ($new_entries as $new_entry) {
+                if ($old_entry['Session ID'] == $new_entry['Session ID']) {
                     $fnd = true;
                     break;
                 }
             }
             if ($fnd == false) {
-                $new_entries[] = $entry;
+                $new_entries[] = $old_entry;
             }
         }
 

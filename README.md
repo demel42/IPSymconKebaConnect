@@ -124,12 +124,12 @@ Referenzen
 
 ## 7. Versions-Historie
 
-- 1.0.16 @ 20.02.2022 18:23
+- 1.0.16 @ 22.02.2022 11:47
   - Korrektur zu 1.0.12
 
 - 1.0.15 @ 19.02.2022 15:20
   - Aktionen hinzugefügt
-  - Anpassungen an IPS 6.1 (Prüfung auf ungültige ID's)
+  - Anpassungen an IPS 6.2 (Prüfung auf ungültige ID's)
   - libs/common.php -> submodule CommonStubs
 
 - 1.0.14 @ 12.02.2022 07:39
