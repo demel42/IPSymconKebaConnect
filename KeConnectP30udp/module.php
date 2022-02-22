@@ -846,7 +846,7 @@ class KeConnectP30udp extends IPSModule
                 $fnd = false;
                 foreach ($old_entries as $old_entry) {
                     $this->SendDebug(__FUNCTION__, 'old_entry=' . print_r($old_entry, true), 0);
-                    if ($new_entry['Session ID'] == $old_entriy['Session ID']) {
+                    if ($new_entry['Session ID'] == $old_entry['Session ID']) {
                         $fnd = true;
                         break;
                     }
