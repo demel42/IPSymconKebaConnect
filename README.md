@@ -124,7 +124,7 @@ Referenzen
 
 ## 7. Versions-Historie
 
-- 1.0.16 @ 01.03.2022 12:11 (beta)
+- 1.0.16 @ 01.03.2022 21:57 (beta)
   - Anzeige der Referenzen der Instanz
   - Korrektur zu 1.0.12
 
