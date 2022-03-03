@@ -124,7 +124,10 @@ Referenzen
 
 ## 7. Versions-Historie
 
-- 1.0.16 @ 01.03.2022 21:57 (beta)
+- 1.0.17 @ 03.03.2022 11:03 (beta)
+  - Fix in CommonStubs
+
+- 1.0.16 @ 01.03.2022 21:57
   - Anzeige der Referenzen der Instanz
   - Korrektur zu 1.0.12
 
