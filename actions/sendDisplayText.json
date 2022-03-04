@@ -6,7 +6,7 @@
             "type": "ValidationTextBox",
             "name": "TEXT",
             "caption": "Text (max 23 Chars)"
-		}
+        }
     ],
     "action": "KebaConnect_SendDisplayText($_IPS['TARGET'], $_IPS['TEXT']);",
     "restrictions": {

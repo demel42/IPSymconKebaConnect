@@ -4,11 +4,11 @@
     "form": [
         {
             "type": "NumberSpinner",
-			"digits": 4,
-			"suffix": "kWh",
+            "digits": 4,
+            "suffix": "kWh",
             "name": "ENERGY",
             "caption": "Energy"
-		}
+        }
     ],
     "action": "KebaConnect_SetMaxChargingCurrent($_IPS['TARGET'], $_IPS['CURRENT']);",
     "restrictions": {
@@ -22,7 +22,7 @@
     "locale": {
         "de": {
             "Limit charging energy": "Ladeenergie begrenzen",
-			"Energy": "Energie",
+            "Energy": "Energie",
             "Limit energy to {ENERGY}kWh": "Energie auf {ENERGY}kWh begrenzen"
         }
     }
