@@ -124,7 +124,7 @@ Referenzen
 
 ## 7. Versions-Historie
 
-- 1.0.18 @ 17.03.2022 09:52 (beta)
+- 1.0.18 @ 17.03.2022 10:15 (beta)
   - save_rf_id: mehr debug zu 1.0.12
 
 - 1.0.17 @ 03.03.2022 14:07

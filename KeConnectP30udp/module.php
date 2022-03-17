@@ -833,13 +833,6 @@ class KeConnectP30udp extends IPSModule
             }
         }
 
-        $history_age = $this->ReadPropertyInteger('history_age');
-        if ($history_age > 0) {
-            $reftstamp = time() - ($history_age * 60 * 60 * 24);
-        } else {
-            $reftstamp = 0;
-        }
-
         $save_per_rfid = $this->ReadPropertyBoolean('save_per_rfid');
         if ($save_per_rfid) {
             $this->SendDebug(__FUNCTION__, 'save_per_rfid', 0);
@@ -861,7 +854,7 @@ class KeConnectP30udp extends IPSModule
                 }
 
                 $tag = $new_entry['RFID tag'];
-                if ($tag != '') {
+                if ($tag == '') {
                     $this->SendDebug(__FUNCTION__, 'save_per_rfid: "RFID tag" is empty -> ignore', 0);
                     continue;
                 }
@@ -889,6 +882,13 @@ class KeConnectP30udp extends IPSModule
                 $this->SetValue($ident, $new);
                 $this->SendDebug(__FUNCTION__, 'save_per_rfid: sessionID=' . $sessionID . ': increment var ' . $ident . ' from ' . $old . ' with ' . $e_pres . ' to ' . $new, 0);
             }
+        }
+
+        $history_age = $this->ReadPropertyInteger('history_age');
+        if ($history_age > 0) {
+            $reftstamp = time() - ($history_age * 60 * 60 * 24);
+        } else {
+            $reftstamp = 0;
         }
 
         foreach ($old_entries as $old_entry) {
