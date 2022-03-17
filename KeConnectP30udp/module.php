@@ -825,7 +825,12 @@ class KeConnectP30udp extends IPSModule
                 'E pres'      => $e_pres,
                 'reason'      => $jdata['reason'],
             ];
-            $new_entries[] = $new_entry;
+
+            if ($ended == 0) {
+                $this->SendDebug(__FUNCTION__, 'ignore entry w/o "ended"', 0);
+            } else {
+                $new_entries[] = $new_entry;
+            }
 
             if ($sessionID <= $lastSessionID) {
                 $this->SendDebug(__FUNCTION__, 'all new reports processed', 0);
