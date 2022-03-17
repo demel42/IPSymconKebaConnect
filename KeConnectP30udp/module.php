@@ -842,43 +842,52 @@ class KeConnectP30udp extends IPSModule
 
         $save_per_rfid = $this->ReadPropertyBoolean('save_per_rfid');
         if ($save_per_rfid) {
+            $this->SendDebug(__FUNCTION__, 'save_per_rfid', 0);
             foreach ($new_entries as $new_entry) {
-                $this->SendDebug(__FUNCTION__, 'new_entry=' . print_r($new_entry, true), 0);
+                $this->SendDebug(__FUNCTION__, 'save_per_rfid: new_entry=' . print_r($new_entry, true), 0);
 
-                $tag = $new_entry['RFID tag'];
-                $this->SendDebug(__FUNCTION__, 'tag=' . $tag, 0);
-                if ($tag != '') {
-                    continue;
-                }
-                $ident = 'ChargedEnergy_' . $tag;
-
+                $sessionID = $new_entry['Session ID'];
                 $fnd = false;
                 foreach ($old_entries as $old_entry) {
-                    $this->SendDebug(__FUNCTION__, 'old_entry=' . print_r($old_entry, true), 0);
-                    if ($new_entry['Session ID'] == $old_entry['Session ID']) {
+                    $this->SendDebug(__FUNCTION__, 'save_per_rfid: old_entry=' . print_r($old_entry, true), 0);
+                    if ($sessionID == $old_entry['Session ID']) {
                         $fnd = true;
                         break;
                     }
                 }
-                $this->SendDebug(__FUNCTION__, 'fnd=' . $this->bool2str($fnd), 0);
-                if ($fnd == false) {
-                    @$varID = $this->GetIDForIdent($ident);
-                    if ($varID == false) {
-                        $name = $this->Translate('Total power consumption of RFID') . ' ' . $tag;
-                        $this->MaintainVariable($ident, $name, VARIABLETYPE_FLOAT, 'KebaConnect.Energy', 1000, true);
-                        $varID = $this->GetIDForIdent($ident);
-                        $archivID = IPS_GetInstanceListByModuleID('{43192F0B-135B-4CE7-A0A7-1475603F3060}')[0];
-                        AC_SetLoggingStatus($archivID, $varID, true);
-                        AC_SetAggregationType($archivID, $varID, 1 /* Zähler */);
-                        $this->SendDebug(__FUNCTION__, 'create var ' . $ident, 0);
-                    }
+                if ($fnd) {
+                    $this->SendDebug(__FUNCTION__, 'save_per_rfid: found old "Session ID" ' . $sessionID . ' -> ignore', 0);
+                    continue;
                 }
-                $sessionID = $new_entry['Session ID'];
+
+                $tag = $new_entry['RFID tag'];
+                if ($tag != '') {
+                    $this->SendDebug(__FUNCTION__, 'save_per_rfid: "RFID tag" is empty -> ignore', 0);
+                    continue;
+                }
+
+                $ident = 'ChargedEnergy_' . $tag;
+                $this->SendDebug(__FUNCTION__, 'save_per_rfid: tag=' . $tag . ', ident=' . $ident, 0);
+
+                @$varID = $this->GetIDForIdent($ident);
+                if ($varID == false) {
+                    $name = $this->Translate('Total power consumption of RFID') . ' ' . $tag;
+                    $this->MaintainVariable($ident, $name, VARIABLETYPE_FLOAT, 'KebaConnect.Energy', 1000, true);
+                    $varID = $this->GetIDForIdent($ident);
+                    $archivID = IPS_GetInstanceListByModuleID('{43192F0B-135B-4CE7-A0A7-1475603F3060}')[0];
+                    AC_SetLoggingStatus($archivID, $varID, true);
+                    AC_SetAggregationType($archivID, $varID, 1 /* Zähler */);
+                    $this->SendDebug(__FUNCTION__, 'save_per_rfid: create var ' . $ident, 0);
+                }
+                $this->SendDebug(__FUNCTION__, 'save_per_rfid: varID=' . $varID, 0);
                 $e_pres = $new_entry['E pres'];
+                $this->SendDebug(__FUNCTION__, 'save_per_rfid: e_pres=' . $e_pres, 0);
                 $old = $this->GetValue($ident);
+                $this->SendDebug(__FUNCTION__, 'save_per_rfid: old=' . $old, 0);
                 $new = $old + $e_pres;
+                $this->SendDebug(__FUNCTION__, 'save_per_rfid: new=' . $new, 0);
                 $this->SetValue($ident, $new);
-                $this->SendDebug(__FUNCTION__, 'sessionID=' . $sessionID . ': increment var ' . $ident . ' from ' . $old . ' with ' . $e_pres . ' to ' . $new, 0);
+                $this->SendDebug(__FUNCTION__, 'save_per_rfid: sessionID=' . $sessionID . ': increment var ' . $ident . ' from ' . $old . ' with ' . $e_pres . ' to ' . $new, 0);
             }
         }
 
