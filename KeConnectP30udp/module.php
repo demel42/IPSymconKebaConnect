@@ -847,7 +847,6 @@ class KeConnectP30udp extends IPSModule
                 $sessionID = $new_entry['Session ID'];
                 $fnd = false;
                 foreach ($old_entries as $old_entry) {
-                    $this->SendDebug(__FUNCTION__, 'save_per_rfid: old_entry=' . print_r($old_entry, true), 0);
                     if ($sessionID == $old_entry['Session ID']) {
                         $fnd = true;
                         break;
@@ -877,13 +876,9 @@ class KeConnectP30udp extends IPSModule
                     AC_SetAggregationType($archivID, $varID, 1 /* Zähler */);
                     $this->SendDebug(__FUNCTION__, 'save_per_rfid: create var ' . $ident, 0);
                 }
-                $this->SendDebug(__FUNCTION__, 'save_per_rfid: varID=' . $varID, 0);
                 $e_pres = $new_entry['E pres'];
-                $this->SendDebug(__FUNCTION__, 'save_per_rfid: e_pres=' . $e_pres, 0);
                 $old = $this->GetValue($ident);
-                $this->SendDebug(__FUNCTION__, 'save_per_rfid: old=' . $old, 0);
                 $new = $old + $e_pres;
-                $this->SendDebug(__FUNCTION__, 'save_per_rfid: new=' . $new, 0);
                 $this->SetValue($ident, $new);
                 $this->SendDebug(__FUNCTION__, 'save_per_rfid: sessionID=' . $sessionID . ': increment var ' . $ident . ' from ' . $old . ' with ' . $e_pres . ' to ' . $new, 0);
             }

@@ -96,7 +96,8 @@ die Angabe der Seriennummer scheint erforderlich zu sein, wenn mehrere Wallboxen
 * Speicherung des Energieverbrauchs pro RFID<br>
 es wird für jede erkannte RFID eine eigene Variable als Aggregation vom Typ _Zähler_ angelegt (Ident *ChargedEnergy_\<RFID-Tag\>*) und nach
 jedem Ladeborgang um den jeweiligen Wert erhöht; der Energieverbrauch wird aus der Ladehistorie der Wallbox ermittelt.
-Hierfür ist die Speicherung der Ladehistorie erforderlich.
+Hierfür ist die Speicherung der Ladehistorie erforderlich.<br>
+Falls mehrere Keba-Wallboxen im Einsatz sind und eine Gesamtsumme pro RFID genötigt wird, siehe [docs/sum_per_rfid.php](docs/sum_per_rfid.php).
 
 #### Variablenprofile
 
@@ -124,8 +125,9 @@ Referenzen
 
 ## 7. Versions-Historie
 
-- 1.0.18 @ 17.03.2022 17:53 (beta)
+- 1.0.18 @ 20.03.2022 10:59 (beta)
   - save_rf_id: mehr debug zu 1.0.12
+  - docs/sum_per_rfid.php hinzugefügt
 
 - 1.0.17 @ 03.03.2022 14:07
   - Fix in CommonStubs
