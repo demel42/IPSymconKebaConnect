@@ -125,7 +125,7 @@ Referenzen
 
 ## 7. Versions-Historie
 
-- 1.0.18 @ 20.03.2022 10:59 (beta)
+- 1.0.18 @ 21.03.2022 17:16
   - save_rf_id: mehr debug zu 1.0.12
   - docs/sum_per_rfid.php hinzugefügt
 
