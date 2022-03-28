@@ -423,23 +423,17 @@ class KeConnectP30udp extends IPSModule
         ];
 
         $items[] = [
-            'type'    => 'Label',
-            'caption' => 'Update data in standby every X minutes'
-        ];
-        $items[] = [
             'type'    => 'NumberSpinner',
             'name'    => 'standby_update_interval',
-            'caption' => 'Minutes'
+            'suffix'  => 'Minutes',
+            'caption' => 'Update interval in standby',
         ];
 
         $items[] = [
-            'type'    => 'Label',
-            'caption' => 'Update data while charging every X seconds'
-        ];
-        $items[] = [
             'type'    => 'NumberSpinner',
             'name'    => 'charging_update_interval',
-            'caption' => 'Seconds'
+            'suffix'  => 'Seconds',
+            'caption' => 'Update interval while charging',
         ];
 
         $formElements[] = [
@@ -522,7 +516,11 @@ class KeConnectP30udp extends IPSModule
                 [
                     'type'    => 'CheckBox',
                     'name'    => 'save_per_rfid',
-                    'caption' => 'save power consumtion per RFID'
+                    'caption' => 'save power consumption per RFID'
+                ],
+                [
+                    'type'    => 'Label',
+                    'caption' => ' ... by activating this switch, additional variables are created on demand and logged as counters',
                 ],
             ],
         ];
