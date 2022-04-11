@@ -321,15 +321,15 @@ class KeConnectP30udp extends IPSModule
 
         $module_disable = $this->ReadPropertyBoolean('module_disable');
         if ($module_disable) {
-            $this->SetTimerInterval('StandbyUpdate', 0);
-            $this->SetTimerInterval('ChargingUpdate', 0);
+            $this->MaintainTimer('StandbyUpdate', 0);
+            $this->MaintainTimer('ChargingUpdate', 0);
             $this->SetStatus(IS_INACTIVE);
             return;
         }
 
         if ($this->CheckConfiguration() != false) {
-            $this->SetTimerInterval('StandbyUpdate', 0);
-            $this->SetTimerInterval('ChargingUpdate', 0);
+            $this->MaintainTimer('StandbyUpdate', 0);
+            $this->MaintainTimer('ChargingUpdate', 0);
             $this->SetStatus(self::$IS_INVALIDCONFIG);
             return;
         }
@@ -610,15 +610,13 @@ class KeConnectP30udp extends IPSModule
 
     protected function SetStandbyUpdateInterval(int $sec = null)
     {
-        if ($sec > 0) {
-            $this->SendDebug(__FUNCTION__, 'override interval with sec=' . $sec, 0);
-            $msec = $sec * 1000;
-        } else {
+        if (is_null($sec)) {
             $min = $this->ReadPropertyInteger('standby_update_interval');
-            $this->SendDebug(__FUNCTION__, 'default interval with min=' . $min, 0);
             $msec = $min > 0 ? $min * 60 * 1000 : 0;
+        } else {
+            $msec = $sec * 1000;
         }
-        $this->SetTimerInterval('StandbyUpdate', $msec);
+        $this->MaintainTimer('StandbyUpdate', $msec);
     }
 
     protected function SetChargingUpdateInterval()
@@ -626,13 +624,11 @@ class KeConnectP30udp extends IPSModule
         $chargingState = $this->GetValue('ChargingState');
         if ($chargingState == self::$STATE_CHARGING) {
             $sec = $this->ReadPropertyInteger('charging_update_interval');
-            $this->SendDebug(__FUNCTION__, 'default interval with sec=' . $sec, 0);
             $msec = $sec > 0 ? $sec * 1000 : 0;
         } else {
-            $this->SendDebug(__FUNCTION__, 'off', 0);
             $msec = 0;
         }
-        $this->SetTimerInterval('ChargingUpdate', $msec);
+        $this->MaintainTimer('ChargingUpdate', $msec);
     }
 
     public function ReceiveData($data)

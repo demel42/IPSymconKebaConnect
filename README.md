@@ -125,9 +125,9 @@ Referenzen
 
 ## 7. Versions-Historie
 
-- 1.0.18 @ 28.03.2022 13:59
-  - save_rf_id: mehr debug zu 1.0.12
-  - docs/sum_per_rfid.php hinzugefügt
+- 1.1 @ 11.04.2022 11:18
+  - Ausgabe der Instanz-Timer unter "Referenzen"
+  - verbesserte Ausgabe der Timer im Debug
 
 - 1.0.17 @ 03.03.2022 14:07
   - Fix in CommonStubs
