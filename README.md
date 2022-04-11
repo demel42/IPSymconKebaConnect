@@ -128,6 +128,7 @@ Referenzen
 - 1.1 @ 11.04.2022 11:18
   - Ausgabe der Instanz-Timer unter "Referenzen"
   - verbesserte Ausgabe der Timer im Debug
+  - Schreibfehler korrigiert
 
 - 1.0.17 @ 03.03.2022 14:07
   - Fix in CommonStubs
