@@ -22,7 +22,7 @@
 			"show table of charging history": "Status der Lade-Historie anzeigen",
 			"save power consumption per RFID": "Speichern des Stromverbrauchs pro RFID",
 			" ... by activating this switch, additional variables are created on demand and logged as counters":
-				" ... durch die Aktivierung dieses Schalters werden bei Bedarf zusätzliche Variablen angelegt und als Zähler gelogen",
+				" ... durch die Aktivierung dieses Schalters werden bei Bedarf zusätzliche Variablen angelegt und als Zähler geloggt",
 			"Update data": "Daten aktualisieren",
 			"Re-install variable-profiles": "Variablenprofile erneut einrichten",
 			"Test area": "Test-Bereich",
