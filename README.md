@@ -125,8 +125,9 @@ Referenzen
 
 ## 7. Versions-Historie
 
-- 1.1.1 @ 13.04.2022 16:00
+- 1.1.1 @ 16.04.2022 12:07
   - potentieller Namenskonflikt behoben (trait CommonStubs)
+  - Aktualisierung von submodule CommonStubs
 
 - 1.1 @ 11.04.2022 11:18
   - Ausgabe der Instanz-Timer unter "Referenzen"
