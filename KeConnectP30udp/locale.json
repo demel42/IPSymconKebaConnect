@@ -173,7 +173,8 @@
 			"Instance is inactive (invalid preconditions)": "Instanz ist inaktiv (ungültige Voraussetzungen)",
 			"Instance is inactive (update not completed)": "Instanz ist inaktiv (Update nicht abgeschlossen)",
 			"Instance is inactive (invalid configuration)": "Instanz ist inaktiv (ungültige Konfiguration)",
-			"Instance is inactive (invalid configuration)": "Instanz ist inaktiv (ungültige Konfiguration)"
+			"Instance is inactive (invalid configuration)": "Instanz ist inaktiv (ungültige Konfiguration)",
+			"Instance is inactive (no Symcon-Connect)": "Instanz ist inaktiv (kein Symcon-Connect)"
 		}
 	}
 }
