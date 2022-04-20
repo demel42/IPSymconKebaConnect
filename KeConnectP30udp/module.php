@@ -157,8 +157,8 @@ class KeConnectP30udp extends IPSModule
 
         $this->RequireParent('{82347F20-F541-41E1-AC5B-A636FD3AE2D8}');
 
-        $this->RegisterTimer('StandbyUpdate', 0, 'KebaConnect_StandbyUpdate(' . $this->InstanceID . ');');
-        $this->RegisterTimer('ChargingUpdate', 0, 'KebaConnect_ChargingUpdate(' . $this->InstanceID . ');');
+        $this->RegisterTimer('StandbyUpdate', 0, $this->GetModulePrefix() . '_StandbyUpdate(' . $this->InstanceID . ');');
+        $this->RegisterTimer('ChargingUpdate', 0, $this->GetModulePrefix() . '_ChargingUpdate(' . $this->InstanceID . ');');
 
         $this->RegisterMessage(0, IPS_KERNELMESSAGE);
     }
@@ -504,7 +504,7 @@ class KeConnectP30udp extends IPSModule
         $formActions[] = [
             'type'    => 'Button',
             'caption' => 'Update data',
-            'onClick' => 'KebaConnect_StandbyUpdate($id);'
+            'onClick' => $this->GetModulePrefix() . '_StandbyUpdate($id);'
         ];
 
         $formActions[] = [
@@ -515,7 +515,7 @@ class KeConnectP30udp extends IPSModule
                 [
                     'type'    => 'Button',
                     'caption' => 'Re-install variable-profiles',
-                    'onClick' => 'KebaConnect_InstallVarProfiles($id, true);'
+                    'onClick' => $this->GetModulePrefix() . '_InstallVarProfiles($id, true);'
                 ]
             ]
         ];
@@ -546,7 +546,7 @@ class KeConnectP30udp extends IPSModule
                         [
                             'type'    => 'Button',
                             'caption' => 'Send',
-                            'onClick' => 'KebaConnect_SendDisplayText($id, $txt);'
+                            'onClick' => $this->GetModulePrefix() . '_SendDisplayText($id, $txt);'
                         ],
                     ],
                 ],
@@ -568,7 +568,7 @@ class KeConnectP30udp extends IPSModule
                         [
                             'type'    => 'Button',
                             'caption' => 'Authorize session',
-                            'onClick' => 'KebaConnect_AuthorizeSession($id, $TAG, $CLASS);'
+                            'onClick' => $this->GetModulePrefix() . '_AuthorizeSession($id, $TAG, $CLASS);'
                         ],
                     ],
                 ],
@@ -584,7 +584,7 @@ class KeConnectP30udp extends IPSModule
                         [
                             'type'    => 'Button',
                             'caption' => 'Deauthorize session',
-                            'onClick' => 'KebaConnect_DeauthorizeSession($id, $TAG);'
+                            'onClick' => $this->GetModulePrefix() . '_DeauthorizeSession($id, $TAG);'
                         ],
                     ],
                 ],
