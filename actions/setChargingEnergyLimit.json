@@ -1,29 +1,36 @@
 {
-    "id": "{556946D4-E17A-36D8-EA5F-2B1B1AAF7880}",
-    "caption": "Limit charging energy",
-    "form": [
-        {
-            "type": "NumberSpinner",
-            "digits": 4,
-            "suffix": "kWh",
-            "name": "ENERGY",
-            "caption": "Energy"
-        }
-    ],
-    "action": "KebaConnect_SetMaxChargingCurrent($_IPS['TARGET'], $_IPS['CURRENT']);",
-    "restrictions": {
-        "objectType": [ 1 ],
-        "moduleID": [ "{A84E350B-55B7-2841-A6F1-C0B17FA0C4CD}" ],
-        "includeEnvironments": [ "TestCommands", "Default" ]
-    },
-    "priority": 10,
-    "category": "target",
-    "format": "Limit energy to {ENERGY}kWh",
-    "locale": {
-        "de": {
-            "Limit charging energy": "Ladeenergie begrenzen",
-            "Energy": "Energie",
-            "Limit energy to {ENERGY}kWh": "Energie auf {ENERGY}kWh begrenzen"
-        }
-    }
+	"id": "{556946D4-E17A-36D8-EA5F-2B1B1AAF7880}",
+	"caption": "Limit charging energy",
+	"form": [
+		{
+			"type": "NumberSpinner",
+			"digits": 4,
+			"suffix": "kWh",
+			"name": "ENERGY",
+			"caption": "Energy"
+		}
+	],
+	"action": "KebaConnect_SetMaxChargingCurrent($_IPS['TARGET'], $_IPS['CURRENT']);",
+	"restrictions": {
+		"objectType": [
+			1
+		],
+		"moduleID": [
+			"{A84E350B-55B7-2841-A6F1-C0B17FA0C4CD}"
+		],
+		"includeEnvironments": [
+			"TestCommands",
+			"Default"
+		]
+	},
+	"priority": 10,
+	"category": "target",
+	"format": "Limit energy to {ENERGY}kWh",
+	"locale": {
+		"de": {
+			"Limit charging energy": "Ladeenergie begrenzen",
+			"Energy": "Energie",
+			"Limit energy to {ENERGY}kWh": "Energie auf {ENERGY}kWh begrenzen"
+		}
+	}
 }

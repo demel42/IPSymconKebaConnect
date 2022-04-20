@@ -1,0 +1,33 @@
+{
+	"id": "{48F34A0F-08D3-A611-351C-706B985CB129}",
+	"caption": "Deauthorize session",
+	"form": [
+		{
+			"type": "ValidationTextBox",
+			"validate": "^([0-9A-Fa-f][0-9A-Fa-f]){1,8}$",
+			"name": "TAG",
+			"caption": "RFID Tag (max 16 Chars)"
+		}
+	],
+	"action": "KebaConnect_DeauthorizeSession($_IPS['TARGET'], $_IPS['TAG']);",
+	"restrictions": {
+		"objectType": [
+			1
+		],
+		"moduleID": [
+			"{A84E350B-55B7-2841-A6F1-C0B17FA0C4CD}"
+		],
+		"includeEnvironments": [
+			"TestCommands",
+			"Default"
+		]
+	},
+	"priority": 10,
+	"category": "target",
+	"locale": {
+		"de": {
+			"Deauthorize session": "Ladezyklus sperren",
+			"RFID Tag (max 16 Chars)": "RFID Tag (max 16 Zeichen)"
+		}
+	}
+}

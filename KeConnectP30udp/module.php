@@ -13,19 +13,6 @@ class KeConnectP30udp extends IPSModule
     private static $UnicastPort = 7090;
     private static $BroadcastPort = 7092;
 
-    public static $STATE_SYSTEM_STARTED = 0;
-    public static $STATE_NOTREADY = 1;
-    public static $STATE_READY = 2;
-    public static $STATE_CHARGING = 3;
-    public static $STATE_ERROR = 4;
-    public static $STATE_SUSPENDED = 5;
-
-    public static $CABLE_NOT_PLUGGED = 0;
-    public static $CABLE_PLUGGED_IN_STATION = 1;
-    public static $CABLE_LOCKED_IN_STATION = 3;
-    public static $CABLE_PLUGGED_IN_VEHICLE = 5;
-    public static $CABLE_LOCKED_IN_VEHICLE = 7;
-
     public static $fixedVariables = [
         'ChargingState',
         'CableState',
@@ -126,6 +113,12 @@ class KeConnectP30udp extends IPSModule
             'Desc'            => 'RFID card',
             'VariableType'    => VARIABLETYPE_STRING,
         ],
+        [
+            'Ident'           => 'ComBackend',
+            'Desc'            => 'Communication backend',
+            'VariableType'    => VARIABLETYPE_BOOLEAN,
+            'VariableProfile' => 'KebaConnect.ComBackend',
+        ],
 
         [
             'Ident'           => 'ErrorCode',
@@ -139,58 +132,6 @@ class KeConnectP30udp extends IPSModule
             'VariableType'    => VARIABLETYPE_STRING,
         ],
     ];
-
-    public function InstallVarProfiles(bool $reInstall = false)
-    {
-        if ($reInstall) {
-            $this->SendDebug(__FUNCTION__, 'reInstall=' . $this->bool2str($reInstall), 0);
-        }
-
-        $this->CreateVarProfile('KebaConnect.Current', VARIABLETYPE_FLOAT, ' A', 0, 0, 0, 1, '', '', $reInstall);
-        $this->CreateVarProfile('KebaConnect.Power', VARIABLETYPE_FLOAT, ' kW', 0, 0, 0, 2, '', '', $reInstall);
-        $this->CreateVarProfile('KebaConnect.Energy', VARIABLETYPE_FLOAT, ' kWh', 0, 0, 0, 2, '', '', $reInstall);
-        $this->CreateVarProfile('KebaConnect.Voltage', VARIABLETYPE_FLOAT, ' V', 0, 0, 0, 0, '', '', $reInstall);
-        $this->CreateVarProfile('KebaConnect.PowerFactor', VARIABLETYPE_FLOAT, ' %', 0, 0, 0, 1, '', '', $reInstall);
-
-        $this->CreateVarProfile('KebaConnect.MaxCurrent', VARIABLETYPE_INTEGER, ' A', 0, 0, 0, 0, '', '', $reInstall);
-
-        $associations = [];
-        $associations[] = ['Wert' => self::$STATE_SYSTEM_STARTED, 'Name' => $this->Translate('system started'), 'Farbe' => -1];
-        $associations[] = ['Wert' => self::$STATE_NOTREADY, 'Name' => $this->Translate('not ready for charging'), 'Farbe' => -1];
-        $associations[] = ['Wert' => self::$STATE_READY, 'Name' => $this->Translate('ready for charging'), 'Farbe' => -1];
-        $associations[] = ['Wert' => self::$STATE_CHARGING, 'Name' => $this->Translate('charging'), 'Farbe' => -1];
-        $associations[] = ['Wert' => self::$STATE_ERROR, 'Name' => $this->Translate('error occured'), 'Farbe' => -1];
-        $associations[] = ['Wert' => self::$STATE_SUSPENDED, 'Name' => $this->Translate('charging suspended'), 'Farbe' => -1];
-        $this->CreateVarProfile('KebaConnect.ChargingState', VARIABLETYPE_INTEGER, '', 0, 0, 0, 1, '', $associations, $reInstall);
-
-        $associations = [];
-        $associations[] = ['Wert' => self::$CABLE_NOT_PLUGGED, 'Name' => $this->Translate('not plugged'), 'Farbe' => -1];
-        $associations[] = ['Wert' => self::$CABLE_PLUGGED_IN_STATION, 'Name' => $this->Translate('plugged in station'), 'Farbe' => -1];
-        $associations[] = ['Wert' => self::$CABLE_LOCKED_IN_STATION, 'Name' => $this->Translate('locked in station'), 'Farbe' => -1];
-        $associations[] = ['Wert' => self::$CABLE_PLUGGED_IN_VEHICLE, 'Name' => $this->Translate('plugged in vehicle'), 'Farbe' => -1];
-        $associations[] = ['Wert' => self::$CABLE_LOCKED_IN_VEHICLE, 'Name' => $this->Translate('locked in vehicle'), 'Farbe' => -1];
-        $this->CreateVarProfile('KebaConnect.CableState', VARIABLETYPE_INTEGER, '', 0, 0, 0, 1, '', $associations, $reInstall);
-
-        $associations = [];
-        $associations[] = ['Wert' => 0, 'Name' => $this->Translate('no error'), 'Farbe' => -1];
-        $associations[] = ['Wert' => 1, 'Name' => $this->Translate('Error 0x%05x'), 'Farbe' => -1];
-        $this->CreateVarProfile('KebaConnect.Error', VARIABLETYPE_INTEGER, '', 0, 0, 0, 1, '', $associations, $reInstall);
-
-        $associations = [];
-        $associations[] = ['Wert' => 0, 'Name' => $this->Translate('no limit'), 'Farbe' => -1];
-        $associations[] = ['Wert' => 1, 'Name' => $this->Translate('%0.0f kWh'), 'Farbe' => -1];
-        $this->CreateVarProfile('KebaConnect.EnergyLimit', VARIABLETYPE_FLOAT, '', 0, 100, 1, 0, '', $associations, $reInstall);
-
-        $associations = [];
-        $associations[] = ['Wert' => false, 'Name' => $this->Translate('no'), 'Farbe' => -1];
-        $associations[] = ['Wert' => true, 'Name' => $this->Translate('yes'), 'Farbe' => -1];
-        $this->CreateVarProfile('KebaConnect.EnableCharging', VARIABLETYPE_BOOLEAN, '', 0, 0, 0, 0, '', $associations, $reInstall);
-
-        $associations = [];
-        $associations[] = ['Wert' => false, 'Name' => $this->Translate('-'), 'Farbe' => -1];
-        $associations[] = ['Wert' => true, 'Name' => $this->Translate('unlock'), 'Farbe' => -1];
-        $this->CreateVarProfile('KebaConnect.UnlockPlug', VARIABLETYPE_BOOLEAN, '', 0, 0, 0, 0, '', $associations, $reInstall);
-    }
 
     public function Create()
     {
@@ -210,17 +151,20 @@ class KeConnectP30udp extends IPSModule
         $this->RegisterPropertyInteger('standby_update_interval', '5');
         $this->RegisterPropertyInteger('charging_update_interval', '1');
 
-        $this->RegisterTimer('StandbyUpdate', 0, 'KebaConnect_StandbyUpdate(' . $this->InstanceID . ');');
-        $this->RegisterTimer('ChargingUpdate', 0, 'KebaConnect_ChargingUpdate(' . $this->InstanceID . ');');
+        $this->RegisterAttributeString('UpdateInfo', '');
 
         $this->InstallVarProfiles(false);
 
         $this->RequireParent('{82347F20-F541-41E1-AC5B-A636FD3AE2D8}');
+
+        $this->RegisterTimer('StandbyUpdate', 0, 'KebaConnect_StandbyUpdate(' . $this->InstanceID . ');');
+        $this->RegisterTimer('ChargingUpdate', 0, 'KebaConnect_ChargingUpdate(' . $this->InstanceID . ');');
+
+        $this->RegisterMessage(0, IPS_KERNELMESSAGE);
     }
 
-    private function CheckConfiguration()
+    private function CheckModuleConfiguration()
     {
-        $s = '';
         $r = [];
 
         $host = $this->ReadPropertyString('host');
@@ -242,19 +186,98 @@ class KeConnectP30udp extends IPSModule
             $r[] = $this->Translate('to save consumption per RFID, history must be saved');
         }
 
-        if ($r != []) {
-            $s = $this->Translate('The following points of the configuration are incorrect') . ':' . PHP_EOL;
-            foreach ($r as $p) {
-                $s .= '- ' . $p . PHP_EOL;
+        return $r;
+    }
+
+    private function CheckModuleUpdate(array $oldInfo, array $newInfo)
+    {
+        $r = [];
+
+        $old_val = $this->ReadPropertyString('use_fields');
+        $use_fields = json_decode($old_val, true);
+        $new_fields = [];
+        foreach (self::$optionalVariables as $var) {
+            $ident = $var['Ident'];
+            $use = false;
+            foreach ($use_fields as $field) {
+                if ($ident == $this->GetArrayElem($field, 'ident', '')) {
+                    $use = (bool) $this->GetArrayElem($field, 'use', false);
+                    break;
+                }
             }
+            $new_fields[] = [
+                'ident' => $ident,
+                'use'   => $use
+            ];
+        }
+        $new_val = json_encode($new_fields);
+        if ($new_val != $old_val) {
+            $field = $this->Translate('available variables');
+            $r[] = $this->TranslateFormat('Adjust Field "{$field}"', ['{$field}' => $field]);
         }
 
-        return $s;
+        return $r;
+    }
+
+    private function CompleteModuleUpdate(array $oldInfo, array $newInfo)
+    {
+        $use_fields = json_decode($this->ReadPropertyString('use_fields'), true);
+        $values = [];
+        foreach (self::$optionalVariables as $var) {
+            $ident = $var['Ident'];
+            $use = false;
+            foreach ($use_fields as $field) {
+                if ($ident == $this->GetArrayElem($field, 'ident', '')) {
+                    $use = (bool) $this->GetArrayElem($field, 'use', false);
+                    break;
+                }
+            }
+            $values[] = [
+                'ident' => $ident,
+                'use'   => $use
+            ];
+        }
+        IPS_SetProperty($this->InstanceID, 'use_fields', json_encode($values));
+
+        return '';
     }
 
     public function ApplyChanges()
     {
         parent::ApplyChanges();
+
+        if ($this->CheckPrerequisites() != false) {
+            $this->MaintainTimer('StandbyUpdate', 0);
+            $this->MaintainTimer('ChargingUpdate', 0);
+            $this->SetStatus(self::$IS_INVALIDPREREQUISITES);
+            return;
+        }
+
+        if ($this->CheckUpdate() != false) {
+            $this->MaintainTimer('StandbyUpdate', 0);
+            $this->MaintainTimer('ChargingUpdate', 0);
+            $this->SetStatus(self::$IS_UPDATEUNCOMPLETED);
+            return;
+        }
+
+        $refs = $this->GetReferenceList();
+        foreach ($refs as $ref) {
+            $this->UnregisterReference($ref);
+        }
+        $propertyNames = [];
+        foreach ($propertyNames as $name) {
+            $oid = $this->ReadPropertyInteger($name);
+            if ($oid >= 10000) {
+                $this->RegisterReference($oid);
+            }
+        }
+
+        if ($this->CheckConfiguration() != false) {
+            $this->MaintainTimer('StandbyUpdate', 0);
+            $this->MaintainTimer('ChargingUpdate', 0);
+            $this->SetStatus(self::$IS_INVALIDCONFIG);
+            return;
+        }
 
         $vpos = 0;
         $this->MaintainVariable('ChargingState', $this->Translate('Charging state'), VARIABLETYPE_INTEGER, 'KebaConnect.ChargingState', $vpos++, true);
@@ -307,100 +330,38 @@ class KeConnectP30udp extends IPSModule
         $this->MaintainVariable('LastChange', $this->Translate('Last change'), VARIABLETYPE_INTEGER, '~UnixTimestamp', $vpos++, true);
         $this->MaintainVariable('LastUpdate', $this->Translate('Last update'), VARIABLETYPE_INTEGER, '~UnixTimestamp', $vpos++, true);
 
-        $refs = $this->GetReferenceList();
-        foreach ($refs as $ref) {
-            $this->UnregisterReference($ref);
-        }
-        $propertyNames = [];
-        foreach ($propertyNames as $name) {
-            $oid = $this->ReadPropertyInteger($name);
-            if ($oid >= 10000) {
-                $this->RegisterReference($oid);
-            }
-        }
-
         $module_disable = $this->ReadPropertyBoolean('module_disable');
         if ($module_disable) {
             $this->MaintainTimer('StandbyUpdate', 0);
             $this->MaintainTimer('ChargingUpdate', 0);
-            $this->SetStatus(IS_INACTIVE);
-            return;
-        }
-
-        if ($this->CheckConfiguration() != false) {
-            $this->MaintainTimer('StandbyUpdate', 0);
-            $this->MaintainTimer('ChargingUpdate', 0);
-            $this->SetStatus(self::$IS_INVALIDCONFIG);
+            $this->SetStatus(self::$IS_DEACTIVATED);
             return;
         }
 
         $this->SetStatus(IS_ACTIVE);
 
-        $this->SetStandbyUpdateInterval();
-        $this->SetChargingUpdateInterval();
+        if (IPS_GetKernelRunlevel() == KR_READY) {
+            $this->SetStandbyUpdateInterval();
+            $this->SetChargingUpdateInterval();
+        }
     }
 
-    public function UpdateFields()
+    public function MessageSink($TimeStamp, $SenderID, $Message, $Data)
     {
-        $use_fields = json_decode($this->ReadPropertyString('use_fields'), true);
+        parent::MessageSink($TimeStamp, $SenderID, $Message, $Data);
 
-        $chg = false;
-        foreach ($use_fields as $field) {
-            $ident = $field['ident'];
-            $fnd = false;
-            foreach (self::$optionalVariables as $var) {
-                if ($ident == $var['Ident']) {
-                    $fnd = true;
-                    break;
-                }
-            }
-            if ($fnd == false) {
-                $chg = true;
-            }
-        }
-
-        $values = [];
-        foreach (self::$optionalVariables as $var) {
-            $ident = $var['Ident'];
-            $use = false;
-            $fnd = false;
-            foreach ($use_fields as $field) {
-                if ($ident == $this->GetArrayElem($field, 'ident', '')) {
-                    $fnd = true;
-                    $use = (bool) $this->GetArrayElem($field, 'use', false);
-                    break;
-                }
-            }
-            if ($fnd == false) {
-                $chg = true;
-            }
-            $desc = $this->Translate($var['Desc']);
-            $values[] = ['ident' => $ident, 'desc' => $desc, 'use' => $use];
-        }
-
-        if ($chg == true) {
-            $this->UpdateFormField('use_fields', 'values', json_encode($values));
+        if ($Message == IPS_KERNELMESSAGE && $Data[0] == KR_READY) {
+            $this->SetStandbyUpdateInterval();
+            $this->SetChargingUpdateInterval();
         }
     }
 
     protected function GetFormElements()
     {
-        $formElements = [];
+        $formElements = $this->GetCommonFormElements('KEBA KeConnect P30 (UDP)');
 
-        $formElements[] = [
-            'type'    => 'Label',
-            'caption' => 'KEBA KeConnect P30 (UDP)'
-        ];
-
-        $s = $this->CheckConfiguration();
-        if ($s != '') {
-            $formElements[] = [
-                'type'    => 'Label',
-                'caption' => $s
-            ];
-            $formElements[] = [
-                'type'    => 'Label',
-            ];
+        if ($this->GetStatus() == self::$IS_UPDATEUNCOMPLETED) {
+            return $formElements;
         }
 
         $formElements[] = [
@@ -409,36 +370,35 @@ class KeConnectP30udp extends IPSModule
             'caption' => 'Disable instance'
         ];
 
-        $items = [];
-        $items[] = [
-            'type'     => 'ValidationTextBox',
-            'name'     => 'host',
-            'caption'  => 'IP address of the wallbox',
-            'validate' => '^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$',
-        ];
-        $items[] = [
-            'type'     => 'ValidationTextBox',
-            'name'     => 'serialnumber',
-            'caption'  => 'Serial number (optional)',
-        ];
-
-        $items[] = [
-            'type'    => 'NumberSpinner',
-            'name'    => 'standby_update_interval',
-            'suffix'  => 'Minutes',
-            'caption' => 'Update interval in standby',
-        ];
-
-        $items[] = [
-            'type'    => 'NumberSpinner',
-            'name'    => 'charging_update_interval',
-            'suffix'  => 'Seconds',
-            'caption' => 'Update interval while charging',
-        ];
-
         $formElements[] = [
             'type'     => 'ExpansionPanel',
-            'items'    => $items,
+            'items'    => [
+                [
+                    'type'     => 'ValidationTextBox',
+                    'name'     => 'host',
+                    'caption'  => 'IP address of the wallbox',
+                    'validate' => '^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$',
+                ],
+                [
+                    'type'     => 'ValidationTextBox',
+                    'name'     => 'serialnumber',
+                    'caption'  => 'Serial number (optional)',
+                ],
+                [
+                    'type'    => 'NumberSpinner',
+                    'name'    => 'standby_update_interval',
+                    'suffix'  => 'Minutes',
+                    'minimum' => 0,
+                    'caption' => 'Update interval in standby',
+                ],
+                [
+                    'type'    => 'NumberSpinner',
+                    'name'    => 'charging_update_interval',
+                    'suffix'  => 'Seconds',
+                    'minimum' => 0,
+                    'caption' => 'Update interval while charging',
+                ],
+            ],
             'caption'  => 'Basic configuration',
             'expanded' => false,
         ];
@@ -452,43 +412,43 @@ class KeConnectP30udp extends IPSModule
             ];
         }
 
-        $items = [];
-        $items[] = [
-            'type'     => 'List',
-            'name'     => 'use_fields',
-            'caption'  => 'available variables',
-            'rowCount' => count($values),
-            'add'      => false,
-            'delete'   => false,
-            'columns'  => [
-                [
-                    'caption' => 'Ident',
-                    'name'    => 'ident',
-                    'width'   => '200px',
-                    'save'    => true
-                ],
-                [
-                    'caption' => 'Description',
-                    'name'    => 'desc',
-                    'width'   => 'auto'
-                ],
-                [
-                    'caption' => 'use',
-                    'name'    => 'use',
-                    'width'   => '100px',
-                    'edit'    => [
-                        'type' => 'CheckBox'
-                    ],
-                ],
-            ],
-            'values'   => $values
-        ];
         $formElements[] = [
             'type'     => 'ExpansionPanel',
-            'items'    => $items,
+            'items'    => [
+                [
+                    'type'     => 'List',
+                    'name'     => 'use_fields',
+                    'caption'  => 'available variables',
+                    'rowCount' => count($values),
+                    'add'      => false,
+                    'delete'   => false,
+                    'columns'  => [
+                        [
+                            'caption' => 'Ident',
+                            'name'    => 'ident',
+                            'width'   => '200px',
+                            'save'    => true
+                        ],
+                        [
+                            'caption' => 'Description',
+                            'name'    => 'desc',
+                            'width'   => 'auto',
+                            'save'    => false,
+                        ],
+                        [
+                            'caption' => 'use',
+                            'name'    => 'use',
+                            'width'   => '100px',
+                            'edit'    => [
+                                'type' => 'CheckBox'
+                            ],
+                        ],
+                    ],
+                    'values'   => $values
+                ],
+            ],
             'caption'  => 'Additional variables',
             'expanded' => false,
-            'onClick'  => 'KebaConnect_UpdateFields($id);'
         ];
 
         $formElements[] = [
@@ -531,6 +491,15 @@ class KeConnectP30udp extends IPSModule
     protected function GetFormActions()
     {
         $formActions = [];
+
+        if ($this->GetStatus() == self::$IS_UPDATEUNCOMPLETED) {
+            $formActions[] = $this->GetCompleteUpdateFormAction();
+
+            $formActions[] = $this->GetInformationFormAction();
+            $formActions[] = $this->GetReferencesFormAction();
+
+            return $formActions;
+        }
 
         $formActions[] = [
             'type'    => 'Button',
@@ -581,11 +550,49 @@ class KeConnectP30udp extends IPSModule
                         ],
                     ],
                 ],
+                [
+                    'type'    => 'RowLayout',
+                    'items'   => [
+                        [
+                            'type'     => 'ValidationTextBox',
+                            'validate' => '^([0-9A-Fa-f][0-9A-Fa-f]){1,8}$',
+                            'name'     => 'TAG',
+                            'caption'  => 'RFID Tag (max 16 Chars)'
+                        ],
+                        [
+                            'type'     => 'ValidationTextBox',
+                            'validate' => '^([0-9A-Fa-f][0-9A-Fa-f]){0,10}$',
+                            'name'     => 'CLASS',
+                            'caption'  => 'RFID Class (max 20 Chars)'
+                        ],
+                        [
+                            'type'    => 'Button',
+                            'caption' => 'Authorize session',
+                            'onClick' => 'KebaConnect_AuthorizeSession($id, $TAG, $CLASS);'
+                        ],
+                    ],
+                ],
+                [
+                    'type'    => 'RowLayout',
+                    'items'   => [
+                        [
+                            'type'     => 'ValidationTextBox',
+                            'validate' => '^([0-9A-Fa-f][0-9A-Fa-f]){1,8}$',
+                            'name'     => 'TAG',
+                            'caption'  => 'RFID Tag (max 16 Chars)'
+                        ],
+                        [
+                            'type'    => 'Button',
+                            'caption' => 'Deauthorize session',
+                            'onClick' => 'KebaConnect_DeauthorizeSession($id, $TAG);'
+                        ],
+                    ],
+                ],
             ]
         ];
 
-        $formActions[] = $this->GetInformationForm();
-        $formActions[] = $this->GetReferencesForm();
+        $formActions[] = $this->GetInformationFormAction();
+        $formActions[] = $this->GetReferencesFormAction();
 
         return $formActions;
     }
@@ -1047,12 +1054,20 @@ class KeConnectP30udp extends IPSModule
                 $this->SaveValue('FirmwareVersion', $firmware, $is_changed);
                 $this->SendDebug(__FUNCTION__, 'set variable "FirmwareVersion" to "' . $firmware . '" from field "Firmware"', 0);
             }
+            if (in_array('Backend', $use_idents)) {
+                $b = boolval($this->GetArrayElem($jdata, 'Backend', 0));
+                $this->SaveValue('ComBackend', $b, $is_changed);
+                $this->SendDebug(__FUNCTION__, 'set variable "ComBackend" to ' . $this->bool2str($b) . ' from field "Backend"', 0);
+            }
             if (in_array('LastBoot', $use_idents)) {
                 $sec = intval($this->GetArrayElem($jdata, 'Sec', 0));
                 $ts = $now - $sec;
                 $this->SaveValue('LastBoot', $ts, $is_changed);
                 $this->SendDebug(__FUNCTION__, 'set variable "LastBoot" to ' . date('d.m.Y H:i:s', $ts) . ' from field "Sec"', 0);
             }
+            $dsw1 = $this->GetArrayElem($jdata, 'DIP-Sw1', '');
+            $dsw2 = $this->GetArrayElem($jdata, 'DIP-Sw2', '');
+            $this->SendDebug(__FUNCTION__, 'Dip-Switch 1=' . $this->int2bitmap(hexdec($dsw1), 8) . ', 2=' . $this->int2bitmap(hexdec($dsw2), 8), 0);
         }
 
         if ($report_id == 2) {
@@ -1067,9 +1082,9 @@ class KeConnectP30udp extends IPSModule
                 $this->SendDebug(__FUNCTION__, 'set variable "CableState" to ' . $cable_state . ' from field "CableState"', 0);
             }
             if (in_array('EnableCharging', $use_idents)) {
-                $enable_sys = boolval($this->GetArrayElem($jdata, 'Enable sys', false));
-                $this->SaveValue('EnableCharging', $enable_sys, $is_changed);
-                $this->SendDebug(__FUNCTION__, 'set variable "EnableCharging" to ' . $enable_sys . ' from field "Enable sys"', 0);
+                $enable_user = boolval($this->GetArrayElem($jdata, 'Enable user', false));
+                $this->SaveValue('EnableCharging', $enable_user, $is_changed);
+                $this->SendDebug(__FUNCTION__, 'set variable "EnableCharging" to ' . $enable_user . ' from field "Enable user"', 0);
             }
 
             $error1 = $this->GetArrayElem($jdata, 'Error 1', 0);
@@ -1110,6 +1125,10 @@ class KeConnectP30udp extends IPSModule
                 $this->SaveValue('ChargingEnergyLimit', $setenergy, $is_changed);
                 $this->SendDebug(__FUNCTION__, 'set variable "ChargingEnergyLimit" to ' . $setenergy . ' from field "Setenergy"', 0);
             }
+
+            $auth_on = $this->GetArrayElem($jdata, 'AuthON', 0);
+            $auth_req = $this->GetArrayElem($jdata, 'Authreq', 0);
+            $this->SendDebug(__FUNCTION__, 'AuthON=' . $auth_on . ', Authreq=' . $auth_req, 0);
 
             $b = $this->checkAction('SwitchEnableCharging', false);
             $this->MaintainAction('EnableCharging', $b);
@@ -1333,6 +1352,10 @@ class KeConnectP30udp extends IPSModule
                         break;
                 }
                 break;
+            case 'AuthorizeSession':
+            case 'DeauthorizeSession':
+                $enabled = true;
+                break;
             default:
                 $this->SendDebug(__FUNCTION__, 'unsupported action "' . $func . '"', 0);
                 break;
@@ -1401,6 +1424,47 @@ class KeConnectP30udp extends IPSModule
         return $this->CallAction($cmd);
     }
 
+    public function AuthorizeSession(string $tag, string $class)
+    {
+        if ($this->checkAction(__FUNCTION__, true) == false) {
+            return false;
+        }
+
+        // authorize charging
+        // tag   = RFID tag (max 8 hex-bytes = 16 chars)
+        // class = RFID class (max 10 hex-bytes = 20 chars)
+
+        if (preg_match('/^([0-9A-Fa-f][0-9A-Fa-f]){1,8}$/', $tag) == false) {
+            $this->SendDebug(__FUNCTION__, 'tag="' . $tag . '" is malformed - max 8 hex-bytes = 16 chars', 0);
+            return false;
+        }
+        if (preg_match('/^([0-9A-Fa-f][0-9A-Fa-f]){0,10}$/', $class) == false) {
+            $this->SendDebug(__FUNCTION__, 'class="' . $class . '" is malformed - max 8 hex-bytes = 16 chars', 0);
+            return false;
+        }
+
+        $cmd = 'start ' . $tag . ' ' . $class;
+        return $this->CallAction($cmd);
+    }
+
+    public function DeauthorizeSession(string $tag)
+    {
+        if ($this->checkAction(__FUNCTION__, true) == false) {
+            return false;
+        }
+
+        // authorize charging
+        // tag   = RFID tag (8 bytes)
+
+        if (preg_match('/^([0-9A-Fa-f][0-9A-Fa-f]){1,8}$/', $tag) == false) {
+            $this->SendDebug(__FUNCTION__, 'tag="' . $tag . '" is malformed - max 8 hex-bytes = 16 chars', 0);
+            return false;
+        }
+
+        $cmd = 'stop ' . $tag;
+        return $this->CallAction($cmd);
+    }
+
     public function SetMaxChargingCurrent(float $current)
     {
         if ($this->checkAction(__FUNCTION__, true) == false) {
@@ -1436,9 +1500,9 @@ class KeConnectP30udp extends IPSModule
         return $this->CallAction($cmd);
     }
 
-    public function RequestAction($Ident, $Value)
+    public function RequestAction($ident, $value)
     {
-        if ($this->CommonRequestAction($Ident, $Value)) {
+        if ($this->CommonRequestAction($ident, $value)) {
             return;
         }
 
@@ -1448,38 +1512,38 @@ class KeConnectP30udp extends IPSModule
         }
 
         $r = false;
-        switch ($Ident) {
+        switch ($ident) {
             case 'EnableCharging':
-                $r = $this->SwitchEnableCharging((bool) $Value);
-                $this->SendDebug(__FUNCTION__, $Ident . '=' . $this->bool2str($Value) . ' => ret=' . $this->bool2str($r), 0);
+                $r = $this->SwitchEnableCharging((bool) $value);
+                $this->SendDebug(__FUNCTION__, $ident . '=' . $this->bool2str($value) . ' => ret=' . $this->bool2str($r), 0);
                 if ($r) {
-                    $this->SetValue($Ident, $Value);
+                    $this->SetValue($ident, $value);
                     $this->SetStandbyUpdateInterval(1);
                 }
                 break;
             case 'MaxChargingCurrent':
-                $r = $this->SetMaxChargingCurrent((float) $Value);
-                $this->SendDebug(__FUNCTION__, $Ident . '=' . $Value . ' => ret=' . $this->bool2str($r), 0);
+                $r = $this->SetMaxChargingCurrent((float) $value);
+                $this->SendDebug(__FUNCTION__, $ident . '=' . $value . ' => ret=' . $this->bool2str($r), 0);
                 if ($r) {
-                    $this->SetValue($Ident, $Value);
+                    $this->SetValue($ident, $value);
                     $this->SetStandbyUpdateInterval(1);
                 }
                 break;
             case 'ChargingEnergyLimit':
-                $r = $this->SetChargingEnergyLimit((float) $Value);
-                $this->SendDebug(__FUNCTION__, $Ident . '=' . $Value . ' => ret=' . $this->bool2str($r), 0);
+                $r = $this->SetChargingEnergyLimit((float) $value);
+                $this->SendDebug(__FUNCTION__, $ident . '=' . $value . ' => ret=' . $this->bool2str($r), 0);
                 if ($r) {
-                    $this->SetValue($Ident, $Value);
+                    $this->SetValue($ident, $value);
                     $this->SetStandbyUpdateInterval(1);
                 }
                 break;
             case 'UnlockPlug':
                 $r = $this->UnlockPlug();
-                $this->SendDebug(__FUNCTION__, $Ident . '=' . $Value . ' => ret=' . $this->bool2str($r), 0);
-                $this->SetValue($Ident, false); // Trick, damit der Wert immer "false" bleibt
+                $this->SendDebug(__FUNCTION__, $ident . '=' . $value . ' => ret=' . $this->bool2str($r), 0);
+                $this->SetValue($ident, false); // Trick, damit der Wert immer "false" bleibt
                 break;
             default:
-                $this->SendDebug(__FUNCTION__, 'invalid ident ' . $Ident, 0);
+                $this->SendDebug(__FUNCTION__, 'invalid ident ' . $ident, 0);
                 break;
         }
     }

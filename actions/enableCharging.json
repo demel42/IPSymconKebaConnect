@@ -1,18 +1,25 @@
 {
-    "id": "{5150A6F1-70E3-DA8E-F070-FEDD9B1F5AB1}",
-    "caption": "Enable charging",
-    "form": [ ],
-    "action": "KebaConnect_SwitchEnableCharging($_IPS['TARGET'], 1);",
-    "restrictions": {
-        "objectType": [ 1 ],
-        "moduleID": [ "{A84E350B-55B7-2841-A6F1-C0B17FA0C4CD}" ],
-        "includeEnvironments": [ "TestCommands", "Default" ]
-    },
-    "priority": 10,
-    "category": "target",
-    "locale": {
-        "de": {
-            "Enable charging": "Laden aktivieren"
-        }
-    }
+	"id": "{5150A6F1-70E3-DA8E-F070-FEDD9B1F5AB1}",
+	"caption": "Enable charging",
+	"form": [],
+	"action": "KebaConnect_SwitchEnableCharging($_IPS['TARGET'], 1);",
+	"restrictions": {
+		"objectType": [
+			1
+		],
+		"moduleID": [
+			"{A84E350B-55B7-2841-A6F1-C0B17FA0C4CD}"
+		],
+		"includeEnvironments": [
+			"TestCommands",
+			"Default"
+		]
+	},
+	"priority": 10,
+	"category": "target",
+	"locale": {
+		"de": {
+			"Enable charging": "Laden aktivieren"
+		}
+	}
 }

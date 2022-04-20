@@ -1,36 +1,43 @@
 {
-    "id": "{4A94161F-9C14-60B2-1217-FD848310EA95}",
-    "caption": "Set maximum charging current",
-    "form": [
-        {
-            "type": "NumberSpinner",
-            "digits": 4,
-            "minimum": 6,
-            "maximum": 63,
-            "suffix": "A",
-            "name": "CURRENT",
-            "caption": "Current"
-        },
-        {
-            "type": "Label",
-            "caption": "Possible from 6A up to 63A or maximal supported current"
-        }
-    ],
-    "action": "KebaConnect_SetMaxChargingCurrent($_IPS['TARGET'], $_IPS['CURRENT']);",
-    "restrictions": {
-        "objectType": [ 1 ],
-        "moduleID": [ "{A84E350B-55B7-2841-A6F1-C0B17FA0C4CD}" ],
-        "includeEnvironments": [ "TestCommands", "Default" ]
-    },
-    "priority": 10,
-    "category": "target",
-    "format": "Set maximum charging current to {CURRENT}A",
-    "locale": {
-        "de": {
-            "Set maximum charging current": "Maximalen Ladestrom einstellen",
-            "Current": "Strom",
-            "Possible from 6A up to 63A or maximal supported current": "Möglich von 6A bis zu 63A oder maximal unterstützter Strom",
-            "Set maximum charging current to {CURRENT}A": "maximalen Ladestrom auf {CURRENT}A einstellen"
-        }
-    }
+	"id": "{4A94161F-9C14-60B2-1217-FD848310EA95}",
+	"caption": "Set maximum charging current",
+	"form": [
+		{
+			"type": "NumberSpinner",
+			"digits": 4,
+			"minimum": 6,
+			"maximum": 63,
+			"suffix": "A",
+			"name": "CURRENT",
+			"caption": "Current"
+		},
+		{
+			"type": "Label",
+			"caption": "Possible from 6A up to 63A or maximal supported current"
+		}
+	],
+	"action": "KebaConnect_SetMaxChargingCurrent($_IPS['TARGET'], $_IPS['CURRENT']);",
+	"restrictions": {
+		"objectType": [
+			1
+		],
+		"moduleID": [
+			"{A84E350B-55B7-2841-A6F1-C0B17FA0C4CD}"
+		],
+		"includeEnvironments": [
+			"TestCommands",
+			"Default"
+		]
+	},
+	"priority": 10,
+	"category": "target",
+	"format": "Set maximum charging current to {CURRENT}A",
+	"locale": {
+		"de": {
+			"Set maximum charging current": "Maximalen Ladestrom einstellen",
+			"Current": "Strom",
+			"Possible from 6A up to 63A or maximal supported current": "Möglich von 6A bis zu 63A oder maximal unterstützter Strom",
+			"Set maximum charging current to {CURRENT}A": "maximalen Ladestrom auf {CURRENT}A einstellen"
+		}
+	}
 }

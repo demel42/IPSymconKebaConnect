@@ -104,13 +104,23 @@ Falls mehrere Keba-Wallboxen im Einsatz sind und eine Gesamtsumme pro RFID genö
 Es werden folgende Variablenprofile angelegt:
 
 * Boolean<br>
-KebaConnect.EnableCharging, KebaConnect.UnlockPlug
+KebaConnect.ComBackend,
+KebaConnect.EnableCharging,
+KebaConnect.UnlockPlug
 
 * Integer<br>
-KebaConnect.CableState, KebaConnect.ChargingState, KebaConnect.Error, KebaConnect.MaxCurrent
+KebaConnect.CableState,
+KebaConnect.ChargingState,
+KebaConnect.Error,
+KebaConnect.MaxCurrent
 
 * Float<br>
-KebaConnect.Current, KebaConnect.Power, KebaConnect.Energy, KebaConnect.Voltage, KebaConnect.PowerFactor, KebaConnect.EnergyLimit
+KebaConnect.Current,
+KebaConnect.Energy,
+KebaConnect.EnergyLimit,
+KebaConnect.Power,
+KebaConnect.PowerFactor,
+KebaConnect.Voltage
 
 ## 6. Anhang
 
@@ -124,6 +134,12 @@ Referenzen
 [KeContact P20 / P30 UDP Programmers Guide](https://www.keba.com/file/downloads/e-mobility/KeContact_P20_P30_UDP_ProgrGuide_en.pdf)
 
 ## 7. Versions-Historie
+
+- 1.2 @ 20.04.2022 09:43
+  - zusätzliches optionale Feld "Kommunikations-Backend"
+  - zusätzliche Funktionen/Aktionen AuthorizeSession() und DeauthorizeSession() um bei einer Wallbox mit RFID-Autorisierung diese aus dem IPS heraus zu setzen/zu löschen
+  - Implememtierung einer Update-Logik
+  - diverse interne Änderungen
 
 - 1.1.1 @ 16.04.2022 12:07
   - potentieller Namenskonflikt behoben (trait CommonStubs)

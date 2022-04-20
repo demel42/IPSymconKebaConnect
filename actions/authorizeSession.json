@@ -1,0 +1,40 @@
+{
+	"id": "{8D50B12D-0B05-D340-CBA3-9C2FF5B1D7EF}",
+	"caption": "Authorize session",
+	"form": [
+		{
+			"type": "ValidationTextBox",
+			"validate": "^([0-9A-Fa-f][0-9A-Fa-f]){1,8}$",
+			"name": "TAG",
+			"caption": "RFID Tag (max 16 Chars)"
+		},
+		{
+			"type": "ValidationTextBox",
+			"validate": "^([0-9A-Fa-f][0-9A-Fa-f]){0,10}$",
+			"name": "CLASS",
+			"caption": "RFID Class (max 20 Chars)"
+		}
+	],
+	"action": "KebaConnect_AuthorizeSession($_IPS['TARGET'], $_IPS['TAG'], $_IPS['CLASS']);",
+	"restrictions": {
+		"objectType": [
+			1
+		],
+		"moduleID": [
+			"{A84E350B-55B7-2841-A6F1-C0B17FA0C4CD}"
+		],
+		"includeEnvironments": [
+			"TestCommands",
+			"Default"
+		]
+	},
+	"priority": 10,
+	"category": "target",
+	"locale": {
+		"de": {
+			"Authorize session": "Ladezyklus autorisieren",
+			"RFID Tag (max 16 Chars)": "RFID Tag (max 16 Zeichen)",
+			"RFID Class (max 20 Chars)": "RFID Class (max 20 Zeichen)"
+		}
+	}
+}

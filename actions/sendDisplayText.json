@@ -1,27 +1,34 @@
 {
-    "id": "{3FC2546E-61DE-2645-11C7-62B11FEF5C32}",
-    "caption": "Display text on wallbox",
-    "form": [
-        {
-            "type": "ValidationTextBox",
-            "name": "TEXT",
-            "caption": "Text (max 23 Chars)"
-        }
-    ],
-    "action": "KebaConnect_SendDisplayText($_IPS['TARGET'], $_IPS['TEXT']);",
-    "restrictions": {
-        "objectType": [ 1 ],
-        "moduleID": [ "{A84E350B-55B7-2841-A6F1-C0B17FA0C4CD}" ],
-        "includeEnvironments": [ "TestCommands", "Default" ]
-    },
-    "priority": 10,
-    "category": "target",
-    "format": "Display text \"{TEXT}\"",
-    "locale": {
-        "de": {
-            "Display text on wallbox": "Text auf der Wallbox anzeigen",
-            "Text (max 23 Chars)": "Text (max. 23 Zeichen)",
-            "Display text \"{TEXT}\"": "Text \"{TEXT}\" anzeigen"
-        }
-    }
+	"id": "{3FC2546E-61DE-2645-11C7-62B11FEF5C32}",
+	"caption": "Display text on wallbox",
+	"form": [
+		{
+			"type": "ValidationTextBox",
+			"name": "TEXT",
+			"caption": "Text (max 23 Chars)"
+		}
+	],
+	"action": "KebaConnect_SendDisplayText($_IPS['TARGET'], $_IPS['TEXT']);",
+	"restrictions": {
+		"objectType": [
+			1
+		],
+		"moduleID": [
+			"{A84E350B-55B7-2841-A6F1-C0B17FA0C4CD}"
+		],
+		"includeEnvironments": [
+			"TestCommands",
+			"Default"
+		]
+	},
+	"priority": 10,
+	"category": "target",
+	"format": "Display text \"{TEXT}\"",
+	"locale": {
+		"de": {
+			"Display text on wallbox": "Text auf der Wallbox anzeigen",
+			"Text (max 23 Chars)": "Text (max. 23 Zeichen)",
+			"Display text \"{TEXT}\"": "Text \"{TEXT}\" anzeigen"
+		}
+	}
 }

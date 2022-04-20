@@ -2,7 +2,28 @@
 	"translations": {
 		"de": {
 			"KEBA KeConnect P30 (UDP)": "KEBA KeConnect P30 (UDP)",
+
+			"Instance has no active parent instance": "Instanz hat keine aktive übergeordnete Instanz",
+
+			"The following system prerequisites are missing": "Folgende Systemvoraussetzungen fehlen",
+
+			"The following points of the configuration are incorrect": "Die folgenden Punkte der Konfiguration sind fehlerhaft",
+			"to be able to display the charging history, it must be saved": "um den Ladeverlauf anzeigen zu können, muss er gespeichert werden",
+			"to save consumption per RFID, history must be saved": "um den Verbrauch pro RFID zu speichern, muss die Historie gespeichert werden",
+			"Host must be specified": "Host muss angegeben werden",
+
+			"Still something to do to complete the update": "Es ist noch etwas zu tun, um das Update abzuschließen",
+			"old version": "alte Version",
+			"new version": "neue Version",
+			"unknwon": "unbekannt",
+			"Press button 'Complete update' to carry out the required work": "Taste 'Update abschliessen' betätigen um die erforderlichen Arbeiten auszuführen",
+			"Complete update": "Update abschliessen",
+			"Unable to complete the update": "Das Update kann nicht abgeschlossen werden",
+			"please contact the author": "Bitte kontaktieren Sie den Autor",
+			"Adjust Field \"{$field}\"": "Feld \"{$field}\" anpassen",
+
 			"Disable instance": "Instanz deaktivieren",
+
 			"Basic configuration": "Basis-Konfiguration",
 			"IP address of the wallbox": "IP-Adresse der Wallbox",
 			"Serial number (optional)": "Seriennummer (optional)",
@@ -23,22 +44,6 @@
 			"save power consumption per RFID": "Speichern des Stromverbrauchs pro RFID",
 			" ... by activating this switch, additional variables are created on demand and logged as counters":
 				" ... durch die Aktivierung dieses Schalters werden bei Bedarf zusätzliche Variablen angelegt und als Zähler geloggt",
-			"Update data": "Daten aktualisieren",
-			"Re-install variable-profiles": "Variablenprofile erneut einrichten",
-			"Test area": "Test-Bereich",
-			"Expert area": "Experten-Bereich",
-			"Send text to wallbox (max 23 character) - Test of function \"KebaConnect_SendDisplayText\"":
-				"Text an Wallbox senden (max 23 Zeichen) - Test der Funktion \"KebaConnect_SendDisplayText\"",
-			"Text": "Text",
-			"Send": "Senden",
-
-			"The following points of the configuration are incorrect":
-				"Die folgenden Punkte der Konfiguration sind fehlerhaft",
-			"to be able to display the charging history, it must be saved":
-				"um den Ladeverlauf anzeigen zu können, muss er gespeichert werden",
-			"to save consumption per RFID, history must be saved":
-				"um den Verbrauch pro RFID zu speichern, muss die Historie gespeichert werden",
-			"Host must be specified": "Host muss angegeben werden",
 
 			"Active power": "Aktuelle Ladeleistung",
 			"Cable state": "Kabelstatus",
@@ -60,6 +65,7 @@
 			"Power factor": "Leistungsfaktor",
 			"Product type": "Produkt",
 			"RFID card": "RFID Karte",
+			"Communication backend": "Kommunikations-Backend",
 			"Serial number": "Seriennummer",
 			"Total energy": "Gesamtverbrauch",
 			"Voltage phase 1": "Spannung der Phase 1",
@@ -104,11 +110,29 @@
 
 			"no limit": "keine Begrenzung",
 
+			"disconnected": "getrennt",
+			"connected": "verbunden",
+
 			"Session ID": "ID",
 			"Started": "gestartet",
 			"Ended": "beendet",
 			"Energy": "Energie",
 			"there are no charging sessions present": "es sind keine Ladevorgänge vorhanden",
+
+			"Update data": "Daten aktualisieren",
+
+			"Expert area": "Experten-Bereich",
+			"Re-install variable-profiles": "Variablenprofile erneut einrichten",
+
+			"Test area": "Test-Bereich",
+			"Send text to wallbox (max 23 character) - Test of function \"KebaConnect_SendDisplayText\"":
+				"Text an Wallbox senden (max 23 Zeichen) - Test der Funktion \"KebaConnect_SendDisplayText\"",
+			"Text": "Text",
+			"Send": "Senden",
+			"RFID Tag (max 16 Chars)": "RFID Tag (max 16 Zeichen)",
+			"RFID Class (max 20 Chars)": "RFID Tag (max 20 Zeichen)",
+			"Authorize session": "Ladezyklus autorisieren",
+			"Deauthorize session": "Ladezyklus sperren",
 
 			"Information": "Information",
 
@@ -138,12 +162,17 @@
 			"Next run": "nächste Ausführung",
 			"Last run": "letzte Ausführung",
 			"Timer information": "Timer-Information",
+			"Refresh references panel": "Referenzen-Panel aktualisieren",
 
 			"Instance getting created": "Instanz wird erstellt",
 			"Instance is active": "Instanz ist aktiv",
 			"Instance is deleted": "Instanz wird gelöscht",
 			"Instance is inactive": "Instanz ist inaktiv",
 			"Instance is not created": "Instanz wurde nicht erzeugt",
+
+			"Instance is inactive (invalid preconditions)": "Instanz ist inaktiv (ungültige Voraussetzungen)",
+			"Instance is inactive (update not completed)": "Instanz ist inaktiv (Update nicht abgeschlossen)",
+			"Instance is inactive (invalid configuration)": "Instanz ist inaktiv (ungültige Konfiguration)",
 			"Instance is inactive (invalid configuration)": "Instanz ist inaktiv (ungültige Konfiguration)"
 		}
 	}
