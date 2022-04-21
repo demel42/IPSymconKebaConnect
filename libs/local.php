@@ -56,46 +56,53 @@ trait KebaConnectLocalLib
 
         $this->CreateVarProfile('KebaConnect.MaxCurrent', VARIABLETYPE_INTEGER, ' A', 0, 0, 0, 0, '', '', $reInstall);
 
-        $associations = [];
-        $associations[] = ['Wert' => self::$STATE_SYSTEM_STARTED, 'Name' => $this->Translate('system started'), 'Farbe' => -1];
-        $associations[] = ['Wert' => self::$STATE_NOTREADY, 'Name' => $this->Translate('not ready for charging'), 'Farbe' => -1];
-        $associations[] = ['Wert' => self::$STATE_READY, 'Name' => $this->Translate('ready for charging'), 'Farbe' => -1];
-        $associations[] = ['Wert' => self::$STATE_CHARGING, 'Name' => $this->Translate('charging'), 'Farbe' => -1];
-        $associations[] = ['Wert' => self::$STATE_ERROR, 'Name' => $this->Translate('error occured'), 'Farbe' => -1];
-        $associations[] = ['Wert' => self::$STATE_SUSPENDED, 'Name' => $this->Translate('charging suspended'), 'Farbe' => -1];
+        $associations = [
+            ['Wert' => self::$STATE_SYSTEM_STARTED, 'Name' => $this->Translate('system started'), 'Farbe' => -1],
+            ['Wert' => self::$STATE_NOTREADY, 'Name' => $this->Translate('not ready for charging'), 'Farbe' => -1],
+            ['Wert' => self::$STATE_READY, 'Name' => $this->Translate('ready for charging'), 'Farbe' => -1],
+            ['Wert' => self::$STATE_CHARGING, 'Name' => $this->Translate('charging'), 'Farbe' => -1],
+            ['Wert' => self::$STATE_ERROR, 'Name' => $this->Translate('error occured'), 'Farbe' => -1],
+            ['Wert' => self::$STATE_SUSPENDED, 'Name' => $this->Translate('charging suspended'), 'Farbe' => -1],
+        ];
         $this->CreateVarProfile('KebaConnect.ChargingState', VARIABLETYPE_INTEGER, '', 0, 0, 0, 1, '', $associations, $reInstall);
 
-        $associations = [];
-        $associations[] = ['Wert' => self::$CABLE_NOT_PLUGGED, 'Name' => $this->Translate('not plugged'), 'Farbe' => -1];
-        $associations[] = ['Wert' => self::$CABLE_PLUGGED_IN_STATION, 'Name' => $this->Translate('plugged in station'), 'Farbe' => -1];
-        $associations[] = ['Wert' => self::$CABLE_LOCKED_IN_STATION, 'Name' => $this->Translate('locked in station'), 'Farbe' => -1];
-        $associations[] = ['Wert' => self::$CABLE_PLUGGED_IN_VEHICLE, 'Name' => $this->Translate('plugged in vehicle'), 'Farbe' => -1];
-        $associations[] = ['Wert' => self::$CABLE_LOCKED_IN_VEHICLE, 'Name' => $this->Translate('locked in vehicle'), 'Farbe' => -1];
+        $associations = [
+            ['Wert' => self::$CABLE_NOT_PLUGGED, 'Name' => $this->Translate('not plugged'), 'Farbe' => -1],
+            ['Wert' => self::$CABLE_PLUGGED_IN_STATION, 'Name' => $this->Translate('plugged in station'), 'Farbe' => -1],
+            ['Wert' => self::$CABLE_LOCKED_IN_STATION, 'Name' => $this->Translate('locked in station'), 'Farbe' => -1],
+            ['Wert' => self::$CABLE_PLUGGED_IN_VEHICLE, 'Name' => $this->Translate('plugged in vehicle'), 'Farbe' => -1],
+            ['Wert' => self::$CABLE_LOCKED_IN_VEHICLE, 'Name' => $this->Translate('locked in vehicle'), 'Farbe' => -1],
+        ];
         $this->CreateVarProfile('KebaConnect.CableState', VARIABLETYPE_INTEGER, '', 0, 0, 0, 1, '', $associations, $reInstall);
 
-        $associations = [];
-        $associations[] = ['Wert' => 0, 'Name' => $this->Translate('no error'), 'Farbe' => -1];
-        $associations[] = ['Wert' => 1, 'Name' => $this->Translate('Error 0x%05x'), 'Farbe' => -1];
+        $associations = [
+            ['Wert' => 0, 'Name' => $this->Translate('no error'), 'Farbe' => -1],
+            ['Wert' => 1, 'Name' => $this->Translate('Error 0x%05x'), 'Farbe' => -1],
+        ];
         $this->CreateVarProfile('KebaConnect.Error', VARIABLETYPE_INTEGER, '', 0, 0, 0, 1, '', $associations, $reInstall);
 
-        $associations = [];
-        $associations[] = ['Wert' => 0, 'Name' => $this->Translate('no limit'), 'Farbe' => -1];
-        $associations[] = ['Wert' => 1, 'Name' => $this->Translate('%0.0f kWh'), 'Farbe' => -1];
+        $associations = [
+            ['Wert' => 0, 'Name' => $this->Translate('no limit'), 'Farbe' => -1],
+            ['Wert' => 1, 'Name' => $this->Translate('%0.0f kWh'), 'Farbe' => -1],
+        ];
         $this->CreateVarProfile('KebaConnect.EnergyLimit', VARIABLETYPE_FLOAT, '', 0, 100, 1, 0, '', $associations, $reInstall);
 
-        $associations = [];
-        $associations[] = ['Wert' => false, 'Name' => $this->Translate('no'), 'Farbe' => -1];
-        $associations[] = ['Wert' => true, 'Name' => $this->Translate('yes'), 'Farbe' => -1];
+        $associations = [
+            ['Wert' => false, 'Name' => $this->Translate('no'), 'Farbe' => -1],
+            ['Wert' => true, 'Name' => $this->Translate('yes'), 'Farbe' => -1],
+        ];
         $this->CreateVarProfile('KebaConnect.EnableCharging', VARIABLETYPE_BOOLEAN, '', 0, 0, 0, 0, '', $associations, $reInstall);
 
-        $associations = [];
-        $associations[] = ['Wert' => false, 'Name' => $this->Translate('-'), 'Farbe' => -1];
-        $associations[] = ['Wert' => true, 'Name' => $this->Translate('unlock'), 'Farbe' => -1];
+        $associations = [
+            ['Wert' => false, 'Name' => $this->Translate('-'), 'Farbe' => -1],
+            ['Wert' => true, 'Name' => $this->Translate('unlock'), 'Farbe' => -1],
+        ];
         $this->CreateVarProfile('KebaConnect.UnlockPlug', VARIABLETYPE_BOOLEAN, '', 0, 0, 0, 0, '', $associations, $reInstall);
 
-        $associations = [];
-        $associations[] = ['Wert' => false, 'Name' => $this->Translate('disconnected'), 'Farbe' => -1];
-        $associations[] = ['Wert' => true, 'Name' => $this->Translate('connected'), 'Farbe' => -1];
+        $associations = [
+            ['Wert' => false, 'Name' => $this->Translate('disconnected'), 'Farbe' => -1],
+            ['Wert' => true, 'Name' => $this->Translate('connected'), 'Farbe' => -1],
+        ];
         $this->CreateVarProfile('KebaConnect.ComBackend', VARIABLETYPE_BOOLEAN, '', 0, 0, 0, 0, '', $associations, $reInstall);
     }
 }
