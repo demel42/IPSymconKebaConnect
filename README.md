@@ -135,6 +135,9 @@ Referenzen
 
 ## 7. Versions-Historie
 
+- 1.2.1 @ 26.04.2022 12:26
+  - Korrektur: self::$IS_DEACTIVATED wieder IS_INACTIVE
+
 - 1.2 @ 20.04.2022 09:43
   - zusätzliches optionale Feld "Kommunikations-Backend"
   - zusätzliche Funktionen/Aktionen AuthorizeSession() und DeauthorizeSession() um bei einer Wallbox mit RFID-Autorisierung diese aus dem IPS heraus zu setzen/zu löschen

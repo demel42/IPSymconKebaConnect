@@ -334,7 +334,7 @@ class KeConnectP30udp extends IPSModule
         if ($module_disable) {
             $this->MaintainTimer('StandbyUpdate', 0);
             $this->MaintainTimer('ChargingUpdate', 0);
-            $this->SetStatus(self::$IS_DEACTIVATED);
+            $this->SetStatus(IS_INACTIVE);
             return;
         }
 
