@@ -3,27 +3,12 @@
 		"de": {
 			"KEBA KeConnect P30 (UDP)": "KEBA KeConnect P30 (UDP)",
 
-			"Instance has no active parent instance": "Instanz hat keine aktive übergeordnete Instanz",
-
-			"The following system prerequisites are missing": "Folgende Systemvoraussetzungen fehlen",
-
-			"The following points of the configuration are incorrect": "Die folgenden Punkte der Konfiguration sind fehlerhaft",
+			"__function__": "CheckConfiguration",
 			"to be able to display the charging history, it must be saved": "um den Ladeverlauf anzeigen zu können, muss er gespeichert werden",
 			"to save consumption per RFID, history must be saved": "um den Verbrauch pro RFID zu speichern, muss die Historie gespeichert werden",
 			"Host must be specified": "Host muss angegeben werden",
 
-			"Still something to do to complete the update": "Es ist noch etwas zu tun, um das Update abzuschließen",
-			"old version": "alte Version",
-			"new version": "neue Version",
-			"unknwon": "unbekannt",
-			"The use of possible affected status variables can be checked in the expansion panel \"References\"":
-				"Die Verwendung möglicherweise betroffener Statusvariablen kann im Erweiterungspanel \"Referenzen\" überprüft werden",
-			"Press button 'Complete update' to carry out the required work": "Taste 'Update abschliessen' betätigen um die erforderlichen Arbeiten auszuführen",
-			"Complete update": "Update abschliessen",
-			"Unable to complete the update": "Das Update kann nicht abgeschlossen werden",
-			"please contact the author": "Bitte kontaktieren Sie den Autor",
-			"Adjust Field \"{$field}\"": "Feld \"{$field}\" anpassen",
-
+			"__elements__": "",
 			"Disable instance": "Instanz deaktivieren",
 
 			"Basic configuration": "Basis-Konfiguration",
@@ -47,6 +32,7 @@
 			" ... by activating this switch, additional variables are created on demand and logged as counters":
 				" ... durch die Aktivierung dieses Schalters werden bei Bedarf zusätzliche Variablen angelegt und als Zähler geloggt",
 
+			"__variables__": "",
 			"Active power": "Aktuelle Ladeleistung",
 			"Cable state": "Kabelstatus",
 			"Charging current phase 1": "Ladestrom der Phase 1",
@@ -80,27 +66,7 @@
 			"Last change": "letzte Änderung",
 			"Last update": "letzte Aktualisierung",
 
-			"system started": "System bereit",
-			"not ready for charging": "nicht bereit zum Laden",
-			"ready for charging": "bereit zum Laden",
-			"charging": "Ladevorgang aktiv",
-			"error occured": "Fehler aufgetreten",
-			"charging suspended": "Ladevorgang unterbrochen",
-
-			"not plugged": "nicht verbunden",
-			"plugged in station": "verbunden mit Wallbox",
-			"locked in station": "verriegelt in Wallbox",
-			"plugged in vehicle": "verbunden mit Fahrzeug",
-			"locked in vehicle": "verriegelt in Fahrzeug",
-
-			"no error": "kein Fehler",
-			"Error 0x%05x": "Fehler 0x%05x",
-
-			"unlock": "entriegeln",
-
-			"yes": "ja",
-			"no": "nein",
-
+			"__variable__": "ErrorText",
 			"Plug was disconnected during charging": "Stecker wurde während des Ladevorgangs abgesteckt",
 			"Plug was not recognized": "Stecker wurde nicht erkannt",
 			"Temperature cut-off": "Temperaturabschaltung",
@@ -110,23 +76,15 @@
 			"Overcurrent detected in vehicle": "Überstrom im Fahrzeug erkannt",
 			"Fault current detected in vehicle": "Fehlerstrom im Fahrzeug erkannt",
 
-			"no limit": "keine Begrenzung",
-
-			"disconnected": "getrennt",
-			"connected": "verbunden",
-
+			"__function__": "GetChargingHistory",
 			"Session ID": "ID",
 			"Started": "gestartet",
 			"Ended": "beendet",
 			"Energy": "Energie",
 			"there are no charging sessions present": "es sind keine Ladevorgänge vorhanden",
 
+			"__actions__": "",
 			"Update data": "Daten aktualisieren",
-
-			"Expert area": "Experten-Bereich",
-			"Re-install variable-profiles": "Variablenprofile erneut einrichten",
-
-			"Test area": "Test-Bereich",
 			"Send text to wallbox (max 23 character) - Test of function \"KebaConnect_SendDisplayText\"":
 				"Text an Wallbox senden (max 23 Zeichen) - Test der Funktion \"KebaConnect_SendDisplayText\"",
 			"Text": "Text",
@@ -136,47 +94,7 @@
 			"Authorize session": "Ladezyklus autorisieren",
 			"Deauthorize session": "Ladezyklus sperren",
 
-			"Information": "Information",
-
-			"Category": "Kategorie",
-			"Instance": "Instanz",
-			"Variable": "Variable",
-			"Script": "Skript",
-			"Event": "Ereignis",
-			"Medium": "Medium",
-			"Link": "Verknüpfung",
-			"PHP script": "PHP-Skript",
-			"Flow plan": "Ablaufplan",
-			"Triggered event": "Ausgelöstes Ereignis",
-			"Cyclic event": "Zyklisches Ereignis",
-			"Scheduled event": "Geplantes Ereignis",
-			"References": "Referenzen",
-			"by instance used objects": "durch die Instanz verwendete Objekte",
-			"Objects using the instance": "Objekte, die die Instanz verwenden",
-			"Referenced statusvariables": "referenzierte Statusvariablen",
-			"Ident": "Ident",
-			"Object": "Objekt",
-			"Area": "Bereich",
-			"Name": "Bezeichnung",
-			"Open object": "Objekt öffnen",
-			"Timer": "Timer",
-			"Interval": "Intervall",
-			"Next run": "nächste Ausführung",
-			"Last run": "letzte Ausführung",
-			"Timer information": "Timer-Information",
-			"Refresh references panel": "Referenzen-Panel aktualisieren",
-
-			"Instance getting created": "Instanz wird erstellt",
-			"Instance is active": "Instanz ist aktiv",
-			"Instance is deleted": "Instanz wird gelöscht",
-			"Instance is inactive": "Instanz ist inaktiv",
-			"Instance is not created": "Instanz wurde nicht erzeugt",
-
-			"Instance is inactive (invalid preconditions)": "Instanz ist inaktiv (ungültige Voraussetzungen)",
-			"Instance is inactive (update not completed)": "Instanz ist inaktiv (Update nicht abgeschlossen)",
-			"Instance is inactive (invalid configuration)": "Instanz ist inaktiv (ungültige Konfiguration)",
-			"Instance is inactive (invalid configuration)": "Instanz ist inaktiv (ungültige Konfiguration)",
-			"Instance is inactive (no Symcon-Connect)": "Instanz ist inaktiv (kein Symcon-Connect)"
+			"__end__": ""
 		}
 	}
 }

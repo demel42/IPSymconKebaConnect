@@ -1,0 +1,40 @@
+{
+	"translations": {
+		"de": {
+			"__variableprofile__": "KebaConnect.ChargingState",
+			"system started": "System bereit",
+			"not ready for charging": "nicht bereit zum Laden",
+			"ready for charging": "bereit zum Laden",
+			"charging": "Ladevorgang aktiv",
+			"error occured": "Fehler aufgetreten",
+			"charging suspended": "Ladevorgang unterbrochen",
+
+			"__variableprofile__": "KebaConnect.CableState",
+			"not plugged": "nicht verbunden",
+			"plugged in station": "verbunden mit Wallbox",
+			"locked in station": "verriegelt in Wallbox",
+			"plugged in vehicle": "verbunden mit Fahrzeug",
+			"locked in vehicle": "verriegelt in Fahrzeug",
+
+			"__variableprofile__": "KebaConnect.Error",
+			"no error": "kein Fehler",
+			"Error 0x%05x": "Fehler 0x%05x",
+
+			"__variableprofile__": "KebaConnect.EnergyLimit",
+			"no limit": "keine Begrenzung",
+
+			"__variableprofile__": "KebaConnect.EnableCharging",
+			"yes": "ja",
+			"no": "nein",
+
+			"__variableprofile__": "KebaConnect.UnlockPlug",
+			"unlock": "entriegeln",
+
+			"__variableprofile__": "KebaConnect.ComBackend",
+			"disconnected": "getrennt",
+			"connected": "verbunden",
+
+			"__end__": ""
+		}
+	}
+}
