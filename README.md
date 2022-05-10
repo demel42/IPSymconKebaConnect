@@ -135,6 +135,9 @@ Referenzen
 
 ## 7. Versions-Historie
 
+- 1.2.3 @ 10.05.2022 15:06
+  - update submodule CommonStubs
+
 - 1.2.2 @ 29.04.2022 17:59
   - Überlagerung von Translate und Aufteilung von locale.json in 3 translation.json (Modul, libs und CommonStubs)
 
