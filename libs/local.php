@@ -42,7 +42,7 @@ trait KebaConnectLocalLib
     public static $CABLE_PLUGGED_IN_VEHICLE = 5;
     public static $CABLE_LOCKED_IN_VEHICLE = 7;
 
-    public function InstallVarProfiles(bool $reInstall = false)
+    private function InstallVarProfiles(bool $reInstall = false)
     {
         if ($reInstall) {
             $this->SendDebug(__FUNCTION__, 'reInstall=' . $this->bool2str($reInstall), 0);

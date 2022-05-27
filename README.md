@@ -135,6 +135,11 @@ Referenzen
 
 ## 7. Versions-Historie
 
+- 1.3 @ 27.05.2022 12:12
+  - update submodule CommonStubs
+  - einige Funktionen (GetFormElements, GetFormActions) waren fehlerhafterweise "protected" und nicht "private"
+  - interne Funktionen sind nun entweder private oder nur noch via IPS_RequestAction() erreichbar
+
 - 1.2.4 @ 17.05.2022 15:38
   - update submodule CommonStubs
     Fix: Absicherung gegen fehlende Objekte
