@@ -503,7 +503,7 @@ class KeConnectP30udp extends IPSModule
         $formActions[] = [
             'type'    => 'Button',
             'caption' => 'Update data',
-            'onClick' => $this->GetModulePrefix() . '_StandbyUpdate($id);'
+            'onClick' => 'IPS_RequestAction(' . $this->InstanceID . ', "StandbyUpdate", "");',
         ];
 
         $formActions[] = [
@@ -610,7 +610,7 @@ class KeConnectP30udp extends IPSModule
         return $d;
     }
 
-    protected function SetStandbyUpdateInterval(int $sec = null)
+    private function SetStandbyUpdateInterval(int $sec = null)
     {
         if (is_null($sec)) {
             $min = $this->ReadPropertyInteger('standby_update_interval');
@@ -621,7 +621,7 @@ class KeConnectP30udp extends IPSModule
         $this->MaintainTimer('StandbyUpdate', $msec);
     }
 
-    protected function SetChargingUpdateInterval()
+    private function SetChargingUpdateInterval()
     {
         $chargingState = $this->GetValue('ChargingState');
         if ($chargingState == self::$STATE_CHARGING) {
