@@ -4,9 +4,9 @@
 	"name": "KebaConnect",
 	"url": "https://github.com/demel42/IPSymconKebaConnect",
 	"compatibility": {
-		"version": "6.0"
+		"version": "6.2"
 	},
-	"version": "1.3.1",
+	"version": "1.3.2",
 	"build": 0,
-	"date": 1653730666
+	"date": 1655886820
 }
