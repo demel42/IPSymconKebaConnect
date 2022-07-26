@@ -866,10 +866,7 @@ class KeConnectP30udp extends IPSModule
                 if ($varID == false) {
                     $name = $this->Translate('Total power consumption of RFID') . ' ' . $tag;
                     $this->MaintainVariable($ident, $name, VARIABLETYPE_FLOAT, 'KebaConnect.Energy', 1000, true);
-                    $varID = $this->GetIDForIdent($ident);
-                    $archivID = IPS_GetInstanceListByModuleID('{43192F0B-135B-4CE7-A0A7-1475603F3060}')[0];
-                    AC_SetLoggingStatus($archivID, $varID, true);
-                    AC_SetAggregationType($archivID, $varID, 1 /* Zähler */);
+                    $this->SetVariableLogging($ident, 1 /* Zähler */);
                     $this->SendDebug(__FUNCTION__, 'save_per_rfid: create var ' . $ident, 0);
                 }
                 $e_pres = $new_entry['E pres'];

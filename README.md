@@ -135,6 +135,10 @@ Referenzen
 
 ## 7. Versions-Historie
 
+- 1.4.1 @ 26.07.2022 10:28
+  - update submodule CommonStubs
+    Fix: CheckModuleUpdate() nicht mehr aufrufen, wenn das erstmalig installiert wird
+
 - 1.4 @ 05.07.2022 09:35
   - Verbesserung: IPS-Status wird nur noch gesetzt, wenn er sich ändert
 
