@@ -135,6 +135,9 @@ Referenzen
 
 ## 7. Versions-Historie
 
+- 1.4.2 @ 02.08.2022 18:37
+  - Fix: kleiner Übersetzungsfehler im Testbereich der Instanz
+
 - 1.4.1 @ 26.07.2022 10:28
   - update submodule CommonStubs
     Fix: CheckModuleUpdate() nicht mehr aufrufen, wenn das erstmalig installiert wird

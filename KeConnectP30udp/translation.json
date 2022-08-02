@@ -90,7 +90,7 @@
 			"Text": "Text",
 			"Send": "Senden",
 			"RFID Tag (max 16 Chars)": "RFID Tag (max 16 Zeichen)",
-			"RFID Class (max 20 Chars)": "RFID Tag (max 20 Zeichen)",
+			"RFID Class (max 20 Chars)": "RFID Class (max 20 Zeichen)",
 			"Authorize session": "Ladezyklus autorisieren",
 			"Deauthorize session": "Ladezyklus sperren",
 
