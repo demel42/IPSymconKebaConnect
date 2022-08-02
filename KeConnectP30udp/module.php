@@ -1431,7 +1431,7 @@ class KeConnectP30udp extends IPSModule
             return false;
         }
         if (preg_match('/^([0-9A-Fa-f][0-9A-Fa-f]){0,10}$/', $class) == false) {
-            $this->SendDebug(__FUNCTION__, 'class="' . $class . '" is malformed - max 8 hex-bytes = 16 chars', 0);
+            $this->SendDebug(__FUNCTION__, 'class="' . $class . '" is malformed - max 10 hex-bytes = 20 chars', 0);
             return false;
         }
 
