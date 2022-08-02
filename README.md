@@ -69,6 +69,12 @@ Setzen des maximalen Ladestroms, zwischen minimal 6A und maximal 63A (soweit nic
 `KebaConnect_SetChargingEnergyLimit(int $InstanzID, float $energy)`<br>
 Setzen der für den Ladevorgang verfügbaren Energie
 
+`KebaConnect_AuthorizeSession(int $InstanzID, string $Tag, string $Class)`<br>
+Authorisierung eines Ladevorgangs durch Angabe von *Tag* und *Class* der RFID-Karte
+
+`KebaConnect_DeauthorizeSession(int $InstanzID, string $Tag)`<br>
+Aufhebung einer vorangegangenen Authorisierung eines Ladevorgangs, hier wird nur das *Tag* benötigt
+
 `KebaConnect_GetHistory(int $InstanzID)`<br>
 Liefert die Lade-Historie gemäß den Einstellungen in der Instanz-Konfiguⅹation als json-kodierte Liste von Einträgen.
 
