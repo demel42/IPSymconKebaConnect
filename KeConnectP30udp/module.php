@@ -157,7 +157,7 @@ class KeConnectP30udp extends IPSModule
         $this->RegisterPropertyInteger('history_age', 90);
         $this->RegisterPropertyBoolean('save_per_rfid', false);
 
-        $this->RegisterPropertyInteger('standby_update_interval', '5');
+        $this->RegisterPropertyInteger('standby_update_interval', '300');
         $this->RegisterPropertyInteger('charging_update_interval', '1');
 
         $this->RegisterAttributeString('UpdateInfo', '');
@@ -222,7 +222,12 @@ class KeConnectP30udp extends IPSModule
         $new_val = json_encode($new_fields);
         if ($new_val != $old_val) {
             $field = $this->Translate('available variables');
-            $r[] = $this->TranslateFormat('Adjust Field "{$field}"', ['{$field}' => $field]);
+            $r[] = $this->TranslateFormat('Adjust property "{$field}"', ['{$field}' => $field]);
+        }
+
+        if ($this->version2num($oldInfo) < $this->version2num('1.5')) {
+            $field = $this->Translate('Update interval in standby');
+            $r[] = $this->TranslateFormat('Adjust property "{$field}" from minutes to seconds', ['{$field}' => $field]);
         }
 
         return $r;
@@ -247,6 +252,11 @@ class KeConnectP30udp extends IPSModule
             ];
         }
         IPS_SetProperty($this->InstanceID, 'use_fields', json_encode($values));
+
+        if ($this->version2num($oldInfo) < $this->version2num('1.5')) {
+            $min = $this->ReadPropertyInteger('standby_update_interval');
+            IPS_SetProperty($this->InstanceID, 'standby_update_interval', $min * 60);
+        }
 
         return '';
     }
@@ -386,7 +396,7 @@ class KeConnectP30udp extends IPSModule
                 [
                     'type'    => 'NumberSpinner',
                     'name'    => 'standby_update_interval',
-                    'suffix'  => 'Minutes',
+                    'suffix'  => 'Seconds',
                     'minimum' => 0,
                     'caption' => 'Update interval in standby',
                 ],
@@ -613,8 +623,8 @@ class KeConnectP30udp extends IPSModule
     private function SetStandbyUpdateInterval(int $sec = null)
     {
         if (is_null($sec)) {
-            $min = $this->ReadPropertyInteger('standby_update_interval');
-            $msec = $min > 0 ? $min * 60 * 1000 : 0;
+            $sec = $this->ReadPropertyInteger('standby_update_interval');
+            $msec = $sec > 0 ? $sec * 1000 : 0;
         } else {
             $msec = $sec * 1000;
         }

@@ -93,8 +93,8 @@ Liefert die Lade-Historie gemäß den Einstellungen in der Instanz-Konfiguⅹati
 |                                       |          |              | |
 | save_per_rfid                         | boolean  | false        | Speicherung des Energieverbrauchs pro RFID |
 |                                       |          |              | |
-| standby_update_interval               | integer  |              | Datenabruf im Ruhezustand in Minuten |
-| charging_update_interval              | integer  |              | Datenabruf während des Ladens in Sekunden |
+| standby_update_interval               | integer  | 300          | Aktualisierungsintervall im Ruhezustand in Sekunden |
+| charging_update_interval              | integer  | 1            | Aktualisierungsintervall während des Ladens in Sekunden |
 
 * Seriennummer der Wallbox<br>
 die Angabe der Seriennummer scheint erforderlich zu sein, wenn mehrere Wallboxen im Verband genutzt werden
@@ -140,6 +140,9 @@ Referenzen
 [KeContact P20 / P30 UDP Programmers Guide](https://www.keba.com/file/downloads/e-mobility/KeContact_P20_P30_UDP_ProgrGuide_en.pdf)
 
 ## 7. Versions-Historie
+
+- 1.5 @ 04.08.2022 11:01
+  - Anpassung: "Aktualisierungsintervall im Ruhezustand" kann nun in Sekunden angegeben werden
 
 - 1.4.2 @ 02.08.2022 18:37
   - Fix: kleiner Übersetzungsfehler im Testbereich der Instanz

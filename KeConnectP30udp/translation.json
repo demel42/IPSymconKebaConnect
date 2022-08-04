@@ -3,6 +3,10 @@
 		"de": {
 			"KEBA KeConnect P30 (UDP)": "KEBA KeConnect P30 (UDP)",
 
+			"__function__": "CheckUpdate",
+			"Adjust property \"{$field}\"": "Eigenschaft \"{$field}\" anpassen",
+			"Adjust property \"{$field}\" from minutes to seconds": "Eigenschaft \"{$field}\" von Minuten auf Sekunden umstellen",
+
 			"__function__": "CheckConfiguration",
 			"to be able to display the charging history, it must be saved": "um den Ladeverlauf anzeigen zu können, muss er gespeichert werden",
 			"to save consumption per RFID, history must be saved": "um den Verbrauch pro RFID zu speichern, muss die Historie gespeichert werden",
@@ -17,7 +21,6 @@
 			"Update interval in standby": "Aktualisierungsintervall im Ruhezustand",
 			"Update interval while charging": "Aktualisierungsintervall während des Ladevorgangs",
 			"Seconds": "Sekunden",
-			"Minutes": "Minuten",
 			"Ident": "Identifikation",
 			"Description": "Beschreibung",
 			"use": "verwenden",
