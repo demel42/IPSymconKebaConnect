@@ -142,7 +142,7 @@ Referenzen
 ## 7. Versions-Historie
 
 - 1.5 @ 04.08.2022 11:01
-  - Anpassung: "Aktualisierungsintervall im Ruhezustand" kann nun in Sekunden angegeben werden
+  - Änderung: "Aktualisierungsintervall im Ruhezustand" kann nun in Sekunden angegeben werden
 
 - 1.4.2 @ 02.08.2022 18:37
   - Fix: kleiner Übersetzungsfehler im Testbereich der Instanz
