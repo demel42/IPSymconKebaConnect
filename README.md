@@ -141,8 +141,9 @@ Referenzen
 
 ## 7. Versions-Historie
 
-- 1.5 @ 04.08.2022 11:01
+- 1.5 @ 04.08.2022 16:45
   - Änderung: "Aktualisierungsintervall im Ruhezustand" kann nun in Sekunden angegeben werden
+  - update submodule CommonStubs
 
 - 1.4.2 @ 02.08.2022 18:37
   - Fix: kleiner Übersetzungsfehler im Testbereich der Instanz
