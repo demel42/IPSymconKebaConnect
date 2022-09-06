@@ -785,27 +785,11 @@ class KeConnectP30udp extends IPSModule
                 }
             }
 
-            $started = 0;
             $s = $this->GetArrayElem($jdata, 'started', '');
-            if ($s != false) {
-                $d = DateTime::createFromFormat('Y-m-d H:i:s.v', $s, new DateTimeZone('UTC'));
-                if ($d == false) {
-                    $this->SendDebug(__FUNCTION__, 'field "started": parse failed ' . print_r(DateTime::getLastErrors(), true), 0);
-                } else {
-                    $started = intval($d->format('U'));
-                }
-            }
+            $started = $this->DecodeTstamp($s, 'started');
 
-            $ended = 0;
             $s = $this->GetArrayElem($jdata, 'ended', '');
-            if ($s != false) {
-                $d = DateTime::createFromFormat('Y-m-d H:i:s.v', $s, new DateTimeZone('UTC'));
-                if ($d == false) {
-                    $this->SendDebug(__FUNCTION__, 'field "ended": parse failed ' . print_r(DateTime::getLastErrors(), true), 0);
-                } else {
-                    $ended = intval($d->format('U'));
-                }
-            }
+            $ended = $this->DecodeTstamp($s, 'ended');
 
             $tag = $this->GetArrayElem($jdata, 'RFID tag', 0);
             if (preg_match('/^[0]+$/', $tag)) {
@@ -940,8 +924,8 @@ class KeConnectP30udp extends IPSModule
 
             $tbl = '';
             foreach ($new_entries as $entry) {
-                $s = date('d.m. H:i:s', $entry['started']);
-                $e = date('d.m. H:i:s', $entry['ended']);
+                $s = date('d.m.Y H:i:s', $entry['started']);
+                $e = date('d.m.Y H:i:s', $entry['ended']);
                 $e_pres = GetValueFormattedEx($this->GetIDForIdent('ChargedEnergy'), $entry['E pres']);
                 $tbl .= '<tr>' . PHP_EOL;
                 $tbl .= '<td>' . $entry['Session ID'] . '</td>' . PHP_EOL;
@@ -1070,6 +1054,19 @@ class KeConnectP30udp extends IPSModule
             $dsw1 = $this->GetArrayElem($jdata, 'DIP-Sw1', '');
             $dsw2 = $this->GetArrayElem($jdata, 'DIP-Sw2', '');
             $this->SendDebug(__FUNCTION__, 'Dip-Switch 1=' . $this->int2bitmap(hexdec($dsw1), 8) . ', 2=' . $this->int2bitmap(hexdec($dsw2), 8), 0);
+            $timeQ = $this->GetArrayElem($jdata, 'timeQ', '');
+            $timeQ_map = [
+                0 => 'NONE',
+                1 => 'NOT_SYNCED',
+                2 => 'WEAK',
+                3 => 'STRONG',
+            ];
+            $this->SendDebug(__FUNCTION__, 'timeQ=' . $timeQ . '(' . $timeQ_map[$timeQ] . ')', 0);
+            if ($timeQ < 2) {
+                $cmd = 'setdatetime ' . time();
+                $r = $this->ExecuteCmd($cmd);
+                $this->SendDebug(__FUNCTION__, 'cmd=' . $cmd . ' => ' . $r, 0);
+            }
         }
 
         if ($report_id == 2) {
@@ -1222,31 +1219,15 @@ class KeConnectP30udp extends IPSModule
             }
 
             if (in_array('ChargingStarted', $use_idents)) {
-                $ts = 0;
                 $s = $this->GetArrayElem($jdata, 'started', '');
-                if ($s != false) {
-                    $d = DateTime::createFromFormat('Y-m-d H:i:s.v', $s, new DateTimeZone('UTC'));
-                    if ($d == false) {
-                        $this->SendDebug(__FUNCTION__, 'field "started": parse failed ' . print_r(DateTime::getLastErrors(), true), 0);
-                    } else {
-                        $ts = intval($d->format('U'));
-                    }
-                }
+                $ts = $this->DecodeTstamp($s, 'started');
                 $this->SaveValue('ChargingStarted', $ts, $is_changed);
                 $s = $ts ? date('d.m.Y H:i:s', $ts) : '-';
                 $this->SendDebug(__FUNCTION__, 'set variable "ChargingStarted" to ' . $s . ' from field "started"', 0);
             }
             if (in_array('ChargingEnded', $use_idents)) {
-                $ts = 0;
                 $s = $this->GetArrayElem($jdata, 'ended', '');
-                if ($s != false) {
-                    $d = DateTime::createFromFormat('Y-m-d H:i:s.v', $s, new DateTimeZone('UTC'));
-                    if ($d == false) {
-                        $this->SendDebug(__FUNCTION__, 'field "ended": parse failed ' . print_r(DateTime::getLastErrors(), true), 0);
-                    } else {
-                        $ts = intval($d->format('U'));
-                    }
-                }
+                $ts = $this->DecodeTstamp($s, 'ended');
                 $this->SaveValue('ChargingEnded', $ts, $is_changed);
                 $s = $ts ? date('d.m.Y H:i:s', $ts) : '-';
                 $this->SendDebug(__FUNCTION__, 'set variable "ChargingEnded" to ' . $s . ' from field "ended"', 0);
@@ -1587,4 +1568,25 @@ class KeConnectP30udp extends IPSModule
     {
         return $this->GetMediaData('ChargingHistory');
     }
+
+    private function DecodeTstamp($value, $field)
+    {
+        $ts = 0;
+        if ($value != false) {
+            if (preg_match('/^([0-9]+)000$/', $value, $r)) {
+                $ts = $this->GetValue('LastBoot') + (int) $r[1];
+                $this->SendDebug(__FUNCTION__, 'field "' . $field . '"=' . $value . ' => ' . $ts . '/' . date('d.m.Y H:i:s', $ts), 0);
+            } else {
+                $d = DateTime::createFromFormat('Y-m-d H:i:s.v', $value, new DateTimeZone('UTC'));
+                if ($d == false) {
+                    $this->SendDebug(__FUNCTION__, 'field "' . $field . '"=' . $value . ': parse failed ' . print_r(DateTime::getLastErrors(), true), 0);
+                } else {
+                    $ts = intval($d->format('U'));
+                    $this->SendDebug(__FUNCTION__, 'field "' . $field . '"=' . $value . ' => ' . $ts . '/' . date('d.m.Y H:i:s', $ts), 0);
+                }
+            }
+        }
+        return $ts;
+    }
 }
+

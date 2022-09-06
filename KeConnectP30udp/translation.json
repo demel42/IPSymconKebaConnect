@@ -79,6 +79,9 @@
 			"Overcurrent detected in vehicle": "Überstrom im Fahrzeug erkannt",
 			"Fault current detected in vehicle": "Fehlerstrom im Fahrzeug erkannt",
 
+			"__media__": "",
+			"ChargingHistory": "ChargingHistory",
+
 			"__function__": "GetChargingHistory",
 			"Session ID": "ID",
 			"Started": "gestartet",

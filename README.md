@@ -141,6 +141,11 @@ Referenzen
 
 ## 7. Versions-Historie
 
+- 1.6 @ 31.08.2022 08:09
+  - Verbesserung: bei fehlender NTP-Zeisynchronisation der Wallbox wird diese aus dem IPS eingestellt
+  - Fix: verbessete Dekodierung von übermittelten Zeitstempeln bei fehlender Synchronisation
+  - update submodule CommonStubs
+
 - 1.5 @ 04.08.2022 16:45
   - Änderung: "Aktualisierungsintervall im Ruhezustand" kann nun in Sekunden angegeben werden
   - update submodule CommonStubs
