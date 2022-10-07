@@ -141,6 +141,10 @@ Referenzen
 
 ## 7. Versions-Historie
 
+- 1.6.1 @ 07.10.2022 13:59
+  - update submodule CommonStubs
+    Fix: Update-Prüfung wieder funktionsfähig
+
 - 1.6 @ 31.08.2022 08:09
   - Verbesserung: bei fehlender NTP-Zeisynchronisation der Wallbox wird diese aus dem IPS eingestellt
   - Fix: verbessete Dekodierung von übermittelten Zeitstempeln bei fehlender Synchronisation
