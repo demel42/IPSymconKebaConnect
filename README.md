@@ -141,6 +141,10 @@ Referenzen
 
 ## 7. Versions-Historie
 
+- 1.6.2 @ 11.10.2022 08:23
+  - update submodule CommonStubs
+    Fix: Fehler in SetVariableLogging()
+
 - 1.6.1 @ 07.10.2022 13:59
   - update submodule CommonStubs
     Fix: Update-Prüfung wieder funktionsfähig
