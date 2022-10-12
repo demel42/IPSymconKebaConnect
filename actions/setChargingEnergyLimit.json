@@ -10,7 +10,7 @@
 			"caption": "Energy"
 		}
 	],
-	"action": "KebaConnect_SetMaxChargingCurrent($_IPS['TARGET'], $_IPS['CURRENT']);",
+	"action": "KebaConnect_SetChargingEnergyLimit($_IPS['TARGET'], $_IPS['ENERGY']);",
 	"restrictions": {
 		"objectType": [
 			1

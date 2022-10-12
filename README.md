@@ -141,6 +141,9 @@ Referenzen
 
 ## 7. Versions-Historie
 
+- 1.6.3 @ 12.10.2022 12:01
+  - Fix: Aktion "Ladeenergie begrenzen" war fehlerhaft
+
 - 1.6.2 @ 11.10.2022 08:23
   - update submodule CommonStubs
     Fix: Fehler in SetVariableLogging()
