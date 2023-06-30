@@ -166,8 +166,8 @@ class KeConnectP30udp extends IPSModule
 
         $this->RequireParent('{82347F20-F541-41E1-AC5B-A636FD3AE2D8}');
 
-        $this->RegisterTimer('StandbyUpdate', 0, 'IPS_RequestAction(' . $this->InstanceID . ', "StandbyUpdate", "");');
-        $this->RegisterTimer('ChargingUpdate', 0, 'IPS_RequestAction(' . $this->InstanceID . ', "ChargingUpdate", "");');
+        $this->RegisterTimer('StandbyUpdate', 0, $this->GetModulePrefix() . '_StandbyUpdate(' . $this->InstanceID . ');');
+        $this->RegisterTimer('ChargingUpdate', 0, $this->GetModulePrefix() . '_ChargingUpdate(' . $this->InstanceID . ');');
 
         $this->RegisterMessage(0, IPS_KERNELMESSAGE);
     }
@@ -513,7 +513,7 @@ class KeConnectP30udp extends IPSModule
         $formActions[] = [
             'type'    => 'Button',
             'caption' => 'Update data',
-            'onClick' => 'IPS_RequestAction(' . $this->InstanceID . ', "StandbyUpdate", "");',
+            'onClick' => $this->GetModulePrefix() . '_StandbyUpdate($id);'
         ];
 
         $formActions[] = [
@@ -698,7 +698,7 @@ class KeConnectP30udp extends IPSModule
         return $buf;
     }
 
-    private function StandbyUpdate()
+    public function StandbyUpdate()
     {
         if ($this->CheckStatus() == self::$STATUS_INVALID) {
             $this->SendDebug(__FUNCTION__, $this->GetStatusText() . ' => skip', 0);
@@ -963,7 +963,7 @@ class KeConnectP30udp extends IPSModule
         }
     }
 
-    private function ChargingUpdate()
+    public function ChargingUpdate()
     {
         if ($this->CheckStatus() == self::$STATUS_INVALID) {
             $this->SendDebug(__FUNCTION__, $this->GetStatusText() . ' => skip', 0);
