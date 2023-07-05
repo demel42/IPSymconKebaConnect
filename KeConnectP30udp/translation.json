@@ -35,6 +35,11 @@
 			" ... by activating this switch, additional variables are created on demand and logged as counters":
 				" ... durch die Aktivierung dieses Schalters werden bei Bedarf zusätzliche Variablen angelegt und als Zähler geloggt",
 
+			"Generate message when the gateway is inactive": "Meldung erzeugen wenn der Gateway inaktiv ist",
+
+			"__messages__": "",
+			"Instance has no active gateway": "Instanz hat keinen aktiven Gateway",
+
 			"__variables__": "",
 			"Active power": "Aktuelle Ladeleistung",
 			"Cable state": "Kabelstatus",

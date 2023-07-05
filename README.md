@@ -141,8 +141,9 @@ Referenzen
 
 ## 7. Versions-Historie
 
-- 1.7 @ 29.06.2023 08:34
+- 1.7 @ 05.07.2023 11:56
   - Fix: die Funktionen 'KebaConnect_StandbyUpdate' und 'KebaConnect_ChargingUpdate' sind wieder verfügbar
+  - Neu: Schalter, um die Meldung eines inaktiven Gateway zu steuern
   - Vorbereitung auf IPS 7 / PHP 8.2
   - update submodule CommonStubs
     - Absicherung bei Zugriff auf Objekte und Inhalte
