@@ -143,9 +143,9 @@ Referenzen
 
 - 1.7 @ 29.06.2023 08:34
   - Fix: die Funktionen 'KebaConnect_StandbyUpdate' und 'KebaConnect_ChargingUpdate' sind wieder verfügbar
+  - Vorbereitung auf IPS 7 / PHP 8.2
   - update submodule CommonStubs
     - Absicherung bei Zugriff auf Objekte und Inhalte
-    - Vorbereitung auf IPS 7 / PHP 8.2
 
 - 1.6.3 @ 12.10.2022 12:01
   - Fix: Aktion "Ladeenergie begrenzen" war fehlerhaft
