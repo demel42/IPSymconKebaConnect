@@ -133,13 +133,16 @@ class KeConnectP30udp extends IPSModule
         ],
     ];
 
-    private $ModuleDir;
-
     public function __construct(string $InstanceID)
     {
         parent::__construct($InstanceID);
 
-        $this->ModuleDir = __DIR__;
+        $this->CommonContruct(__DIR__);
+    }
+
+    public function __destruct()
+    {
+        $this->CommonDestruct();
     }
 
     public function Create()
@@ -162,7 +165,8 @@ class KeConnectP30udp extends IPSModule
         $this->RegisterPropertyInteger('standby_update_interval', '300');
         $this->RegisterPropertyInteger('charging_update_interval', '1');
 
-        $this->RegisterAttributeString('UpdateInfo', '');
+        $this->RegisterAttributeString('UpdateInfo', json_encode([]));
+        $this->RegisterAttributeString('ModuleStats', json_encode([]));
 
         $this->InstallVarProfiles(false);
 

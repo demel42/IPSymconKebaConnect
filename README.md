@@ -141,6 +141,10 @@ Referenzen
 
 ## 7. Versions-Historie
 
+- 1.8 @ 19.09.2023 16:48
+  - Neu: Ermittlung von Speicherbedarf und Laufzeit (aktuell und für 31 Tage) und Anzeige im Panel "Information"
+  - update submodule CommonStubs
+
 - 1.7 @ 05.07.2023 11:56
   - Fix: die Funktionen 'KebaConnect_StandbyUpdate' und 'KebaConnect_ChargingUpdate' sind wieder verfügbar
   - Neu: Schalter, um die Meldung eines inaktiven Gateway zu steuern
