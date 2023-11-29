@@ -85,25 +85,39 @@ Liefert die Lade-Historie gemäß den Einstellungen in der Instanz-Konfiguⅹati
 | Eigenschaft                           | Typ      | Standardwert | Beschreibung |
 | :------------------------------------ | :------  | :----------- | :----------- |
 | host                                  | string   |              | IP-Adresse der Wallbox |
-| serialnumber                          | string   |              | Seriennummer der Wallbox |
+| serialnumber                          | string   |              | Seriennummer der Wallbox _[1]_|
 |                                       |          |              | |
 | save_history                          | boolean  | false        | Ladehistorie sichern |
 | show_history                          | boolean  | false        | Ladehistorie in HTML-Box darstellen |
 | history_age                           | integer  | 90           | maximales Alter eines Ladevorgangs in Tagen |
 |                                       |          |              | |
-| save_per_rfid                         | boolean  | false        | Speicherung des Energieverbrauchs pro RFID |
+| save_per_rfid                         | boolean  | false        | Speicherung des Energieverbrauchs pro RFID _[2]_ |
+|                                       |          |              | |
+| phase_switching                       | boolean  | false        | Unterstützen einer (dynamischen) Phasen-Umschaltung _[3]_|
+| with_surplus_control                  | boolean  | false        | Anlage von Variablen für PV-Überschussladung _[4]_|
 |                                       |          |              | |
 | standby_update_interval               | integer  | 300          | Aktualisierungsintervall im Ruhezustand in Sekunden |
 | charging_update_interval              | integer  | 1            | Aktualisierungsintervall während des Ladens in Sekunden |
 
-* Seriennummer der Wallbox<br>
+- _[1]_: Seriennummer der Wallbox<br>
 die Angabe der Seriennummer scheint erforderlich zu sein, wenn mehrere Wallboxen im Verband genutzt werden
 
-* Speicherung des Energieverbrauchs pro RFID<br>
+- _[2]_: Speicherung des Energieverbrauchs pro RFID<br>
 es wird für jede erkannte RFID eine eigene Variable als Aggregation vom Typ _Zähler_ angelegt (Ident *ChargedEnergy_\<RFID-Tag\>*) und nach
 jedem Ladeborgang um den jeweiligen Wert erhöht; der Energieverbrauch wird aus der Ladehistorie der Wallbox ermittelt.
 Hierfür ist die Speicherung der Ladehistorie erforderlich.<br>
 Falls mehrere Keba-Wallboxen im Einsatz sind und eine Gesamtsumme pro RFID genötigt wird, siehe [docs/sum_per_rfid.php](docs/sum_per_rfid.php).
+
+- _[3]_: dynamische Phasen-Umschaltung<br>
+die dynamische Phasenumschaktung setzt entsprechende Zusatzhardware voraus (z.B. [KeContact S10 Phase Switching Device](https://www.keba.com/download/x/a5613f1cc0/kecontacts10_ihde.pdf)), die Verbindung von Ausgabe **X2** zu dem Umschalter sowie ein aktuellen Firmwarestand. Siehe Punkt *7.5* auch im [Installationshandbuch](https://www.keba.com/download/x/44d3dc9e54/kecontactp30_ihde_web.pdf).
+**Achtung**: diese Funktion it noch nicht implementiert!
+
+- _[4]_: PV-Überschussladung<br>
+beim Eintragen eines Wertes in diese Variablen (z.B. durch den [EnergieverbrauchOptimierer](https://community.symcon.de/t/energieverbrauch-optimierer-inkl-kachel/133036)) wird in Abhängigkeit der Anzahl der Phasen der _Maximaler Ladestrom_ berechnet.
+
+
+ChargingState
+
 
 #### Variablenprofile
 
@@ -111,21 +125,25 @@ Es werden folgende Variablenprofile angelegt:
 
 * Boolean<br>
 KebaConnect.ComBackend,
-KebaConnect.EnableCharging,
-KebaConnect.UnlockPlug
+KebaConnect.UnlockPlug,
+KebaConnect.YesNo
 
 * Integer<br>
 KebaConnect.CableState,
 KebaConnect.ChargingState,
 KebaConnect.Error,
-KebaConnect.MaxCurrent
+KebaConnect.OperationMode,
+KebaConnect.PhaseSwitch,
+KebaConnect.PhaseSwitchSource
 
 * Float<br>
 KebaConnect.Current,
 KebaConnect.Energy,
 KebaConnect.EnergyLimit,
+KebaConnect.MaxCurrent,
 KebaConnect.Power,
 KebaConnect.PowerFactor,
+KebaConnect.SurplusPower,
 KebaConnect.Voltage
 
 ## 6. Anhang
@@ -140,6 +158,14 @@ Referenzen
 [KeContact P20 / P30 UDP Programmers Guide](https://www.keba.com/file/downloads/e-mobility/KeContact_P20_P30_UDP_ProgrGuide_en.pdf)
 
 ## 7. Versions-Historie
+
+- 1.9 @ 29.11.2023 11:27
+  - Neu: Unterstützung von PV-Überschussladen mit dynamischer Umschaltung der Ladestromstärke
+    Für das Zusammenspiel mit dem Energieverbrauch-Optimierer stellt das Modul Variablen zur Verfüpung
+	- zu Setzen der verfügbaren Leistung
+	- zur Abfrage, ob die Wallbox ladebereit ist
+  - Neu: 1/3-phasiges Laden
+    Vorbereitung von dynamischem Umschalten - ungetestet -
 
 - 1.8 @ 19.09.2023 16:48
   - Neu: Ermittlung von Speicherbedarf und Laufzeit (aktuell und für 31 Tage) und Anzeige im Panel "Information"

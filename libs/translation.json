@@ -34,6 +34,27 @@
 			"disconnected": "getrennt",
 			"connected": "verbunden",
 
+			"__variableprofile__": "KebaConnect.OperationMode",
+			"off": "auѕ",
+			"manual": "manuell",
+			"surplus": "Überschuss",
+
+			"__variableprofile__": "KebaConnect.MainsPhases",
+			"dynamic": "dynamisch",
+			"1 phase (fix)": "1 Phase (fix)",
+			"3 phases (fix)": "3 Phasen (fix)",
+
+			"__variableprofile__": "KebaConnect.PhaseSwitchSource",
+			"none": "keine",
+			"OCPP": "OCPP",
+			"REST-API": "REST-API",
+			"ModBus": "ModBus",
+			"UDP": "UDP",
+
+			"__variableprofile__": "KebaConnect.PhaseSwitch",
+			"1 phase": "1 Phase",
+			"3 phases": "3 Phasen",
+
 			"__end__": ""
 		}
 	}

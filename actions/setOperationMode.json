@@ -1,0 +1,53 @@
+{
+	"id": "{096FBF10-C67A-5671-E96F-D42797EF8F7D}",
+	"caption": "Set operation mode",
+	"form": [
+		"$varID = IPS_GetObjectIDByIdent('OperationMode', $_IPS['TARGET']);",
+		"$variable = IPS_GetVariable($varID);",
+		"$profileName = $variable['VariableCustomProfile'];",
+		"if ($profileName == '') {",
+		"   $profileName = $variable['VariableProfile'];",
+		"}",
+		"$options = [];",
+		"foreach (IPS_GetVariableProfile($profileName)['Associations'] as $association) {",
+		"   $value = $association['Value'];",
+		"   if ($variable['VariableType'] == 0) {",
+		"       $value = ($value == 1);",
+		"   }",
+		"   $options[] = [",
+		"       'caption' => sprintf($association['Name'], $value),",
+		"       'value' => $value",
+		"   ];",
+		"}",
+		"$noticeBases = IPS_GetInstanceListByModuleID('{4CF21C1E-B0F8-5535-8B5D-01ADDDB5DFD7}');",
+		"return [",
+		"   [",
+		"       'type' => 'Select',",
+		"       'name' => 'MODE',",
+		"       'caption' => 'Operation mode',",
+		"       'options' => $options",
+		"   ]",
+		"];"
+	],
+	"action": "KebaConnect_SetOperationMode($_IPS['TARGET'], $_IPS['MODE']);",
+	"restrictions": {
+		"objectType": [
+			1
+		],
+		"moduleID": [
+			"{A84E350B-55B7-2841-A6F1-C0B17FA0C4CD}"
+		],
+		"includeEnvironments": [
+			"TestCommands",
+			"Default"
+		]
+	},
+	"priority": 10,
+	"category": "target",
+	"locale": {
+		"de": {
+			"Operation mode": "Betriebsart",
+			"Set operation mode": "Betriebsart setzen"
+		}
+	}
+}

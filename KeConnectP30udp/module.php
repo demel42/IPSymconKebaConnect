@@ -131,6 +131,19 @@ class KeConnectP30udp extends IPSModule
             'Desc'            => 'Error text',
             'VariableType'    => VARIABLETYPE_STRING,
         ],
+
+        [
+            'Ident'           => 'PhaseSwitchSource',
+            'Desc'            => 'Source for phase switching',
+            'VariableType'    => VARIABLETYPE_INTEGER,
+            'VariableProfile' => 'KebaConnect.PhaseSwitchSource',
+        ],
+        [
+            'Ident'           => 'PhaseSwitch',
+            'Desc'            => 'Status of phase switching',
+            'VariableType'    => VARIABLETYPE_INTEGER,
+            'VariableProfile' => 'KebaConnect.PhaseSwitch',
+        ],
     ];
 
     public function __construct(string $InstanceID)
@@ -162,8 +175,14 @@ class KeConnectP30udp extends IPSModule
         $this->RegisterPropertyInteger('history_age', 90);
         $this->RegisterPropertyBoolean('save_per_rfid', false);
 
+        $this->RegisterPropertyBoolean('phase_switching', false);
+        $this->RegisterPropertyBoolean('with_surplus_control', false);
+
         $this->RegisterPropertyInteger('standby_update_interval', '300');
         $this->RegisterPropertyInteger('charging_update_interval', '1');
+
+        $this->RegisterAttributeString('Product', '');
+        $this->RegisterAttributeString('Firmware', '');
 
         $this->RegisterAttributeString('UpdateInfo', json_encode([]));
         $this->RegisterAttributeString('ModuleStats', json_encode([]));
@@ -201,6 +220,20 @@ class KeConnectP30udp extends IPSModule
             $r[] = $this->Translate('to save consumption per RFID, history must be saved');
         }
 
+        $phase_switching = $this->ReadPropertyBoolean('phase_switching');
+        if ($phase_switching) {
+            $series = $this->ExtractSeries();
+            if (in_array($series, ['C', 'X']) == false) {
+                $this->SendDebug(__FUNCTION__, '"phase_switching" is only supported by series C and X', 0);
+                $r[] = $this->Translate('phase switching is only supported by series C and X');
+            }
+            $version = $this->ExtractVersion();
+            if ($this->version2num($version) < $this->version2num('3.10.51')) {
+                $this->SendDebug(__FUNCTION__, '"phase_switching" is only supported from version 3.10.51', 0);
+                $r[] = $this->Translate('phase switching is only supported from version 3.10.51');
+            }
+        }
+
         return $r;
     }
 
@@ -220,12 +253,15 @@ class KeConnectP30udp extends IPSModule
                     break;
                 }
             }
+            $desc = $this->Translate($var['Desc']);
             $new_fields[] = [
                 'ident' => $ident,
+                'desc'  => $desc,
                 'use'   => $use
             ];
         }
         $new_val = json_encode($new_fields);
+
         if ($new_val != $old_val) {
             $field = $this->Translate('available variables');
             $r[] = $this->TranslateFormat('Adjust property "{$field}"', ['{$field}' => $field]);
@@ -234,6 +270,14 @@ class KeConnectP30udp extends IPSModule
         if ($this->version2num($oldInfo) < $this->version2num('1.5')) {
             $field = $this->Translate('Update interval in standby');
             $r[] = $this->TranslateFormat('Adjust property "{$field}" from minutes to seconds', ['{$field}' => $field]);
+        }
+
+        if ($this->version2num($oldInfo) < $this->version2num('1.9')) {
+            $field = $this->Translate('Max charging current');
+            $r[] = $this->TranslateFormat('The variable "{$field}" is now a float', ['{$field}' => $field]);
+            $r[] = $this->Translate('Adjust variableprofile \'KebaConnect.MaxCurrent\'');
+            $field = $this->Translate('Mains connection');
+            $r[] = $this->TranslateFormat('Adjust the new variable "{$field}"', ['{$field}' => $field]);
         }
 
         return $r;
@@ -252,8 +296,10 @@ class KeConnectP30udp extends IPSModule
                     break;
                 }
             }
+            $desc = $this->Translate($var['Desc']);
             $values[] = [
                 'ident' => $ident,
+                'desc'  => $desc,
                 'use'   => $use
             ];
         }
@@ -262,6 +308,13 @@ class KeConnectP30udp extends IPSModule
         if ($this->version2num($oldInfo) < $this->version2num('1.5')) {
             $min = $this->ReadPropertyInteger('standby_update_interval');
             IPS_SetProperty($this->InstanceID, 'standby_update_interval', $min * 60);
+        }
+
+        if ($this->version2num($oldInfo) < $this->version2num('1.9')) {
+            if (IPS_VariableProfileExists('KebaConnect.MaxCurrent')) {
+                IPS_DeleteVariableProfile('KebaConnect.MaxCurrent');
+            }
+            $this->InstallVarProfiles(false);
         }
 
         return '';
@@ -294,7 +347,16 @@ class KeConnectP30udp extends IPSModule
             return;
         }
 
+        $with_surplus_control = $this->ReadPropertyBoolean('with_surplus_control');
+        $phase_switching = $this->ReadPropertyBoolean('phase_switching');
+
         $vpos = 0;
+        $this->MaintainVariable('OperationMode', $this->Translate('Operation mode'), VARIABLETYPE_INTEGER, 'KebaConnect.OperationMode', $vpos++, $with_surplus_control);
+        $with_surplus_control = $this->ReadPropertyBoolean('with_surplus_control');
+        if ($with_surplus_control) {
+            $this->MaintainAction('OperationMode', true);
+        }
+
         $this->MaintainVariable('ChargingState', $this->Translate('Charging state'), VARIABLETYPE_INTEGER, 'KebaConnect.ChargingState', $vpos++, true);
         $this->MaintainVariable('CableState', $this->Translate('Cable state'), VARIABLETYPE_INTEGER, 'KebaConnect.CableState', $vpos++, true);
 
@@ -304,19 +366,35 @@ class KeConnectP30udp extends IPSModule
         $this->MaintainVariable('TotalEnergy', $this->Translate('Total energy'), VARIABLETYPE_FLOAT, 'KebaConnect.Energy', $vpos++, true);
 
         $vpos = 20;
-        $this->MaintainVariable('EnableCharging', $this->Translate('Enable charging'), VARIABLETYPE_BOOLEAN, 'KebaConnect.EnableCharging', $vpos++, true);
-        $this->MaintainAction('EnableCharging', true);
+        $this->MaintainVariable('EnableCharging', $this->Translate('Charging enabled'), VARIABLETYPE_BOOLEAN, 'KebaConnect.YesNo', $vpos++, true);
+        $this->MaintainAction('EnableCharging', $with_surplus_control == false);
 
         $this->MaintainVariable('UnlockPlug', $this->Translate('Unlock plug'), VARIABLETYPE_BOOLEAN, 'KebaConnect.UnlockPlug', $vpos++, true);
         $this->MaintainAction('UnlockPlug', true);
 
-        $this->MaintainVariable('MaxChargingCurrent', $this->Translate('Max charging current'), VARIABLETYPE_INTEGER, 'KebaConnect.MaxCurrent', $vpos++, true);
-        $this->MaintainAction('MaxChargingCurrent', true);
+        if ($this->version2num($this->GetModuleVersion()) >= $this->version2num('1.9')) {
+            $this->MaintainVariable('MaxChargingCurrent', $this->Translate('Maximum current for charging'), VARIABLETYPE_FLOAT, 'KebaConnect.MaxCurrent', $vpos++, true);
+            $this->MaintainAction('MaxChargingCurrent', true);
+        }
 
-        $this->MaintainVariable('ChargingEnergyLimit', $this->Translate('Charging energy limit'), VARIABLETYPE_FLOAT, 'KebaConnect.EnergyLimit', $vpos++, true);
+        $this->MaintainVariable('ChargingEnergyLimit', $this->Translate('Maximum energy for charging'), VARIABLETYPE_FLOAT, 'KebaConnect.EnergyLimit', $vpos++, true);
         $this->MaintainAction('ChargingEnergyLimit', true);
 
-        $this->MaintainVariable('MaxSupportedCurrent', $this->Translate('Max supported current'), VARIABLETYPE_INTEGER, 'KebaConnect.MaxCurrent', $vpos++, true);
+        if ($this->version2num($this->GetModuleVersion()) >= $this->version2num('1.9')) {
+            $this->MaintainVariable('MaxSupportedCurrent', $this->Translate('Maximum supported current'), VARIABLETYPE_FLOAT, 'KebaConnect.MaxCurrent', $vpos++, true);
+        }
+
+        $this->MaintainVariable('MainsConnectionMode', $this->Translate('Mains connection phase switching'), VARIABLETYPE_INTEGER, 'KebaConnect.MainsPhases', $vpos++, $phase_switching);
+        if ($phase_switching) {
+            $this->MaintainAction('MainsConnectionMode', true);
+        }
+        $this->MaintainVariable('MainsConnectionPhases', $this->Translate('Mains connection number of used phases'), VARIABLETYPE_INTEGER, '', $vpos++, true);
+
+        $this->MaintainVariable('SurplusReady', $this->Translate('Ready for surplus charging'), VARIABLETYPE_BOOLEAN, 'KebaConnect.YesNo', $vpos++, $with_surplus_control);
+        $this->MaintainVariable('SurplusPower', $this->Translate('Available surplus power'), VARIABLETYPE_FLOAT, 'KebaConnect.SurplusPower', $vpos++, $with_surplus_control);
+        if ($with_surplus_control) {
+            $this->MaintainAction('SurplusPower', true);
+        }
 
         $vpos = 40;
         $use_fields = json_decode($this->ReadPropertyString('use_fields'), true);
@@ -498,6 +576,28 @@ class KeConnectP30udp extends IPSModule
                     'caption' => ' ... by activating this switch, additional variables are created on demand and logged as counters',
                 ],
             ],
+        ];
+
+        $formElements[] = [
+            'type'    => 'RowLayout',
+            'items'   => [
+                [
+                    'type'    => 'CheckBox',
+                    'name'    => 'phase_switching',
+                    'caption' => 'support phase switching via output X2',
+                ],
+                [
+                    'type'    => 'Label',
+                    'italic'  => true,
+                    'caption' => '(assumes the wallbox is equipped and configured for this)',
+                ],
+            ]
+        ];
+
+        $formElements[] = [
+            'type'    => 'CheckBox',
+            'name'    => 'with_surplus_control',
+            'caption' => 'variables for PV surplus charging control',
         ];
 
         $formElements[] = [
@@ -733,6 +833,8 @@ class KeConnectP30udp extends IPSModule
             }
         }
 
+        $this->EvalSurplusReady();
+
         $save_history = $this->ReadPropertyBoolean('save_history');
         if ($save_history) {
             $this->GetChargingHistory();
@@ -740,6 +842,128 @@ class KeConnectP30udp extends IPSModule
 
         $this->SetStandbyUpdateInterval();
         $this->SetChargingUpdateInterval();
+    }
+
+    public function SetMainsConnectionMode(int $connectionMode)
+    {
+        $this->SendDebug(__FUNCTION__, 'connectionMode=' . $connectionMode, 0);
+
+        switch ($connectionMode) {
+            case self::$MAINS_PHASES_DYNAMIC:
+                $r = true;
+                break;
+            case self::$MAINS_PHASES_FIX1:
+                $r = $this->SetMainsConnectionPhases(1);
+                break;
+            case self::$MAINS_PHASES_FIX3:
+                $r = $this->SetMainsConnectionPhases(3);
+                break;
+            default:
+                $r = false;
+                break;
+        }
+        if ($r) {
+            $this->SetValue('MainsConnectionMode', $connectionMode);
+        }
+        return $r;
+    }
+
+    public function SetMainsConnectionPhases(int $phases)
+    {
+        $this->SendDebug(__FUNCTION__, 'phases=' . $phases, 0);
+
+        if ($phases == $this->GetValue('MainsConnectionPhases')) {
+            return true;
+        }
+
+        $varID = $this->GetIDForIdent('MainsConnectionPhases');
+        $ts = IPS_GetVariable($varID)['VariableChanged'];
+        $age = time() - $ts;
+        $too_quick = $age <= (5 * 60);
+
+        $this->SendDebug(__FUNCTION__, 'last change=' . date('d.m.Y H:i:s') . $ts . ' (' . $this->seconds2duration($age) . ') => ' . ($too_quick ? 'too quickly' : 'possible'), 0);
+        if ($too_quick) {
+            return false;
+        }
+
+        $phase_switching = $this->ReadPropertyBoolean('phase_switching');
+        if ($phase_switching) {
+            switch ($phases) {
+                case 1:
+                    $r = $this->CallAction('x2 ' . self::$X2_1P);
+                    break;
+                case 3:
+                    $r = $this->CallAction('x2 ' . self::$X2_3P);
+                    break;
+                default:
+                    $r = false;
+                    break;
+            }
+        } else {
+            $r = true;
+        }
+
+        if ($r) {
+            $this->SetValue('MainsConnectionPhases', $phases);
+        }
+        return $r;
+    }
+
+    public function SetSurplusPower(float $power)
+    {
+        $with_surplus_control = $this->ReadPropertyBoolean('with_surplus_control');
+        if ($with_surplus_control) {
+            return false;
+        }
+
+        $phase_switching = $this->ReadPropertyBoolean('phase_switching');
+        $connectionMode = $this->GetValue('MainsConnectionMode');
+        $phase_dynamic = $phase_switching && $connectionMode == self::$MAINS_PHASES_DYNAMIC;
+        $n_phases = $this->GetValue('MainsConnectionPhases');
+
+        $current = $power / 230;
+        if ($n_phases == 3) {
+            $current /= $n_phases;
+            if ($current < 6 && $phase_dynamic) {
+                $n_phases = 1;
+                $r = $this->SetMainsConnectionPhases($n_phases);
+                if ($r == false) {
+                    return $r;
+                }
+                $current *= $n_phases;
+            }
+        } else {
+            if ($current > 18 && $phase_dynamic) {
+                $n_phases = 3;
+                $r = $this->SetMainsConnectionPhases($n_phases);
+                if ($r == false) {
+                    return $r;
+                }
+                $current /= $n_phases;
+            }
+        }
+
+        $s = 'mains phases=' . $n_phases;
+        $s .= ', power=' . $this->format_float($power, 2) . ' W';
+        $s .= ', current=' . $this->format_float($current, 1) . ' A';
+        $this->SendDebug(__FUNCTION__, $s, 0);
+
+        $r = $this->SetMaxChargingCurrent($current);
+        if ($r) {
+            $this->SetValue('SurplusPower', $power);
+            $enableCharging = $this->GetValue('EnableCharging');
+            $chargingCurrent = $this->GetValue('MaxChargingCurrent');
+            if ($chargingCurrent == 0) {
+                if ($enableCharging && $this->CallAction('ena 0')) {
+                    $this->SetValue('EnableCharging', false);
+                }
+            } else {
+                if ($enableCharging == false && $this->CallAction('ena 1')) {
+                    $this->SetValue('EnableCharging', true);
+                }
+            }
+        }
+        return $r;
     }
 
     private function cmp_entries($a, $b)
@@ -820,6 +1044,8 @@ class KeConnectP30udp extends IPSModule
             $e_pres = floatval($this->GetArrayElem($jdata, 'E pres', 0));
             $e_pres /= 10000;
 
+            $reason = $this->GetArrayElem($jdata, 'reason', 0);
+
             $new_entry = [
                 'Session ID'  => $sessionID,
                 'started'     => $started,
@@ -828,10 +1054,10 @@ class KeConnectP30udp extends IPSModule
                 'Curr HW'     => $curr_hw,
                 'E start'     => $e_start,
                 'E pres'      => $e_pres,
-                'reason'      => $jdata['reason'],
+                'reason'      => $reason,
             ];
 
-            if ($ended == 0) {
+            if ($ended == 0 && $reason == 0) {
                 $this->SendDebug(__FUNCTION__, 'ignore entry w/o "ended"', 0);
             } else {
                 $new_entries[] = $new_entry;
@@ -940,7 +1166,7 @@ class KeConnectP30udp extends IPSModule
             $tbl = '';
             foreach ($new_entries as $entry) {
                 $s = date('d.m.Y H:i:s', $entry['started']);
-                $e = date('d.m.Y H:i:s', $entry['ended']);
+                $e = $entry['ended'] ? date('d.m.Y H:i:s', $entry['ended']) : '-';
                 $e_pres = GetValueFormattedEx($this->GetIDForIdent('ChargedEnergy'), $entry['E pres']);
                 $tbl .= '<tr>' . PHP_EOL;
                 $tbl .= '<td>' . $entry['Session ID'] . '</td>' . PHP_EOL;
@@ -998,6 +1224,50 @@ class KeConnectP30udp extends IPSModule
         if ($buf != false) {
             $this->DecodeReport($buf);
         }
+        $this->EvalSurplusReady();
+    }
+
+    private function ExtractVersion()
+    {
+        $firmware = $this->ReadAttributeString('Firmware');
+        if ($firmware == '') {
+            return false;
+        }
+        $r = explode(' ', $firmware);
+        $version = count($r) > 3 ? $r[2] : '';
+        return $version;
+    }
+
+    private function ExtractModel()
+    {
+        $product = $this->ReadAttributeString('Product');
+        if (strlen($product) < 5) {
+            return false;
+        }
+        $model = substr($product, 3, 3);
+        return $model;
+    }
+
+    private function ExtractSeries()
+    {
+        $product = $this->ReadAttributeString('Product');
+        if (strlen($product) < 14) {
+            return false;
+        }
+        $code = substr($product, 13, 1);
+        $map_series = [
+            '0'=> 'E',
+            '1'=> 'B',
+            '2'=> 'C',
+            '3'=> 'A',
+            'R'=> 'X',
+            'C'=> 'X',
+            'E'=> 'X',
+            'G'=> 'X',
+            'H'=> 'X',
+        ];
+        $series = isset($map_series[$code]) ? $map_series[$code] : '';
+        return $series;
     }
 
     private function DecodeReport(string $data)
@@ -1043,7 +1313,16 @@ class KeConnectP30udp extends IPSModule
         if ($report_id == 1) {
             $product = $this->GetArrayElem($jdata, 'Product', '');
             $serial = $this->GetArrayElem($jdata, 'Serial', '');
+            $firmware = $this->GetArrayElem($jdata, 'Firmware', '');
             $this->SetSummary($product . ' (#' . $serial . ')');
+
+            $this->WriteAttributeString('Product', $product);
+            $this->WriteAttributeString('Firmware', $firmware);
+
+            $series = $this->ExtractSeries();
+            $version = $this->ExtractVersion();
+
+            $this->SendDebug(__FUNCTION__, 'product=' . $product . ', serial=' . $serial . ', firmware=' . $firmware . ' / series=' . $series . ', version=' . $version, 0);
 
             if (in_array('ProductType', $use_idents)) {
                 $this->SaveValue('ProductType', $product, $is_changed);
@@ -1054,7 +1333,6 @@ class KeConnectP30udp extends IPSModule
                 $this->SendDebug(__FUNCTION__, 'set variable "SerialNumber" to "' . $serial . '" from field "Serial"', 0);
             }
             if (in_array('FirmwareVersion', $use_idents)) {
-                $firmware = $this->GetArrayElem($jdata, 'Firmware', '');
                 $this->SaveValue('FirmwareVersion', $firmware, $is_changed);
                 $this->SendDebug(__FUNCTION__, 'set variable "FirmwareVersion" to "' . $firmware . '" from field "Firmware"', 0);
             }
@@ -1072,6 +1350,7 @@ class KeConnectP30udp extends IPSModule
             $dsw1 = $this->GetArrayElem($jdata, 'DIP-Sw1', '');
             $dsw2 = $this->GetArrayElem($jdata, 'DIP-Sw2', '');
             $this->SendDebug(__FUNCTION__, 'Dip-Switch 1=' . $this->int2bitmap(hexdec($dsw1), 8) . ', 2=' . $this->int2bitmap(hexdec($dsw2), 8), 0);
+
             $timeQ = $this->GetArrayElem($jdata, 'timeQ', '');
             $timeQ_map = [
                 0 => 'NONE',
@@ -1125,7 +1404,7 @@ class KeConnectP30udp extends IPSModule
             }
 
             if (in_array('MaxChargingCurrent', $use_idents)) {
-                $max_curr = floatval($this->GetArrayElem($jdata, 'Max curr', 0));
+                $max_curr = floatval($this->GetArrayElem($jdata, 'Max user', 0));
                 $max_curr /= 1000;
                 $this->SaveValue('MaxChargingCurrent', $max_curr, $is_changed);
                 $this->SendDebug(__FUNCTION__, 'set variable "MaxChargingCurrent" to ' . $max_curr . ' from field "Max curr"', 0);
@@ -1158,6 +1437,54 @@ class KeConnectP30udp extends IPSModule
 
             $b = $this->checkAction('UnlockPlug', false);
             $this->MaintainAction('UnlockPlug', $b);
+
+            $x2src = $this->GetArrayElem($jdata, 'X2 phaseSwitch source', 0);
+            if (in_array('PhaseSwitchSource', $use_idents)) {
+                $this->SaveValue('PhaseSwitchSource', $x2src, $is_changed);
+                $this->SendDebug(__FUNCTION__, 'set variable "PhaseSwitchSource" to ' . $x2src . ' from field "X2 phaseSwitch source"', 0);
+            }
+
+            $x2 = $this->GetArrayElem($jdata, 'X2 phaseSwitch', 0);
+            if (in_array('PhaseSwitch', $use_idents)) {
+                $this->SaveValue('PhaseSwitch', $x2, $is_changed);
+                $this->SendDebug(__FUNCTION__, 'set variable "PhaseSwitch" to ' . $x2 . ' from field "X2 phaseSwitch"', 0);
+            }
+
+            $phase_switching = $this->ReadPropertyBoolean('phase_switching');
+            if ($phase_switching) {
+                if ($x2src != self::$X2SRC_UDP) {
+                    $r = $this->CallAction('x2src ' . self::$X2SRC_UDP);
+                    if ($r && in_array('PhaseSwitchSource', $use_idents)) {
+                        $this->SaveValue('PhaseSwitchSource', self::$X2SRC_UDP, $is_changed);
+                    }
+                }
+                $phases = $this->GetValue('MainsConnectionPhases');
+                switch ($phases) {
+                    case 1:
+                        if ($x2 != self::$X2_1P) {
+                            $r = $this->CallAction('x2 ' . self::$X2_1P);
+                            if ($r && in_array('PhaseSwitch', $use_idents)) {
+                                $this->SaveValue('PhaseSwitch', self::$X2_1P, $is_changed);
+                            }
+                        }
+                        break;
+                    case 3:
+                        if ($x2 != self::$X2_3P) {
+                            $r = $this->CallAction('x2 ' . self::$X2_3P);
+                            if ($r && in_array('PhaseSwitch', $use_idents)) {
+                                $this->SaveValue('PhaseSwitch', self::$X2_3P, $is_changed);
+                            }
+                        }
+                        break;
+                }
+            } else {
+                if ($x2src != self::$X2SRC_NONE) {
+                    $r = $this->CallAction('x2src ' . self::$X2SRC_NONE);
+                    if ($r && in_array('PhaseSwitchSource', $use_idents)) {
+                        $this->SaveValue('PhaseSwitchSource', self::$X2SRC_NONE, $is_changed);
+                    }
+                }
+            }
         }
 
         if ($report_id == 3) {
@@ -1332,7 +1659,15 @@ class KeConnectP30udp extends IPSModule
 
         switch ($func) {
             case 'SwitchEnableCharging':
-                $enabled = true;
+                $with_surplus_control = $this->ReadPropertyBoolean('with_surplus_control');
+                if ($with_surplus_control) {
+                    $operationMode = $this->GetValue('OperationMode');
+                    if ($operationMode == self::$OPERATING_MODE_MANUAL) {
+                        $enabled = true;
+                    }
+                } else {
+                    $enabled = true;
+                }
                 break;
             case 'SetMaxChargingCurrent':
                 $enabled = true;
@@ -1391,6 +1726,8 @@ class KeConnectP30udp extends IPSModule
 
     public function SendDisplayText(string $txt)
     {
+        $this->SendDebug(__FUNCTION__, 'text="' . $txt . '"', 0);
+
         // Text shown on the display. Maximum 23 ASCII characters can be used. 0 .. 23 characters
         //   ~ == Σ
         //   $ == blank
@@ -1403,33 +1740,57 @@ class KeConnectP30udp extends IPSModule
 
     public function UnlockPlug()
     {
+        $this->SendDebug(__FUNCTION__, '', 0);
+
         if ($this->checkAction(__FUNCTION__, true) == false) {
             return false;
         }
 
         if ($this->GetValue('EnableCharging') == true) {
             $this->SendDebug(__FUNCTION__, 'force disable charging', 0);
-            $this->CallAction('ena 0');
+            $r = $this->CallAction('ena 0');
+            if ($r == false) {
+                return $r;
+            }
             IPS_Sleep(250);
         }
-        return $this->CallAction('unlock');
+
+        $cmd = 'unlock';
+        $r = $this->CallAction($cmd);
+        if ($r) {
+            $this->SetValue('UnlockPlug', false); // Trick, damit der Wert immer "false" bleibt
+        }
+        return $r;
     }
 
-    public function SwitchEnableCharging(bool $mode)
+    public function SwitchEnableCharging(bool $enable)
     {
+        $this->SendDebug(__FUNCTION__, 'enable=' . $this->bool2str($enable), 0);
+
         if ($this->checkAction(__FUNCTION__, true) == false) {
             return false;
         }
 
+        // if ($operationMode == self::$OPERATING_MODE_OFF) {
+
         // enable charging
         // 0 = Disabled; is indicated with a blue flashing LED
         // 1 = Enabled
-        $cmd = 'ena ' . ($mode ? '1' : '0');
-        return $this->CallAction($cmd);
+        $cmd = 'ena ' . ($enable ? '1' : '0');
+        $r = $this->CallAction($cmd);
+        if ($r) {
+            $this->SetValue('EnableCharging', $enable);
+        }
+        if ($r) {
+            $r = $this->EvalSurplusReady();
+        }
+        return $r;
     }
 
     public function AuthorizeSession(string $tag, string $class)
     {
+        $this->SendDebug(__FUNCTION__, 'tag="' . $tag . '", classe="' . $class . '"', 0);
+
         if ($this->checkAction(__FUNCTION__, true) == false) {
             return false;
         }
@@ -1453,6 +1814,8 @@ class KeConnectP30udp extends IPSModule
 
     public function DeauthorizeSession(string $tag)
     {
+        $this->SendDebug(__FUNCTION__, 'tag="' . $tag . '"', 0);
+
         if ($this->checkAction(__FUNCTION__, true) == false) {
             return false;
         }
@@ -1471,37 +1834,130 @@ class KeConnectP30udp extends IPSModule
 
     public function SetMaxChargingCurrent(float $current)
     {
+        $this->SendDebug(__FUNCTION__, 'current=' . $current, 0);
+
         if ($this->checkAction(__FUNCTION__, true) == false) {
             return false;
         }
 
         // maximum allowed loading current in milliampere
-        // range: 6000mA ... 63000mA or 'MaxSupportedCurrent'
-        $min = 6.0;
-        if ($current < $min) {
-            $this->SendDebug(__FUNCTION__, 'value ist below minimum (6A)', 0);
-            $current = $min;
-        }
-        $max = $this->GetValue('MaxSupportedCurrent');
-        if ($current > $max) {
-            $this->SendDebug(__FUNCTION__, 'value ist above supported maximum (' . $max . 'A)', 0);
-            $current = $max;
+        // range: 0 or 6000mA ... 32000mA
+        if ($current > 0) {
+            $min = 6.0;
+            if ($current < $min) {
+                $this->SendDebug(__FUNCTION__, 'value ist below minimum (' . $min . ' A) => 0', 0);
+                $current = 0;
+            }
+            $max = 32;
+            if ($current > $max) {
+                $this->SendDebug(__FUNCTION__, 'value ist above maximum (' . $max . ' A) => 0', 0);
+                $current = 0;
+            }
         }
         $c = intval($current * 1000);
-        $cmd = 'curr ' . $c;
-        return $this->CallAction($cmd);
+        $this->SendDebug(__FUNCTION__, 'current=' . $c . ' mA', 0);
+        if ($current != $this->GetValue('MaxChargingCurrent')) {
+            $delay = 1; // 0 or 1 - 860400 sec
+            $cmd = 'currtime ' . $c . ' ' . $delay;
+            /*
+            $cmd = 'curr ' . $c;
+             */
+            $r = $this->CallAction($cmd);
+            if ($r) {
+                $this->SetValue('MaxChargingCurrent', $current);
+            }
+        } else {
+            $r = true;
+        }
+        return $r;
     }
 
     public function SetChargingEnergyLimit(float $energy)
     {
+        $this->SendDebug(__FUNCTION__, 'energy=' . $energy, 0);
+
         if ($this->checkAction(__FUNCTION__, true) == false) {
             return false;
         }
 
         // Charging energy limit in 0,1Wh
+        $e = $energy * 1000;
+        $this->SendDebug(__FUNCTION__, 'energy=' . $e . ' Wh', 0);
         $e = $energy * 10000;
         $cmd = 'setenergy ' . $e;
-        return $this->CallAction($cmd);
+        $r = $this->CallAction($cmd);
+        if ($r) {
+            $this->SetValue('ChargingEnergyLimit', $energy);
+        }
+        return $r;
+    }
+
+    public function EvalSurplusReady()
+    {
+        $with_surplus_control = $this->ReadPropertyBoolean('with_surplus_control');
+        if ($with_surplus_control == false) {
+            return false;
+        }
+        $surplusReady = false;
+        $operationMode = $this->GetValue('OperationMode');
+        if ($operationMode == self::$OPERATING_MODE_SURPLUS) {
+            $chargingState = $this->GetValue('ChargingState');
+            switch ($chargingState) {
+                case self::$STATE_READY:
+                case self::$STATE_CHARGING:
+                case self::$STATE_SUSPENDED:
+                    $surplusReady = true;
+                    break;
+                default:
+                    break;
+            }
+        }
+        $this->SetValue('SurplusReady', $surplusReady);
+        if ($surplusReady) {
+            $surplusPower = $this->GetValue('SurplusPower');
+            $r = $this->SetSurplusPower($surplusPower);
+        } else {
+            $r = true;
+        }
+        $this->SendDebug(__FUNCTION__, 'operationMode=' . $operationMode . ', surplusReady=' . $this->bool2str($surplusReady), 0);
+        return $r;
+    }
+
+    public function SetOperationMode(int $operationMode)
+    {
+        $this->SendDebug(__FUNCTION__, 'operationMode=' . $operationMode, 0);
+        $with_surplus_control = $this->ReadPropertyBoolean('with_surplus_control');
+        if ($with_surplus_control == false) {
+            return false;
+        }
+
+        $r = true;
+        switch ($operationMode) {
+            case self::$OPERATING_MODE_OFF:
+                $this->SetValue('OperationMode', $operationMode);
+                $r = $this->SwitchEnableCharging(false);
+                if ($r) {
+                    $r = $this->EvalSurplusReady();
+                }
+                if ($r) {
+                    $r = $this->SetMaxChargingCurrent(0);
+                }
+                break;
+            case self::$OPERATING_MODE_MANUAL:
+                $this->SetValue('OperationMode', $operationMode);
+                if ($this->CallAction('ena 1')) {
+                    $this->SetValue('EnableCharging', true);
+                }
+                break;
+            case self::$OPERATING_MODE_SURPLUS:
+                $this->SetValue('OperationMode', $operationMode);
+                $r = $this->EvalSurplusReady();
+                break;
+            default:
+                $r = false;
+                break;
+        }
+        return $r;
     }
 
     public function RequestAction($ident, $value)
@@ -1521,7 +1977,6 @@ class KeConnectP30udp extends IPSModule
                 $r = $this->SwitchEnableCharging((bool) $value);
                 $this->SendDebug(__FUNCTION__, $ident . '=' . $this->bool2str($value) . ' => ret=' . $this->bool2str($r), 0);
                 if ($r) {
-                    $this->SetValue($ident, $value);
                     $this->SetStandbyUpdateInterval(1);
                 }
                 break;
@@ -1529,7 +1984,6 @@ class KeConnectP30udp extends IPSModule
                 $r = $this->SetMaxChargingCurrent((float) $value);
                 $this->SendDebug(__FUNCTION__, $ident . '=' . $value . ' => ret=' . $this->bool2str($r), 0);
                 if ($r) {
-                    $this->SetValue($ident, $value);
                     $this->SetStandbyUpdateInterval(1);
                 }
                 break;
@@ -1537,20 +1991,39 @@ class KeConnectP30udp extends IPSModule
                 $r = $this->SetChargingEnergyLimit((float) $value);
                 $this->SendDebug(__FUNCTION__, $ident . '=' . $value . ' => ret=' . $this->bool2str($r), 0);
                 if ($r) {
-                    $this->SetValue($ident, $value);
                     $this->SetStandbyUpdateInterval(1);
                 }
                 break;
             case 'UnlockPlug':
                 $r = $this->UnlockPlug();
                 $this->SendDebug(__FUNCTION__, $ident . '=' . $value . ' => ret=' . $this->bool2str($r), 0);
-                $this->SetValue($ident, false); // Trick, damit der Wert immer "false" bleibt
                 break;
             case 'StandbyUpdate':
                 $this->StandbyUpdate();
                 break;
             case 'ChargingUpdate':
                 $this->ChargingUpdate();
+                break;
+            case 'MainsConnectionMode':
+                $r = $this->SetMainsConnectionMode($value);
+                $this->SendDebug(__FUNCTION__, $ident . '=' . $value . ' => ret=' . $this->bool2str($r), 0);
+                if ($r) {
+                    $this->SetStandbyUpdateInterval(1);
+                }
+                break;
+            case 'SurplusPower':
+                $r = $this->SetSurplusPower($value);
+                $this->SendDebug(__FUNCTION__, $ident . '=' . $value . ' => ret=' . $this->bool2str($r), 0);
+                if ($r) {
+                    $this->SetStandbyUpdateInterval(1);
+                }
+                break;
+            case 'OperationMode':
+                $r = $this->SetOperationMode($value);
+                $this->SendDebug(__FUNCTION__, $ident . '=' . $value . ' => ret=' . $this->bool2str($r), 0);
+                if ($r) {
+                    $this->SetStandbyUpdateInterval(1);
+                }
                 break;
             default:
                 $this->SendDebug(__FUNCTION__, 'invalid ident ' . $ident, 0);
