@@ -41,8 +41,8 @@
 
 			"__variableprofile__": "KebaConnect.MainsPhases",
 			"dynamic": "dynamisch",
-			"1 phase (fix)": "1 Phase (fix)",
-			"3 phases (fix)": "3 Phasen (fix)",
+			"1 phase (fixed)": "1 Phase (fixed)",
+			"3 phases (fixed)": "3 Phasen (fixed)",
 
 			"__variableprofile__": "KebaConnect.PhaseSwitchSource",
 			"none": "keine",

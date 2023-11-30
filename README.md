@@ -159,7 +159,7 @@ Referenzen
 
 ## 7. Versions-Historie
 
-- 1.9.1 @ 30.11.2023 08:45
+- 1.9.1 @ 30.11.2023 11:07
   - Neu: Modul-interne Protokollierung der Aktivitäten/Einstellungen zur besseren Nachvollziehbarkeit insbesondere bei PV-Überschussladung
 
 - 1.9 @ 29.11.2023 11:27

@@ -253,11 +253,9 @@ class KeConnectP30udp extends IPSModule
                     break;
                 }
             }
-            $desc = $this->Translate($var['Desc']);
             $new_fields[] = [
                 'ident' => $ident,
-                'desc'  => $desc,
-                'use'   => $use
+                'use'   => $use,
             ];
         }
         $new_val = json_encode($new_fields);
@@ -296,11 +294,9 @@ class KeConnectP30udp extends IPSModule
                     break;
                 }
             }
-            $desc = $this->Translate($var['Desc']);
             $values[] = [
                 'ident' => $ident,
-                'desc'  => $desc,
-                'use'   => $use
+                'use'   => $use,
             ];
         }
         IPS_SetProperty($this->InstanceID, 'use_fields', json_encode($values));
