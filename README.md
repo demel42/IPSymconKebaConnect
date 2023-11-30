@@ -159,6 +159,9 @@ Referenzen
 
 ## 7. Versions-Historie
 
+- 1.9.1 @ 30.11.2023 08:45
+  - Neu: Modul-interne Protokollierung der Aktivitäten/Einstellungen zur besseren Nachvollziehbarkeit insbesonder bi PV-Überschussladumg
+
 - 1.9 @ 29.11.2023 11:27
   - Neu: Unterstützung von PV-Überschussladen mit dynamischer Umschaltung der Ladestromstärke
     Für das Zusammenspiel mit dem Energieverbrauch-Optimierer stellt das Modul Variablen zur Verfüpung

@@ -710,6 +710,7 @@ class KeConnectP30udp extends IPSModule
 
         $formActions[] = $this->GetInformationFormAction();
         $formActions[] = $this->GetReferencesFormAction();
+        $formActions[] = $this->GetModuleActivityFormAction();
 
         return $formActions;
     }
@@ -883,6 +884,7 @@ class KeConnectP30udp extends IPSModule
 
         $this->SendDebug(__FUNCTION__, 'last change=' . date('d.m.Y H:i:s') . $ts . ' (' . $this->seconds2duration($age) . ') => ' . ($too_quick ? 'too quickly' : 'possible'), 0);
         if ($too_quick) {
+            $this->AddModuleActivity('unable to set number of phases of mains connection to ' . $phases . ' - too quickly');
             return false;
         }
 
@@ -905,6 +907,7 @@ class KeConnectP30udp extends IPSModule
 
         if ($r) {
             $this->SetValue('MainsConnectionPhases', $phases);
+            $this->AddModuleActivity('set number of phases of mains connection to ' . $phases);
         }
         return $r;
     }
@@ -956,10 +959,12 @@ class KeConnectP30udp extends IPSModule
             if ($chargingCurrent == 0) {
                 if ($enableCharging && $this->CallAction('ena 0')) {
                     $this->SetValue('EnableCharging', false);
+                    $this->AddModuleActivity('disable charging');
                 }
             } else {
                 if ($enableCharging == false && $this->CallAction('ena 1')) {
                     $this->SetValue('EnableCharging', true);
+                    $this->AddModuleActivity('enable charging');
                 }
             }
         }
@@ -1454,8 +1459,11 @@ class KeConnectP30udp extends IPSModule
             if ($phase_switching) {
                 if ($x2src != self::$X2SRC_UDP) {
                     $r = $this->CallAction('x2src ' . self::$X2SRC_UDP);
-                    if ($r && in_array('PhaseSwitchSource', $use_idents)) {
-                        $this->SaveValue('PhaseSwitchSource', self::$X2SRC_UDP, $is_changed);
+                    if ($r) {
+                        if (in_array('PhaseSwitchSource', $use_idents)) {
+                            $this->SaveValue('PhaseSwitchSource', self::$X2SRC_UDP, $is_changed);
+                        }
+                        $this->AddModuleActivity('set phase switch source to UDP');
                     }
                 }
                 $phases = $this->GetValue('MainsConnectionPhases');
@@ -1463,16 +1471,22 @@ class KeConnectP30udp extends IPSModule
                     case 1:
                         if ($x2 != self::$X2_1P) {
                             $r = $this->CallAction('x2 ' . self::$X2_1P);
-                            if ($r && in_array('PhaseSwitch', $use_idents)) {
-                                $this->SaveValue('PhaseSwitch', self::$X2_1P, $is_changed);
+                            if ($r) {
+                                if (in_array('PhaseSwitch', $use_idents)) {
+                                    $this->SaveValue('PhaseSwitch', self::$X2_1P, $is_changed);
+                                }
+                                $this->AddModuleActivity('force number of phases of mains connection to 1');
                             }
                         }
                         break;
                     case 3:
                         if ($x2 != self::$X2_3P) {
                             $r = $this->CallAction('x2 ' . self::$X2_3P);
-                            if ($r && in_array('PhaseSwitch', $use_idents)) {
-                                $this->SaveValue('PhaseSwitch', self::$X2_3P, $is_changed);
+                            if ($r) {
+                                if (in_array('PhaseSwitch', $use_idents)) {
+                                    $this->SaveValue('PhaseSwitch', self::$X2_3P, $is_changed);
+                                }
+                                $this->AddModuleActivity('force number of phases of mains connection to 3');
                             }
                         }
                         break;
@@ -1480,8 +1494,11 @@ class KeConnectP30udp extends IPSModule
             } else {
                 if ($x2src != self::$X2SRC_NONE) {
                     $r = $this->CallAction('x2src ' . self::$X2SRC_NONE);
-                    if ($r && in_array('PhaseSwitchSource', $use_idents)) {
-                        $this->SaveValue('PhaseSwitchSource', self::$X2SRC_NONE, $is_changed);
+                    if ($r) {
+                        if (in_array('PhaseSwitchSource', $use_idents)) {
+                            $this->SaveValue('PhaseSwitchSource', self::$X2SRC_NONE, $is_changed);
+                        }
+                        $this->AddModuleActivity('set phase switch source to none');
                     }
                 }
             }
@@ -1752,6 +1769,7 @@ class KeConnectP30udp extends IPSModule
             if ($r == false) {
                 return $r;
             }
+            $this->AddModuleActivity('force disable charging');
             IPS_Sleep(250);
         }
 
@@ -1759,6 +1777,7 @@ class KeConnectP30udp extends IPSModule
         $r = $this->CallAction($cmd);
         if ($r) {
             $this->SetValue('UnlockPlug', false); // Trick, damit der Wert immer "false" bleibt
+            $this->AddModuleActivity('unlock plug');
         }
         return $r;
     }
@@ -1780,6 +1799,7 @@ class KeConnectP30udp extends IPSModule
         $r = $this->CallAction($cmd);
         if ($r) {
             $this->SetValue('EnableCharging', $enable);
+            $this->AddModuleActivity(($enable ? 'en' : 'dis') . 'able charging');
         }
         if ($r) {
             $r = $this->EvalSurplusReady();
@@ -1809,7 +1829,11 @@ class KeConnectP30udp extends IPSModule
         }
 
         $cmd = 'start ' . $tag . ' ' . $class;
-        return $this->CallAction($cmd);
+        $r = $this->CallAction($cmd);
+        if ($r) {
+            $this->AddModuleActivity('authorize RFID ' . $tag . ' ' . $classg);
+        }
+        return $r;
     }
 
     public function DeauthorizeSession(string $tag)
@@ -1820,7 +1844,7 @@ class KeConnectP30udp extends IPSModule
             return false;
         }
 
-        // authorize charging
+        // deauthorize charging
         // tag   = RFID tag (8 bytes)
 
         if (preg_match('/^([0-9A-Fa-f][0-9A-Fa-f]){1,8}$/', $tag) == false) {
@@ -1829,7 +1853,11 @@ class KeConnectP30udp extends IPSModule
         }
 
         $cmd = 'stop ' . $tag;
-        return $this->CallAction($cmd);
+        $r = $this->CallAction($cmd);
+        if ($r) {
+            $this->AddModuleActivity('deauthorize RFID ' . $tag);
+        }
+        return $r;
     }
 
     public function SetMaxChargingCurrent(float $current)
@@ -1865,6 +1893,7 @@ class KeConnectP30udp extends IPSModule
             $r = $this->CallAction($cmd);
             if ($r) {
                 $this->SetValue('MaxChargingCurrent', $current);
+                $this->AddModuleActivity('set max charging current to ' . $c . ' mA with delay of ' . $delay . 's');
             }
         } else {
             $r = true;
@@ -1888,6 +1917,7 @@ class KeConnectP30udp extends IPSModule
         $r = $this->CallAction($cmd);
         if ($r) {
             $this->SetValue('ChargingEnergyLimit', $energy);
+            $this->AddModuleActivity('set charging energy limit to ' . ($energy * 1000) . ' Wh');
         }
         return $r;
     }
@@ -1935,22 +1965,27 @@ class KeConnectP30udp extends IPSModule
         switch ($operationMode) {
             case self::$OPERATING_MODE_OFF:
                 $this->SetValue('OperationMode', $operationMode);
-                $r = $this->SwitchEnableCharging(false);
-                if ($r) {
-                    $r = $this->EvalSurplusReady();
+                $this->AddModuleActivity('switch operation-mode to off');
+                if ($this->CallAction('ena 0')) {
+                    $this->SetValue('EnableCharging', false);
+                    $this->AddModuleActivity('disable charging');
                 }
+                $r = $this->EvalSurplusReady();
                 if ($r) {
                     $r = $this->SetMaxChargingCurrent(0);
                 }
                 break;
             case self::$OPERATING_MODE_MANUAL:
                 $this->SetValue('OperationMode', $operationMode);
+                $this->AddModuleActivity('switch operation-mode to manual');
                 if ($this->CallAction('ena 1')) {
                     $this->SetValue('EnableCharging', true);
+                    $this->AddModuleActivity('enable charging');
                 }
                 break;
             case self::$OPERATING_MODE_SURPLUS:
                 $this->SetValue('OperationMode', $operationMode);
+                $this->AddModuleActivity('switch operation-mode to surplus loading');
                 $r = $this->EvalSurplusReady();
                 break;
             default:
