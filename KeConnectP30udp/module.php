@@ -278,6 +278,10 @@ class KeConnectP30udp extends IPSModule
             $r[] = $this->TranslateFormat('Adjust the new variable "{$field}"', ['{$field}' => $field]);
         }
 
+        if ($this->version2num($oldInfo) < $this->version2num('1.9.4')) {
+            $r[] = $this->Translate('Adjust variableprofiles \'KebaConnect.MaxCurrent\' and \'KebaConnect.EnergyLimit\'');
+        }
+
         return $r;
     }
 
@@ -309,6 +313,16 @@ class KeConnectP30udp extends IPSModule
         if ($this->version2num($oldInfo) < $this->version2num('1.9')) {
             if (IPS_VariableProfileExists('KebaConnect.MaxCurrent')) {
                 IPS_DeleteVariableProfile('KebaConnect.MaxCurrent');
+            }
+            $this->InstallVarProfiles(false);
+        }
+
+        if ($this->version2num($oldInfo) < $this->version2num('1.9.4')) {
+            if (IPS_VariableProfileExists('KebaConnect.MaxCurrent')) {
+                IPS_DeleteVariableProfile('KebaConnect.MaxCurrent');
+            }
+            if (IPS_VariableProfileExists('KebaConnect.EnergyLimit')) {
+                IPS_DeleteVariableProfile('KebaConnect.EnergyLimit');
             }
             $this->InstallVarProfiles(false);
         }
@@ -1640,10 +1654,11 @@ class KeConnectP30udp extends IPSModule
             $this->SendDebug(__FUNCTION__, 'set variable "CableState" to ' . $cable_state . ' from field "CableState"', 0);
         }
         if (in_array('MaxChargingCurrent', $use_idents) && isset($jdata['Max curr'])) {
-            $max_curr = floatval($jdata['Max curr']);
+            $fld = 'Curr user'; // wenn per Kommando 'currtime' gesetzt wird, 'Max curr' wenn per 'curr'
+            $max_curr = floatval($this->GetArrayElem($jdata, $fld, 0));
             $max_curr /= 1000;
             $this->SaveValue('MaxChargingCurrent', $max_curr, $is_changed);
-            $this->SendDebug(__FUNCTION__, 'set variable "MaxChargingCurrent" to ' . $max_curr . ' from field "Max curr"', 0);
+            $this->SendDebug(__FUNCTION__, 'set variable "MaxChargingCurrent" to ' . $max_curr . ' from field "' . $fld . '"', 0);
         }
         if (in_array('ChargedEnergy', $use_idents) && isset($jdata['E pres'])) {
             $e_pres = floatval($jdata['E pres']);
@@ -1673,6 +1688,8 @@ class KeConnectP30udp extends IPSModule
 
         switch ($func) {
             case 'SwitchEnableCharging':
+            case 'SetMaxChargingCurrent':
+            case 'SetChargingEnergyLimit':
                 $with_surplus_control = $this->ReadPropertyBoolean('with_surplus_control');
                 if ($with_surplus_control) {
                     $operationMode = $this->GetValue('OperationMode');
@@ -1682,12 +1699,6 @@ class KeConnectP30udp extends IPSModule
                 } else {
                     $enabled = true;
                 }
-                break;
-            case 'SetMaxChargingCurrent':
-                $enabled = true;
-                break;
-            case 'SetChargingEnergyLimit':
-                $enabled = true;
                 break;
             case 'UnlockPlug':
                 $cableState = $this->GetValue('CableState');
@@ -1884,9 +1895,6 @@ class KeConnectP30udp extends IPSModule
         if ($current != $this->GetValue('MaxChargingCurrent')) {
             $delay = 1; // 0 or 1 - 860400 sec
             $cmd = 'currtime ' . $c . ' ' . $delay;
-            /*
-            $cmd = 'curr ' . $c;
-             */
             $r = $this->CallAction($cmd);
             if ($r) {
                 $this->SetValue('MaxChargingCurrent', $current);

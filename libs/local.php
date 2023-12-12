@@ -76,13 +76,13 @@ trait KebaConnectLocalLib
             ['Wert' => 0, 'Name' => '-', 'Farbe' => -1],
             ['Wert' => 0.1, 'Name' => '%0.1f A', 'Farbe' => -1],
         ];
-        $this->CreateVarProfile('KebaConnect.MaxCurrent', VARIABLETYPE_FLOAT, '', 0, 0, 0.1, 3, '', $associations, $reInstall);
+        $this->CreateVarProfile('KebaConnect.MaxCurrent', VARIABLETYPE_FLOAT, '', 0, 63, 1, 3, '', $associations, $reInstall);
 
         $associations = [
             ['Wert' => 0, 'Name' => '-', 'Farbe' => -1],
             ['Wert' => 1, 'Name' => '%0.0f kWh', 'Farbe' => -1],
         ];
-        $this->CreateVarProfile('KebaConnect.EnergyLimit', VARIABLETYPE_FLOAT, '', 0, 0, 0.1, 3, '', $associations, $reInstall);
+        $this->CreateVarProfile('KebaConnect.EnergyLimit', VARIABLETYPE_FLOAT, '', 0, 100, 1, 3, '', $associations, $reInstall);
 
         $associations = [
             ['Wert' => self::$STATE_SYSTEM_STARTED, 'Name' => $this->Translate('system started'), 'Farbe' => -1],

@@ -7,7 +7,7 @@
 			"Adjust property \"{$field}\"": "Eigenschaft \"{$field}\" anpassen",
 			"Adjust property \"{$field}\" from minutes to seconds": "Eigenschaft \"{$field}\" von Minuten auf Sekunden umstellen",
 			"Adjust variableprofile 'KebaConnect.MaxCurrent'":
-				"Variablenprofile 'KebaConnect.MaxCurrent' anpassen",
+				"Variablenprofil 'KebaConnect.MaxCurrent' anpassen",
 			"The variable \"{$field}\" is now a float":
 				"Die Variable \"{$field}\" ist jetzt ein Fliesskommazahl",
 			"Adjust the new variable \"{$field}\"":
@@ -16,6 +16,8 @@
 				"Phasenumschaltung wird nur von den Serien C und X unterstützt",
 			"phase switching is only supported from version 3.10.51":
 				"Phasenumschaltung wird erst ab Version 3.10.51 unterstützt",
+			"Adjust variableprofiles 'KebaConnect.MaxCurrent' and 'KebaConnect.EnergyLimit'":
+				"Variablenprofile 'KebaConnect.MaxCurrent' und 'KebaConnect.EnergyLimit' anpassen",
 
 			"__function__": "CheckConfiguration",
 			"to be able to display the charging history, it must be saved": "um den Ladeverlauf anzeigen zu können, muss er gespeichert werden",
