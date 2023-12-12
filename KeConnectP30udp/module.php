@@ -1405,10 +1405,11 @@ class KeConnectP30udp extends IPSModule
             }
 
             if (in_array('MaxChargingCurrent', $use_idents)) {
-                $max_curr = floatval($this->GetArrayElem($jdata, 'Max user', 0));
+                $fld = 'Curr user'; // wenn per Kommando 'currtime' gesetzt wird, 'Max curr' wenn per 'curr'
+                $max_curr = floatval($this->GetArrayElem($jdata, $fld, 0));
                 $max_curr /= 1000;
                 $this->SaveValue('MaxChargingCurrent', $max_curr, $is_changed);
-                $this->SendDebug(__FUNCTION__, 'set variable "MaxChargingCurrent" to ' . $max_curr . ' from field "Max curr"', 0);
+                $this->SendDebug(__FUNCTION__, 'set variable "MaxChargingCurrent" to ' . $max_curr . ' from field "' . $fld . '"', 0);
             }
             if (in_array('MaxSupportedCurrent', $use_idents)) {
                 $curr_hw = floatval($this->GetArrayElem($jdata, 'Curr HW', 0));

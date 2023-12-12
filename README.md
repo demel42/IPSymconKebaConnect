@@ -155,6 +155,9 @@ Referenzen
 
 ## 7. Versions-Historie
 
+- 1.9.3 @ 12.12.2023 17:36
+  - Fix: der maximale Strom wurde nicht korrekt ausgelesen, aufgrund des Wechsel von Kommanto "curr" zu "currtimer"
+
 - 1.9.2 @ 12.12.2023 09:34
   - Fix: unbekannte Variable (Korrektur zu 1.9.1)
   - Fix: Korrektur im README.md
