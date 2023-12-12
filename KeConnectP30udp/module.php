@@ -1827,7 +1827,7 @@ class KeConnectP30udp extends IPSModule
         $cmd = 'start ' . $tag . ' ' . $class;
         $r = $this->CallAction($cmd);
         if ($r) {
-            $this->AddModuleActivity('authorize RFID ' . $tag . ' ' . $classg);
+            $this->AddModuleActivity('authorize RFID ' . $tag . ' ' . $class);
         }
         return $r;
     }

@@ -159,6 +159,9 @@ Referenzen
 
 ## 7. Versions-Historie
 
+- 1.9.2 @ 12.12.2023 07:28
+  - Fix: unbekannte Variable (Korrektur zu 1.9.1)
+
 - 1.9.1 @ 30.11.2023 11:07
   - Neu: Modul-interne Protokollierung der Aktivitäten/Einstellungen zur besseren Nachvollziehbarkeit insbesondere bei PV-Überschussladung
 
