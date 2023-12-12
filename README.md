@@ -155,6 +155,9 @@ Referenzen
 
 ## 7. Versions-Historie
 
+- 1.9.5 @ 12.12.2023 18:47
+  - Fix: Übersetzungsfehler im Variablenprofil "KebaConnect.MainsPhase"
+
 - 1.9.4 @ 12.12.2023 18:36
   - Fix: Variablenprofile "KebaConnect.MaxCurrent" und "KebaConnect.EnergyLimit" wieder im Webfront anpassbar gemacht - aber nur mit Modus "manuell", im Modus "PV-Überschussladen" sind die Variablen nicht editierbar
   - Fix: nach Setzen der Stromstärke sprang der Wert kurz zurück auf 0

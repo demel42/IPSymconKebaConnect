@@ -282,6 +282,10 @@ class KeConnectP30udp extends IPSModule
             $r[] = $this->Translate('Adjust variableprofiles \'KebaConnect.MaxCurrent\' and \'KebaConnect.EnergyLimit\'');
         }
 
+        if ($this->version2num($oldInfo) < $this->version2num('1.9.5')) {
+            $r[] = $this->Translate('Adjust variableprofile \'KebaConnect.MainsPhases\'');
+        }
+
         return $r;
     }
 
@@ -323,6 +327,13 @@ class KeConnectP30udp extends IPSModule
             }
             if (IPS_VariableProfileExists('KebaConnect.EnergyLimit')) {
                 IPS_DeleteVariableProfile('KebaConnect.EnergyLimit');
+            }
+            $this->InstallVarProfiles(false);
+        }
+
+        if ($this->version2num($oldInfo) < $this->version2num('1.9.5')) {
+            if (IPS_VariableProfileExists('KebaConnect.MainsPhases')) {
+                IPS_DeleteVariableProfile('KebaConnect.MainsPhases');
             }
             $this->InstallVarProfiles(false);
         }

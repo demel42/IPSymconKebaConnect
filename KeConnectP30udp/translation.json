@@ -18,6 +18,8 @@
 				"Phasenumschaltung wird erst ab Version 3.10.51 unterstützt",
 			"Adjust variableprofiles 'KebaConnect.MaxCurrent' and 'KebaConnect.EnergyLimit'":
 				"Variablenprofile 'KebaConnect.MaxCurrent' und 'KebaConnect.EnergyLimit' anpassen",
+			"Adjust variableprofile 'KebaConnect.MainsPhases'":
+				"Variablenprofil 'KebaConnect.MainsPhases' anpassen",
 
 			"__function__": "CheckConfiguration",
 			"to be able to display the charging history, it must be saved": "um den Ladeverlauf anzeigen zu können, muss er gespeichert werden",
