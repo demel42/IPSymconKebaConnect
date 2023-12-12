@@ -110,14 +110,10 @@ Falls mehrere Keba-Wallboxen im Einsatz sind und eine Gesamtsumme pro RFID genö
 
 - _[3]_: dynamische Phasen-Umschaltung<br>
 die dynamische Phasenumschaktung setzt entsprechende Zusatzhardware voraus (z.B. [KeContact S10 Phase Switching Device](https://www.keba.com/download/x/a5613f1cc0/kecontacts10_ihde.pdf)), die Verbindung von Ausgabe **X2** zu dem Umschalter sowie ein aktuellen Firmwarestand. Siehe Punkt *7.5* auch im [Installationshandbuch](https://www.keba.com/download/x/44d3dc9e54/kecontactp30_ihde_web.pdf).
-**Achtung**: diese Funktion it noch nicht implementiert!
+**Achtung**: diese Funktion ist noch nicht vollständig implementiert und umfänglich getestet!
 
 - _[4]_: PV-Überschussladung<br>
 beim Eintragen eines Wertes in diese Variablen (z.B. durch den [EnergieverbrauchOptimierer](https://community.symcon.de/t/energieverbrauch-optimierer-inkl-kachel/133036)) wird in Abhängigkeit der Anzahl der Phasen der _Maximaler Ladestrom_ berechnet.
-
-
-ChargingState
-
 
 #### Variablenprofile
 
@@ -159,8 +155,9 @@ Referenzen
 
 ## 7. Versions-Historie
 
-- 1.9.2 @ 12.12.2023 07:28
+- 1.9.2 @ 12.12.2023 09:34
   - Fix: unbekannte Variable (Korrektur zu 1.9.1)
+  - Fix: Korrektur im README.md
 
 - 1.9.1 @ 30.11.2023 11:07
   - Neu: Modul-interne Protokollierung der Aktivitäten/Einstellungen zur besseren Nachvollziehbarkeit insbesondere bei PV-Überschussladung
