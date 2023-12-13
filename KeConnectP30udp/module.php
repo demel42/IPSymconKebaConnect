@@ -969,9 +969,19 @@ class KeConnectP30udp extends IPSModule
 
     public function SetSurplusPower(float $power)
     {
+        $this->SendDebug(__FUNCTION__, 'power=' . $power, 0);
+
         $with_surplus_control = $this->ReadPropertyBoolean('with_surplus_control');
-        if ($with_surplus_control) {
+        if ($with_surplus_control == false) {
+            $this->SendDebug(__FUNCTION__, 'with_surplus_control=' . $this->bool2str($with_surplus_control) . ' => skip', 0);
             return false;
+        }
+
+        $operationMode = $this->GetValue('OperationMode');
+        if ($operationMode != self::$OPERATING_MODE_SURPLUS) {
+            $this->SendDebug(__FUNCTION__, 'operationMode=' . $operationMode . ' => skip', 0);
+            $this->SetValue('SurplusPower', $power);
+            return true;
         }
 
         $phase_switching = $this->ReadPropertyBoolean('phase_switching');
@@ -1847,8 +1857,6 @@ class KeConnectP30udp extends IPSModule
             return false;
         }
 
-        // if ($operationMode == self::$OPERATING_MODE_OFF) {
-
         // enable charging
         // 0 = Disabled; is indicated with a blue flashing LED
         // 1 = Enabled
@@ -1922,7 +1930,7 @@ class KeConnectP30udp extends IPSModule
         $this->SendDebug(__FUNCTION__, 'current=' . $current, 0);
 
         if ($this->checkAction(__FUNCTION__, true) == false) {
-            return false;
+            //return false;
         }
 
         // maximum allowed loading current in milliampere
