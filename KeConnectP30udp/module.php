@@ -175,6 +175,7 @@ class KeConnectP30udp extends IPSModule
         $this->RegisterPropertyInteger('history_age', 90);
         $this->RegisterPropertyBoolean('save_per_rfid', false);
 
+        $this->RegisterPropertyInteger('phase_count', self::$MAINS_PHASES_FIX3);
         $this->RegisterPropertyBoolean('phase_switching', false);
         $this->RegisterPropertyBoolean('with_surplus_control', false);
 
@@ -230,7 +231,12 @@ class KeConnectP30udp extends IPSModule
             $version = $this->ExtractVersion();
             if ($this->version2num($version) < $this->version2num('3.10.51')) {
                 $this->SendDebug(__FUNCTION__, '"phase_switching" is only supported from version 3.10.51', 0);
-                $r[] = $this->Translate('phase switching is only supported from version 3.10.51');
+                $r[] = $this->Translate('phase switching is only supported from wallbox firmware version 3.10.51');
+            }
+            $phase_count = $this->ReadPropertyInteger('phase_count');
+            if ($phase_count == self::$MAINS_PHASES_FIX1) {
+                $this->SendDebug(__FUNCTION__, '"phase_switching" is only supported if wallbox has > 1 phase', 0);
+                $r[] = $this->Translate('phase switching is only supported if wallbox has more as 1 phase');
             }
         }
 
@@ -409,7 +415,7 @@ class KeConnectP30udp extends IPSModule
         if ($phase_switching) {
             $this->MaintainAction('MainsConnectionMode', true);
         }
-        $this->MaintainVariable('MainsConnectionPhases', $this->Translate('Mains connection number of used phases'), VARIABLETYPE_INTEGER, '', $vpos++, true);
+        $this->MaintainVariable('MainsConnectionPhases', $this->Translate('Mains connection number of used phases'), VARIABLETYPE_INTEGER, '', $vpos++, $phase_switching);
 
         $this->MaintainVariable('SurplusReady', $this->Translate('Ready for surplus charging'), VARIABLETYPE_BOOLEAN, 'KebaConnect.YesNo', $vpos++, $with_surplus_control);
         $this->MaintainVariable('SurplusPower', $this->Translate('Available surplus power'), VARIABLETYPE_FLOAT, 'KebaConnect.SurplusPower', $vpos++, $with_surplus_control);
@@ -597,6 +603,22 @@ class KeConnectP30udp extends IPSModule
                     'caption' => ' ... by activating this switch, additional variables are created on demand and logged as counters',
                 ],
             ],
+        ];
+
+        $formElements[] = [
+            'type'    => 'Select',
+            'name'    => 'phase_count',
+            'options' => [
+                [
+                    'caption' => $this->Translate('1 phase'),
+                    'value'   => self::$MAINS_PHASES_FIX1,
+                ],
+                [
+                    'caption' => $this->Translate('3 phases'),
+                    'value'   => self::$MAINS_PHASES_FIX3,
+                ],
+            ],
+            'caption' => 'number of phases of mains connection',
         ];
 
         $formElements[] = [
@@ -870,6 +892,12 @@ class KeConnectP30udp extends IPSModule
     {
         $this->SendDebug(__FUNCTION__, 'connectionMode=' . $connectionMode, 0);
 
+        $phase_switching = $this->ReadPropertyBoolean('phase_switching');
+        if ($phase_switching == false) {
+            $this->SendDebug(__FUNCTION__, 'phase_switching=' . $this->bool2str($phase_switching) . ' => skip', 0);
+            return false;
+        }
+
         switch ($connectionMode) {
             case self::$MAINS_PHASES_DYNAMIC:
                 $r = true;
@@ -893,6 +921,12 @@ class KeConnectP30udp extends IPSModule
     public function SetMainsConnectionPhases(int $phases)
     {
         $this->SendDebug(__FUNCTION__, 'phases=' . $phases, 0);
+
+        $phase_switching = $this->ReadPropertyBoolean('phase_switching');
+        if ($phase_switching == false) {
+            $this->SendDebug(__FUNCTION__, 'phase_switching=' . $this->bool2str($phase_switching) . ' => skip', 0);
+            return false;
+        }
 
         if ($phases == $this->GetValue('MainsConnectionPhases')) {
             return true;
@@ -943,7 +977,11 @@ class KeConnectP30udp extends IPSModule
         $phase_switching = $this->ReadPropertyBoolean('phase_switching');
         $connectionMode = $this->GetValue('MainsConnectionMode');
         $phase_dynamic = $phase_switching && $connectionMode == self::$MAINS_PHASES_DYNAMIC;
-        $n_phases = $this->GetValue('MainsConnectionPhases');
+        if ($phase_switching) {
+            $n_phases = $this->GetValue('MainsConnectionPhases');
+        } else {
+            $n_phases = $this->ReadPropertyInteger('phase_count');
+        }
 
         $current = $power / 230;
         if ($n_phases == 3) {

@@ -25,6 +25,9 @@
 			"to be able to display the charging history, it must be saved": "um den Ladeverlauf anzeigen zu können, muss er gespeichert werden",
 			"to save consumption per RFID, history must be saved": "um den Verbrauch pro RFID zu speichern, muss die Historie gespeichert werden",
 			"Host must be specified": "Host muss angegeben werden",
+			"phase switching is only supported by series C and X": "Phasenumschaltung wird nur von den Serien C und X unterstützt",
+			"phase switching is only supported from wallbox firmware version 3.10.51": "Phasenumschaltung wird erst ab Wallbox-Firmware-Version 3.10.51 unterstützt",
+			"phase switching is only supported if wallbox has more as 1 phase": "Phasenumschaltung wird nur unterstützt, wenn die Wallbox mehr als 1 Phase hat",
 
 			"__elements__": "",
 			"Disable instance": "Instanz deaktivieren",
@@ -48,9 +51,10 @@
 			"save power consumption per RFID": "Speichern des Stromverbrauchs pro RFID",
 			" ... by activating this switch, additional variables are created on demand and logged as counters":
 				" ... durch die Aktivierung dieses Schalters werden bei Bedarf zusätzliche Variablen angelegt und als Zähler geloggt",
+			"number of phases of mains connection": "Anzahl der Phasen des Netzanschlusses",
 			"support phase switching via output X2": "Unterstützung der Phasen-Umschaltung über den Ausgang X2",
 			"(assumes the wallbox is equipped and configured for this)":
-				"(setzt voraus, die Wallbox ist dafür ausgerüstet und konfiguriert ist)",
+				"(setzt voraus, dass die Wallbox dafür ausgestattet und konfiguriert ist)",
 			"variables for PV surplus charging control": "Variablen für die Steuerung der PV-Überschussleistung",
 
 			"Generate message when the gateway is inactive": "Meldung erzeugen wenn der Gateway inaktiv ist",

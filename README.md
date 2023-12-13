@@ -85,7 +85,7 @@ Liefert die Lade-Historie gemäß den Einstellungen in der Instanz-Konfiguⅹati
 | Eigenschaft                           | Typ      | Standardwert | Beschreibung |
 | :------------------------------------ | :------  | :----------- | :----------- |
 | host                                  | string   |              | IP-Adresse der Wallbox |
-| serialnumber                          | string   |              | Seriennummer der Wallbox _[1]_|
+| serialnumber                          | string   |              | Seriennummer der Wallbox _[1]_ |
 |                                       |          |              | |
 | save_history                          | boolean  | false        | Ladehistorie sichern |
 | show_history                          | boolean  | false        | Ladehistorie in HTML-Box darstellen |
@@ -93,7 +93,8 @@ Liefert die Lade-Historie gemäß den Einstellungen in der Instanz-Konfiguⅹati
 |                                       |          |              | |
 | save_per_rfid                         | boolean  | false        | Speicherung des Energieverbrauchs pro RFID _[2]_ |
 |                                       |          |              | |
-| phase_switching                       | boolean  | false        | Unterstützen einer (dynamischen) Phasen-Umschaltung _[3]_|
+| phase_count                           | integer  | 3            | Anzahl der Phases des Netzanschlusses |
+| phase_switching                       | boolean  | false        | Unterstützen einer (dynamischen) Phasen-Umschaltung _[3]_ |
 | with_surplus_control                  | boolean  | false        | Anlage von Variablen für PV-Überschussladung _[4]_|
 |                                       |          |              | |
 | standby_update_interval               | integer  | 300          | Aktualisierungsintervall im Ruhezustand in Sekunden |
@@ -151,9 +152,12 @@ GUIDs
 
 Referenzen
 
-[KeContact P20 / P30 UDP Programmers Guide](https://www.keba.com/file/downloads/e-mobility/KeContact_P20_P30_UDP_ProgrGuide_en.pdf)
+[KeContact P30 UDP Programmers Guide](https://www.keba.com/download/x/4a925c4c61/kecontactp30udp_pgen.pdf)
 
 ## 7. Versions-Historie
+
+- 1.9.6 @ 13.12.2023 14:00
+  - Verbesserung; Variablen "Netzanschluss genutzte Phasen" und "Netzanschluss Phasenumschaltung" verden nur noch angelegt, wenn eine dynamische Umschatung möglich sein soll
 
 - 1.9.5 @ 12.12.2023 18:47
   - Fix: Übersetzungsfehler im Variablenprofil "KebaConnect.MainsPhase"
