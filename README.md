@@ -156,8 +156,12 @@ Referenzen
 
 ## 7. Versions-Historie
 
+- 1.9.7 @ 05.01.2024 15:54
+  - Fix: Schreibfehler im README korrigiert
+  - update submodule CommonStubs
+
 - 1.9.6 @ 13.12.2023 14:00
-  - Verbesserung; Variablen "Netzanschluss genutzte Phasen" und "Netzanschluss Phasenumschaltung" verden nur noch angelegt, wenn eine dynamische Umschatung möglich sein soll
+  - Verbesserung; Variablen "Netzanschluss genutzte Phasen" und "Netzanschluss Phasenumschaltung" werden nur noch angelegt, wenn eine dynamische Umschatung möglich sein soll
   - Neu: Einstellung "Anzahl der Phasen des Netzanschlusses"
 
 - 1.9.5 @ 12.12.2023 18:47

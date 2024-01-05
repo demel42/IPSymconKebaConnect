@@ -1423,7 +1423,7 @@ class KeConnectP30udp extends IPSModule
             }
             $dsw1 = $this->GetArrayElem($jdata, 'DIP-Sw1', '');
             $dsw2 = $this->GetArrayElem($jdata, 'DIP-Sw2', '');
-            $this->SendDebug(__FUNCTION__, 'Dip-Switch 1=' . $this->int2bitmap(hexdec($dsw1), 8) . ', 2=' . $this->int2bitmap(hexdec($dsw2), 8), 0);
+            $this->SendDebug(__FUNCTION__, 'Dip-Switch 1=' . $this->bitmap2str(hexdec($dsw1), 8) . ', 2=' . $this->bitmap2str(hexdec($dsw2), 8), 0);
 
             $timeQ = $this->GetArrayElem($jdata, 'timeQ', '');
             $timeQ_map = [
