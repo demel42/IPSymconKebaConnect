@@ -292,6 +292,13 @@ class KeConnectP30udp extends IPSModule
             $r[] = $this->Translate('Adjust variableprofile \'KebaConnect.MainsPhases\'');
         }
 
+        if ($this->version2num($oldInfo) < $this->version2num('1.10')) {
+            $save_history = $this->ReadPropertyBoolean('save_history');
+            if ($save_history) {
+                $r[] = $this->Translate('Set ident of media objects');
+            }
+        }
+
         return $r;
     }
 
@@ -342,6 +349,23 @@ class KeConnectP30udp extends IPSModule
                 IPS_DeleteVariableProfile('KebaConnect.MainsPhases');
             }
             $this->InstallVarProfiles(false);
+        }
+
+        if ($this->version2num($oldInfo) < $this->version2num('1.10')) {
+            $save_history = $this->ReadPropertyBoolean('save_history');
+            if ($save_history) {
+                $m = [
+                    'ChargingHistory' => '.dat',
+                ];
+
+                foreach ($m as $ident => $extension) {
+                    $filename = 'media' . DIRECTORY_SEPARATOR . $this->InstanceID . '-' . $ident . $extension;
+                    @$mediaID = IPS_GetMediaIDByFile($filename);
+                    if ($mediaID != false) {
+                        IPS_SetIdent($mediaID, $ident);
+                    }
+                }
+            }
         }
 
         return '';
@@ -442,13 +466,15 @@ class KeConnectP30udp extends IPSModule
 
         $vpos = 80;
         $show_history = $this->ReadPropertyBoolean('show_history');
-        if ($show_history) {
-            $this->MaintainVariable('History', $this->Translate('Charging history'), VARIABLETYPE_STRING, '~HTMLBox', $vpos++, $show_history);
-        }
+        $this->MaintainVariable('History', $this->Translate('Charging history'), VARIABLETYPE_STRING, '~HTMLBox', $vpos++, $show_history);
 
         $vpos = 90;
         $this->MaintainVariable('LastChange', $this->Translate('Last change'), VARIABLETYPE_INTEGER, '~UnixTimestamp', $vpos++, true);
         $this->MaintainVariable('LastUpdate', $this->Translate('Last update'), VARIABLETYPE_INTEGER, '~UnixTimestamp', $vpos++, true);
+
+        $vpos = 100;
+        $save_history = $this->ReadPropertyBoolean('save_history');
+        $this->MaintainMedia('ChargingHistory', $this->Translate('Data of the charging history'), MEDIATYPE_DOCUMENT, '.dat', false, $vpos++, $save_history);
 
         $module_disable = $this->ReadPropertyBoolean('module_disable');
         if ($module_disable) {
@@ -1055,7 +1081,7 @@ class KeConnectP30udp extends IPSModule
         }
 
         $old_entries = false;
-        $old_s = $this->GetMediaData('ChargingHistory');
+        $old_s = $this->GetMediaContent('ChargingHistory');
         if ($old_s != false) {
             $old_entries = json_decode((string) $old_s, true);
         }
@@ -1219,7 +1245,7 @@ class KeConnectP30udp extends IPSModule
         }
         if ($new_s != $old_s) {
             $this->SendDebug(__FUNCTION__, $n . ' entries=' . print_r($new_entries, true), 0);
-            $this->SetMediaData('ChargingHistory', $new_s, MEDIATYPE_DOCUMENT, '.dat', false);
+            $this->SetMediaContent('ChargingHistory', $new_s);
         } else {
             $this->SendDebug(__FUNCTION__, 'entries not changed', 0);
         }
@@ -2157,7 +2183,11 @@ class KeConnectP30udp extends IPSModule
 
     public function GetHistory()
     {
-        return $this->GetMediaData('ChargingHistory');
+        $save_history = $this->ReadPropertyBoolean('save_history');
+        if ($save_history == false) {
+            return false;
+        }
+        return $this->GetMediaContent('ChargingHistory');
     }
 
     private function DecodeTstamp($value, $field)

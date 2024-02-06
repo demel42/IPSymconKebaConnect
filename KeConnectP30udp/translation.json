@@ -20,6 +20,7 @@
 				"Variablenprofile 'KebaConnect.MaxCurrent' und 'KebaConnect.EnergyLimit' anpassen",
 			"Adjust variableprofile 'KebaConnect.MainsPhases'":
 				"Variablenprofil 'KebaConnect.MainsPhases' anpassen",
+			"Set ident of media objects": "Ident der Media-Objekte setzen",
 
 			"__function__": "CheckConfiguration",
 			"to be able to display the charging history, it must be saved": "um den Ladeverlauf anzeigen zu können, muss er gespeichert werden",
@@ -114,7 +115,7 @@
 			"Fault current detected in vehicle": "Fehlerstrom im Fahrzeug erkannt",
 
 			"__media__": "",
-			"ChargingHistory": "ChargingHistory",
+			"Data of the charging history": "Daten der Ladevorgänge",
 
 			"__function__": "GetChargingHistory",
 			"Session ID": "ID",

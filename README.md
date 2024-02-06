@@ -156,6 +156,10 @@ Referenzen
 
 ## 7. Versions-Historie
 
+- 1.10 @ 28.01.2024 15:46
+  - Änderung: Medien-Objekte haben zur eindeutigen Identifizierung jetzt ebenfalls ein Ident
+  - update submodule CommonStubs
+
 - 1.9.7 @ 05.01.2024 16:57
   - Fix: Schreibfehler im README korrigiert
   - update submodule CommonStubs
