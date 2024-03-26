@@ -944,7 +944,7 @@ class KeConnectP30udp extends IPSModule
         return $r;
     }
 
-    public function SetMainsConnectionPhases(int $phases)
+    private function SetMainsConnectionPhases(int $phases)
     {
         $this->SendDebug(__FUNCTION__, 'phases=' . $phases, 0);
 
@@ -1356,15 +1356,17 @@ class KeConnectP30udp extends IPSModule
         }
         $code = substr($product, 13, 1);
         $map_series = [
-            '0'=> 'E',
-            '1'=> 'B',
-            '2'=> 'C',
-            '3'=> 'A',
-            'R'=> 'X',
-            'C'=> 'X',
-            'E'=> 'X',
-            'G'=> 'X',
-            'H'=> 'X',
+            '0' => 'E',
+            '1' => 'B',
+            '2' => 'C',
+            '3' => 'A',
+            'B' => 'X',
+            'C' => 'X',
+            'E' => 'X',
+            'G' => 'X',
+            'H' => 'X',
+            'S' => 'X',
+            'U' => 'X',
         ];
         $series = isset($map_series[$code]) ? $map_series[$code] : '';
         return $series;
@@ -2010,7 +2012,7 @@ class KeConnectP30udp extends IPSModule
         return $r;
     }
 
-    public function EvalSurplusReady()
+    private function EvalSurplusReady()
     {
         $with_surplus_control = $this->ReadPropertyBoolean('with_surplus_control');
         if ($with_surplus_control == false) {

@@ -75,6 +75,12 @@ Authorisierung eines Ladevorgangs durch Angabe von *Tag* und *Class* der RFID-Ka
 `KebaConnect_DeauthorizeSession(int $InstanzID, string $Tag)`<br>
 Aufhebung einer vorangegangenen Authorisierung eines Ladevorgangs, hier wird nur das *Tag* benötigt
 
+`KebaConnect_SetOperationMode(int $InstanzID, int $operationMode)`<br>
+Betriebsart setzen: 0=aus, 1=manuell, 2=Überschussladen
+
+`KebaConnect_SetMainsConnectionMode(int $InstanzID, int $connectionMode)`<br>
+Netzanschluss Phasenumschaltung setzen: 0=dynamisch, 1=1 Phase (fix), 3=3 Phasen (fix)
+
 `KebaConnect_GetHistory(int $InstanzID)`<br>
 Liefert die Lade-Historie gemäß den Einstellungen in der Instanz-Konfiguⅹation als json-kodierte Liste von Einträgen.
 
@@ -155,6 +161,13 @@ Referenzen
 [KeContact P30 UDP Programmers Guide](https://www.keba.com/download/x/4a925c4c61/kecontactp30udp_pgen.pdf)
 
 ## 7. Versions-Historie
+
+- 1.11 @ 25.03.2024 15:11
+  - Fix: Ermittlung der Wallbox-Hardware-Version korrigiert
+  - Fix: Funktionen waren fehlerhafterweise "public" (SetMainsConnectionPhases(), EvalSurplusReady())
+  - Fix: README.md um Beschreibung öffentlicher Funtionen (KebaConnect_SetOperationMode(), KebaConnect_SetMainsConnectionMode()) ergänzt
+  - Neu: Aktion "SetMainsConnectionMode" hinzugefügt
+  - update submodule CommonStubs
 
 - 1.10 @ 28.01.2024 15:46
   - Änderung: Medien-Objekte haben zur eindeutigen Identifizierung jetzt ebenfalls ein Ident
