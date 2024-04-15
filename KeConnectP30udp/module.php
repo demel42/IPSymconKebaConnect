@@ -958,29 +958,18 @@ class KeConnectP30udp extends IPSModule
             return true;
         }
 
-        $varID = $this->GetIDForIdent('MainsConnectionPhases');
-        $ts = IPS_GetVariable($varID)['VariableChanged'];
-        $age = time() - $ts;
-        $too_quick = $age <= (5 * 60);
-
-        $this->SendDebug(__FUNCTION__, 'last change=' . date('d.m.Y H:i:s') . $ts . ' (' . $this->seconds2duration($age) . ') => ' . ($too_quick ? 'too quickly' : 'possible'), 0);
-        if ($too_quick) {
-            $this->AddModuleActivity('unable to set number of phases of mains connection to ' . $phases . ' - too quickly');
-            return false;
-        }
-
         $phase_switching = $this->ReadPropertyBoolean('phase_switching');
         if ($phase_switching) {
-            switch ($phases) {
-                case 1:
-                    $r = $this->CallAction('x2 ' . self::$X2_1P);
-                    break;
-                case 3:
-                    $r = $this->CallAction('x2 ' . self::$X2_3P);
-                    break;
-                default:
-                    $r = false;
-                    break;
+            $cmd = 'x2 ' . ($phases == 1 ? self::$X2_1P : self::$X2_3P);
+            $msg = '';
+            $r = $this->CallAction($cmd, $msg);
+            $this->SendDebug(__FUNCTION__, 'msg="' . $msg . '"', 0);
+            if ($r == false && $msg == 'X2 : not allowed now') {
+                $varID = $this->GetIDForIdent('MainsConnectionPhases');
+                $ts = IPS_GetVariable($varID)['VariableChanged'];
+                $age = time() - $ts;
+                $this->SendDebug(__FUNCTION__, 'last change=' . date('d.m.Y H:i:s', $ts) . ' (' . $this->seconds2duration($age) . ') => too quickly', 0);
+                $this->AddModuleActivity('unable to set number of phases of mains connection to ' . $phases . ' - too quickly');
             }
         } else {
             $r = true;
@@ -1815,11 +1804,14 @@ class KeConnectP30udp extends IPSModule
         return $enabled;
     }
 
-    private function CallAction($cmd)
+    private function CallAction($cmd, &$msg = null)
     {
+        if (is_null($msg) == false) {
+            $msg = '';
+        }
         if ($this->CheckStatus() == self::$STATUS_INVALID) {
             $this->SendDebug(__FUNCTION__, $this->GetStatusText() . ' => skip', 0);
-            return;
+            return false;
         }
 
         if ($this->HasActiveParent() == false) {
@@ -1828,12 +1820,22 @@ class KeConnectP30udp extends IPSModule
             if ($log_no_parent) {
                 $this->LogMessage($this->Translate('Instance has no active gateway'), KL_WARNING);
             }
-            return;
+            return false;
         }
 
         $r = $this->ExecuteCmd($cmd);
-        $this->SendDebug(__FUNCTION__, 'cmd=' . $cmd . ' => ' . $r, 0);
-        return $r == "TCH-OK :done\n";
+        if (preg_match('?([^ :]*)[ ]*:[ ]*(.*)$?', $r, $match)) {
+            $ok = $match[1] == 'TCH-OK';
+            $txt = $match[2];
+        } else {
+            $ok = false;
+            $txt = '';
+        }
+        $this->SendDebug(__FUNCTION__, 'cmd=' . $cmd . ' => ' . $r . ' (ok=' . $this->bool2str($ok) . ', txt=' . $txt . ')', 0);
+        if (is_null($msg) == false) {
+            $msg = $txt;
+        }
+        return $ok;
     }
 
     public function SendDisplayText(string $txt)

@@ -162,6 +162,9 @@ Referenzen
 
 ## 7. Versions-Historie
 
+- 1.12 @ 15.04.2024 11:34
+  - Änderung: Handhabung von SetMainsConnectionPhases(): Beachtung der "Abkühlzeit"
+
 - 1.11 @ 25.03.2024 15:11
   - Fix: Ermittlung der Wallbox-Hardware-Version korrigiert
   - Fix: Funktionen waren fehlerhafterweise "public" (SetMainsConnectionPhases(), EvalSurplusReady())
