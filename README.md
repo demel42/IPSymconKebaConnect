@@ -162,6 +162,9 @@ Referenzen
 
 ## 7. Versions-Historie
 
+- 1.13 @ 21.04.2024 08:53
+  - Fix: Anpassung der übernahme der Lade-Historie (Feld "reason" hat neuen Wert 5)
+
 - 1.12 @ 15.04.2024 11:34
   - Änderung: Handhabung von SetMainsConnectionPhases(): Beachtung der "Abkühlzeit"
 

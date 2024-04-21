@@ -1133,7 +1133,7 @@ class KeConnectP30udp extends IPSModule
             $e_pres = floatval($this->GetArrayElem($jdata, 'E pres', 0));
             $e_pres /= 10000;
 
-            $reason = $this->GetArrayElem($jdata, 'reason', 0);
+            $reason = (int) $this->GetArrayElem($jdata, 'reason', 0);
 
             $new_entry = [
                 'Session ID'  => $sessionID,
@@ -1146,7 +1146,7 @@ class KeConnectP30udp extends IPSModule
                 'reason'      => $reason,
             ];
 
-            if ($ended == 0 && $reason == 0) {
+            if ($ended == 0 && in_array($reason, [1 /* unplugged */, 10 /* deauthorized */]) == false) {
                 $this->SendDebug(__FUNCTION__, 'ignore entry w/o "ended"', 0);
             } else {
                 $new_entries[] = $new_entry;
