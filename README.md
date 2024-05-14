@@ -162,6 +162,9 @@ Referenzen
 
 ## 7. Versions-Historie
 
+- 1.14 @ 13.05.2024 11:40
+  - Verbesserung: Absicherung den UDP-Kommunikation mit Semaphore, exakte Einhaltung vorgeschriebener Abstände von UDP-Aufrufen
+
 - 1.13 @ 21.04.2024 08:53
   - Fix: Anpassung der übernahme der Lade-Historie (Feld "reason" hat neuen Wert 5)
 

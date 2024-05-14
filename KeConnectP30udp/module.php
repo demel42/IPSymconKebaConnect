@@ -146,11 +146,20 @@ class KeConnectP30udp extends IPSModule
         ],
     ];
 
+    private static $t_UDP_pause = 100;		// The minimum waiting time between any two UDP commands
+    private static $t_COM_pause = 5 * 1000;	// The minimum waiting time between the scheduled repetitions of any UPD command
+    private static $t_DIS_pause = 2 * 1000;	// The minimum waiting time after sending a disable command (e.g. ena 0)
+
+    private static $semaphoreTM = 15 * 1000;
+
+    private $SemaphoreID;
+
     public function __construct(string $InstanceID)
     {
         parent::__construct($InstanceID);
 
         $this->CommonContruct(__DIR__);
+        $this->SemaphoreID = __CLASS__ . '_' . $InstanceID;
     }
 
     public function __destruct()
@@ -184,6 +193,8 @@ class KeConnectP30udp extends IPSModule
 
         $this->RegisterAttributeString('Product', '');
         $this->RegisterAttributeString('Firmware', '');
+
+        $this->RegisterAttributeString('CmdData', json_encode([]));
 
         $this->RegisterAttributeString('UpdateInfo', json_encode([]));
         $this->RegisterAttributeString('ModuleStats', json_encode([]));
@@ -846,38 +857,75 @@ class KeConnectP30udp extends IPSModule
         $host = $this->ReadPropertyString('host');
         $port = self::$UnicastPort;
 
-        // min 100MS zwischend zwei UDP-Kommandos
+        $cmdData = json_decode($this->ReadAttributeString('CmdData'), true);
+        $last_mts = (float) $this->GetArrayElem($cmdData, 'last_mts', 0);
+        $last_cmd = $this->GetArrayElem($cmdData, 'last_cmd', '');
+        $mts = microtime(true);
+        $ms = round(($mts - $last_mts) * 1000);
 
-        IPS_Sleep(100);
+        $wait_ms = 0;
+        if ($ms <= self::$t_UDP_pause) {
+            $wait_ms = self::$t_UDP_pause - $ms + 1;
+        }
+        if ($last_cmd == $cmd) {
+            $wait_ms = self::$t_COM_pause;
+        } elseif ($last_cmd == 'ena 0') {
+            $wait_ms = self::$t_DIS_pause;
+        }
+        if ($wait_ms) {
+            IPS_Sleep($wait_ms);
+        }
 
-        $fp = @socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
-        if ($fp == false) {
-            $this->SendDebug(__FUNCTION__, 'socket_create() failed, reason=' . socket_strerror(socket_last_error($fp)), 0);
-            return false;
-        }
-        socket_set_option($fp, SOL_SOCKET, SO_REUSEADDR, 1);
-        socket_set_option($fp, SOL_SOCKET, SO_SNDTIMEO, ['sec' => 5, 'usec' => 0]);
-        socket_set_option($fp, SOL_SOCKET, SO_RCVTIMEO, ['sec' => 5, 'usec' => 0]);
-        if (socket_bind($fp, '0.0.0.0', $port) == false) {
-            $this->SendDebug(__FUNCTION__, 'socket_bind() failed, reason=' . socket_strerror(socket_last_error($fp)), 0);
-            socket_close($fp);
-            return false;
-        }
-        $this->SendDebug(__FUNCTION__, 'send ' . strlen($cmd) . ' bytes to ' . $host . ':' . $port . ', cmd="' . $cmd . '"', 0);
-        if (socket_sendto($fp, $cmd, strlen($cmd), 0, $host, $port) == false) {
-            $this->SendDebug(__FUNCTION__, 'socket_sendto() failed, reason=' . socket_strerror(socket_last_error($fp)), 0);
-            socket_close($fp);
-            return false;
-        }
-        if (($bytes = socket_recv($fp, $buf, 2048, 0)) == false) {
-            $this->SendDebug(__FUNCTION__, 'socket_recv() failed, reason=' . socket_strerror(socket_last_error($fp)), 0);
-            socket_close($fp);
-            return false;
-        }
-        $this->SendDebug(__FUNCTION__, 'received ' . $bytes . ' bytes, buf="' . $buf . '"', 0);
-        socket_close($fp);
+        $ok = true;
+        $fp = false;
 
-        return $buf;
+        if (IPS_SemaphoreEnter($this->SemaphoreID, self::$semaphoreTM) == false) {
+            $this->SendDebug(__FUNCTION__, 'unable to lock sempahore ' . $this->SemaphoreID, 0);
+            return false;
+        }
+
+        if ($ok) {
+            $fp = @socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
+            if ($fp == false) {
+                $this->SendDebug(__FUNCTION__, 'socket_create() failed, reason=' . socket_strerror(socket_last_error($fp)), 0);
+                $ok = false;
+            }
+        }
+        if ($ok) {
+            socket_set_option($fp, SOL_SOCKET, SO_REUSEADDR, 1);
+            socket_set_option($fp, SOL_SOCKET, SO_SNDTIMEO, ['sec' => 5, 'usec' => 0]);
+            socket_set_option($fp, SOL_SOCKET, SO_RCVTIMEO, ['sec' => 5, 'usec' => 0]);
+            if (socket_bind($fp, '0.0.0.0', $port) == false) {
+                $this->SendDebug(__FUNCTION__, 'socket_bind() failed, reason=' . socket_strerror(socket_last_error($fp)), 0);
+                $ok = false;
+            }
+        }
+        if ($ok) {
+            $this->SendDebug(__FUNCTION__, 'sending ' . strlen($cmd) . ' bytes to ' . $host . ':' . $port . ', cmd="' . $cmd . '"', 0);
+            if (socket_sendto($fp, $cmd, strlen($cmd), 0, $host, $port) == false) {
+                $this->SendDebug(__FUNCTION__, 'socket_sendto() failed, reason=' . socket_strerror(socket_last_error($fp)), 0);
+                $ok = false;
+            }
+        }
+        if ($ok) {
+            if (($bytes = socket_recv($fp, $buf, 2048, 0)) == false) {
+                $this->SendDebug(__FUNCTION__, 'socket_recv() failed, reason=' . socket_strerror(socket_last_error($fp)), 0);
+                $ok = false;
+            } else {
+                $this->SendDebug(__FUNCTION__, 'received ' . $bytes . ' bytes, buf="' . $buf . '"', 0);
+            }
+        }
+        if ($fp != false) {
+            socket_close($fp);
+        }
+
+        IPS_SemaphoreLeave($this->SemaphoreID);
+
+        $cmdData['last_mts'] = $mts;
+        $cmdData['last_cmd'] = $cmd;
+        $this->WriteAttributeString('CmdData', json_encode($cmdData));
+
+        return $ok ? $buf : false;
     }
 
     public function StandbyUpdate()
