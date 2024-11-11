@@ -146,9 +146,11 @@ class KeConnectP30udp extends IPSModule
         ],
     ];
 
-    private static $t_UDP_pause = 100;		// The minimum waiting time between any two UDP commands
-    private static $t_COM_pause = 5 * 1000;	// The minimum waiting time between the scheduled repetitions of any UPD command
-    private static $t_DIS_pause = 2 * 1000;	// The minimum waiting time after sending a disable command (e.g. ena 0)
+    private static $t_UDP_pause = 100;		// The minimum waiting time between any two UDP commands in msec
+    private static $t_COM_pause = 5 * 1000;	// The minimum waiting time between the scheduled repetitions of any UPD command in msec
+    private static $t_DIS_pause = 2 * 1000;	// The minimum waiting time after sending a disable command (e.g. ena 0) in msec
+
+    private static $t_X2_pause = 5 * 60;	// The minimum waiting time between two phase switches in sec
 
     private static $semaphoreTM = 15 * 1000;
 
@@ -158,7 +160,7 @@ class KeConnectP30udp extends IPSModule
     {
         parent::__construct($InstanceID);
 
-        $this->CommonContruct(__DIR__);
+        $this->CommonConstruct(__DIR__);
         $this->SemaphoreID = __CLASS__ . '_' . $InstanceID;
     }
 
@@ -205,6 +207,7 @@ class KeConnectP30udp extends IPSModule
 
         $this->RegisterTimer('StandbyUpdate', 0, $this->GetModulePrefix() . '_StandbyUpdate(' . $this->InstanceID . ');');
         $this->RegisterTimer('ChargingUpdate', 0, $this->GetModulePrefix() . '_ChargingUpdate(' . $this->InstanceID . ');');
+        $this->RegisterTimer('LockPhasesChange', 0, 'IPS_RequestAction(' . $this->InstanceID . ', "LockPhasesChange", "");');
 
         $this->RegisterMessage(0, IPS_KERNELMESSAGE);
     }
@@ -235,12 +238,12 @@ class KeConnectP30udp extends IPSModule
         $phase_switching = $this->ReadPropertyBoolean('phase_switching');
         if ($phase_switching) {
             $series = $this->ExtractSeries();
-            if (in_array($series, ['C', 'X']) == false) {
+            if ($series == false || in_array($series, ['C', 'X']) == false) {
                 $this->SendDebug(__FUNCTION__, '"phase_switching" is only supported by series C and X', 0);
                 $r[] = $this->Translate('phase switching is only supported by series C and X');
             }
             $version = $this->ExtractVersion();
-            if ($this->version2num($version) < $this->version2num('3.10.51')) {
+            if ($version == false || $this->version2num($version) < $this->version2num('3.10.51')) {
                 $this->SendDebug(__FUNCTION__, '"phase_switching" is only supported from version 3.10.51', 0);
                 $r[] = $this->Translate('phase switching is only supported from wallbox firmware version 3.10.51');
             }
@@ -391,6 +394,7 @@ class KeConnectP30udp extends IPSModule
         if ($this->CheckPrerequisites() != false) {
             $this->MaintainTimer('StandbyUpdate', 0);
             $this->MaintainTimer('ChargingUpdate', 0);
+            $this->MaintainTimer('LockPhasesChange', 0);
             $this->MaintainStatus(self::$IS_INVALIDPREREQUISITES);
             return;
         }
@@ -398,6 +402,7 @@ class KeConnectP30udp extends IPSModule
         if ($this->CheckUpdate() != false) {
             $this->MaintainTimer('StandbyUpdate', 0);
             $this->MaintainTimer('ChargingUpdate', 0);
+            $this->MaintainTimer('LockPhasesChange', 0);
             $this->MaintainStatus(self::$IS_UPDATEUNCOMPLETED);
             return;
         }
@@ -405,6 +410,7 @@ class KeConnectP30udp extends IPSModule
         if ($this->CheckConfiguration() != false) {
             $this->MaintainTimer('StandbyUpdate', 0);
             $this->MaintainTimer('ChargingUpdate', 0);
+            $this->MaintainTimer('LockPhasesChange', 0);
             $this->MaintainStatus(self::$IS_INVALIDCONFIG);
             return;
         }
@@ -491,6 +497,7 @@ class KeConnectP30udp extends IPSModule
         if ($module_disable) {
             $this->MaintainTimer('StandbyUpdate', 0);
             $this->MaintainTimer('ChargingUpdate', 0);
+            $this->MaintainTimer('LockPhasesChange', 0);
             $this->MaintainStatus(IS_INACTIVE);
             return;
         }
@@ -946,7 +953,7 @@ class KeConnectP30udp extends IPSModule
 
         foreach (['report 1', 'report 2', 'report 3', 'report 100'] as $cmd) {
             $buf = $this->ExecuteCmd($cmd);
-            if ($buf != false) {
+            if ($buf !== false) {
                 $this->DecodeReport($buf);
             }
         }
@@ -1018,6 +1025,9 @@ class KeConnectP30udp extends IPSModule
                 $age = time() - $ts;
                 $this->SendDebug(__FUNCTION__, 'last change=' . date('d.m.Y H:i:s', $ts) . ' (' . $this->seconds2duration($age) . ') => too quickly', 0);
                 $this->AddModuleActivity('unable to set number of phases of mains connection to ' . $phases . ' - too quickly');
+                if ($this->GetValue('EnableCharging') == false) {
+                    $this->CallAction('ena 0');
+                }
             }
         } else {
             $r = true;
@@ -1056,31 +1066,41 @@ class KeConnectP30udp extends IPSModule
             $n_phases = $this->ReadPropertyInteger('phase_count');
         }
 
+        $min_current = 6;
+        $max_current = $this->GetValue('MaxSupportedCurrent');
+
         $current = $power / 230;
         if ($n_phases == 3) {
             $current /= $n_phases;
-            if ($current < 6 && $phase_dynamic) {
+            if ($phase_dynamic && $current > 0 && $current < $min_current) {
                 $n_phases = 1;
                 $r = $this->SetMainsConnectionPhases($n_phases);
                 if ($r == false) {
-                    return $r;
+                    $n_phases = 3;
+                    // return $r;
                 }
                 $current *= $n_phases;
             }
         } else {
-            if ($current > 18 && $phase_dynamic) {
+            if ($phase_dynamic && $current > ($min_current * 3) && $phase_dynamic) {
                 $n_phases = 3;
                 $r = $this->SetMainsConnectionPhases($n_phases);
                 if ($r == false) {
-                    return $r;
+                    $n_phases = 1;
+                // return $r;
+                } else {
+                    $current /= $n_phases;
                 }
-                $current /= $n_phases;
             }
         }
 
         $s = 'mains phases=' . $n_phases;
         $s .= ', power=' . $this->format_float($power, 2) . ' W';
         $s .= ', current=' . $this->format_float($current, 1) . ' A';
+        if ($current > $max_current) {
+            $current = $max_current;
+            $s .= ' (limited to ' . $this->format_float($current, 1) . ' A)';
+        }
         $this->SendDebug(__FUNCTION__, $s, 0);
 
         $r = $this->SetMaxChargingCurrent($current);
@@ -1139,7 +1159,7 @@ class KeConnectP30udp extends IPSModule
         for ($i = 1; $i <= 30; $i++) {
             $cmd = 'report ' . strval(100 + $i);
             $buf = $this->ExecuteCmd($cmd);
-            if ($buf == false) {
+            if ($buf === false) {
                 continue;
             }
             $jdata = json_decode($buf, true);
@@ -1358,7 +1378,7 @@ class KeConnectP30udp extends IPSModule
         }
 
         $buf = $this->ExecuteCmd('report 3', 'report 100');
-        if ($buf != false) {
+        if ($buf !== false) {
             $this->DecodeReport($buf);
         }
         $this->EvalSurplusReady();
@@ -1501,7 +1521,12 @@ class KeConnectP30udp extends IPSModule
             if ($timeQ < 2) {
                 $cmd = 'setdatetime ' . time();
                 $r = $this->ExecuteCmd($cmd);
-                $this->SendDebug(__FUNCTION__, 'cmd=' . $cmd . ' => ' . $r, 0);
+                if ($r === false) {
+                    $this->SendDebug(__FUNCTION__, 'cmd=' . $cmd . ' => communication failed', 0);
+                    return false;
+                } else {
+                    $this->SendDebug(__FUNCTION__, 'cmd=' . $cmd . ' => ' . $r, 0);
+                }
             }
         }
 
@@ -1637,6 +1662,7 @@ class KeConnectP30udp extends IPSModule
                     }
                 }
             }
+            $this->LockPhasesChange();
         }
 
         if ($report_id == 3) {
@@ -1777,9 +1803,9 @@ class KeConnectP30udp extends IPSModule
             }
             $this->SendDebug(__FUNCTION__, 'set variable "CableState" to ' . $cable_state . ' from field "CableState"', 0);
         }
-        if (in_array('MaxChargingCurrent', $use_idents) && isset($jdata['Max curr'])) {
-            $fld = 'Curr user'; // wenn per Kommando 'currtime' gesetzt wird, 'Max curr' wenn per 'curr'
-            $max_curr = floatval($this->GetArrayElem($jdata, $fld, 0));
+        $fld = 'Curr user'; // wenn per Kommando 'currtime' gesetzt wird, 'Max curr' wenn per 'curr'
+        if (in_array('MaxChargingCurrent', $use_idents) && isset($jdata[$fld])) {
+            $max_curr = floatval($jdata[$fld]);
             $max_curr /= 1000;
             $this->SaveValue('MaxChargingCurrent', $max_curr, $is_changed);
             $this->SendDebug(__FUNCTION__, 'set variable "MaxChargingCurrent" to ' . $max_curr . ' from field "' . $fld . '"', 0);
@@ -1872,6 +1898,11 @@ class KeConnectP30udp extends IPSModule
         }
 
         $r = $this->ExecuteCmd($cmd);
+        if ($r === false) {
+            $this->SendDebug(__FUNCTION__, 'cmd=' . $cmd . ' => communication failed', 0);
+            return false;
+        }
+
         if (preg_match('?([^ :]*)[ ]*:[ ]*(.*)$?', $r, $match)) {
             $ok = $match[1] == 'TCH-OK';
             $txt = $match[2];
@@ -2019,7 +2050,7 @@ class KeConnectP30udp extends IPSModule
                 $this->SendDebug(__FUNCTION__, 'value ist below minimum (' . $min . ' A) => 0', 0);
                 $current = 0;
             }
-            $max = 32;
+            $max = $this->GetValue('MaxSupportedCurrent');
             if ($current > $max) {
                 $this->SendDebug(__FUNCTION__, 'value ist above maximum (' . $max . ' A) => 0', 0);
                 $current = 0;
@@ -2027,7 +2058,12 @@ class KeConnectP30udp extends IPSModule
         }
         $c = intval($current * 1000);
         $this->SendDebug(__FUNCTION__, 'current=' . $c . ' mA', 0);
-        if ($current != $this->GetValue('MaxChargingCurrent')) {
+        $old_current = $this->GetValue('MaxChargingCurrent');
+        if ($old_current == 0 || $current != $old_current) {
+            if ($old_current == 0 && $current != 0 && $this->CallAction('ena 1')) {
+                $this->SetValue('EnableCharging', true);
+                $this->AddModuleActivity('enable charging');
+            }
             $delay = 1; // 0 or 1 - 860400 sec
             $cmd = 'currtime ' . $c . ' ' . $delay;
             $r = $this->CallAction($cmd);
@@ -2179,6 +2215,9 @@ class KeConnectP30udp extends IPSModule
             case 'ChargingUpdate':
                 $this->ChargingUpdate();
                 break;
+            case 'LockPhasesChange':
+                $this->LockPhasesChange();
+                break;
             case 'MainsConnectionMode':
                 $r = $this->SetMainsConnectionMode($value);
                 $this->SendDebug(__FUNCTION__, $ident . '=' . $value . ' => ret=' . $this->bool2str($r), 0);
@@ -2248,17 +2287,40 @@ class KeConnectP30udp extends IPSModule
         if ($value != false) {
             if (preg_match('/^([0-9]+)000$/', $value, $r)) {
                 $ts = $this->GetValue('LastBoot') + (int) $r[1];
-                $this->SendDebug(__FUNCTION__, 'field "' . $field . '"=' . $value . ' => ' . $ts . '/' . date('d.m.Y H:i:s', $ts), 0);
             } else {
                 $d = DateTime::createFromFormat('Y-m-d H:i:s.v', $value, new DateTimeZone('UTC'));
                 if ($d == false) {
                     $this->SendDebug(__FUNCTION__, 'field "' . $field . '"=' . $value . ': parse failed ' . print_r(DateTime::getLastErrors(), true), 0);
                 } else {
                     $ts = intval($d->format('U'));
-                    $this->SendDebug(__FUNCTION__, 'field "' . $field . '"=' . $value . ' => ' . $ts . '/' . date('d.m.Y H:i:s', $ts), 0);
                 }
             }
         }
         return $ts;
+    }
+
+    private function LockPhasesChange()
+    {
+        $msec = 0;
+
+        $phase_switching = $this->ReadPropertyBoolean('phase_switching');
+        if ($phase_switching) {
+            @$varID = $this->GetIDForIdent('PhaseSwitch');
+            if ($varID == false) {
+                @$varID = $this->GetIDForIdent('MainsConnectionPhases');
+            }
+            if ($varID !== false) {
+                $ts = IPS_GetVariable($varID)['VariableChanged'];
+                $age = time() - $ts;
+                $wait = self::$t_X2_pause - $age;
+                if ($wait > 0) {
+                    $msec = $wait * 1000;
+                    $this->SendDebug(__FUNCTION__, 'last change=' . date('d.m.Y H:i:s', $ts) . ' (' . $this->seconds2duration($age) . '), wait=' . $wait . 's', 0);
+                }
+            }
+            $this->MaintainAction('MainsConnectionMode', $msec == 0);
+        }
+
+        $this->MaintainTimer('LockPhasesChange', $msec);
     }
 }

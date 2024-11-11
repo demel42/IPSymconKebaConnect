@@ -162,6 +162,12 @@ Referenzen
 
 ## 7. Versions-Historie
 
+- 1.15 @ 11.11.2024 10:09
+  - Verbesserung: Variable zur Phasenumschaltung entsprechend der Umschalt-Ruhezeit temporär deaktivieren
+  - Verbesserung: Reduzierung der Häufigkeit von Phasenumschaltung
+  - Verbesserung: Abfangen von Fehlern bei nicht erfolgreicher Kommunikation
+  - update submodule CommonStubs
+
 - 1.14 @ 13.05.2024 11:40
   - Verbesserung: Absicherung den UDP-Kommunikation mit Semaphore, exakte Einhaltung vorgeschriebener Abstände von UDP-Aufrufen
 
