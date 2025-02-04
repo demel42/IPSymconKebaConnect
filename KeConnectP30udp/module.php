@@ -736,23 +736,36 @@ class KeConnectP30udp extends IPSModule
                     'type'    => 'Label',
                 ],
                 [
-                    'type'    => 'Label',
-                    'caption' => 'Send text to wallbox (max 23 character) - Test of function "KebaConnect_SendDisplayText"',
-                ],
-                [
                     'type'    => 'RowLayout',
                     'items'   => [
                         [
                             'type'    => 'ValidationTextBox',
-                            'name'    => 'txt',
-                            'caption' => 'Text'
+                            'name'    => 'TEXT',
+                            'caption' => 'Text (max 23 chars)'
+                        ],
+                        [
+                            'type'    => 'NumberSpinner',
+                            'minimum' => 0,
+                            'suffix'  => 'Seconds',
+                            'name'    => 'MIN_DURATION',
+                            'caption' => 'Minimum duration'
+                        ],
+                        [
+                            'type'    => 'NumberSpinner',
+                            'minimum' => 0,
+                            'suffix'  => 'Seconds',
+                            'name'    => 'MAX_DURATION',
+                            'caption' => 'Maximum duration'
                         ],
                         [
                             'type'    => 'Button',
-                            'caption' => 'Send',
-                            'onClick' => $this->GetModulePrefix() . '_SendDisplayText($id, $txt);'
+                            'caption' => 'Send text to wallbox',
+                            'onClick' => $this->GetModulePrefix() . '_SendDisplayText($id, $TEXT, $MIN_DURATION, $MAX_DURATION);'
                         ],
                     ],
+                ],
+                [
+                    'type'    => 'Label',
                 ],
                 [
                     'type'    => 'RowLayout',
@@ -761,13 +774,13 @@ class KeConnectP30udp extends IPSModule
                             'type'     => 'ValidationTextBox',
                             'validate' => '^([0-9A-Fa-f][0-9A-Fa-f]){1,8}$',
                             'name'     => 'TAG',
-                            'caption'  => 'RFID Tag (max 16 Chars)'
+                            'caption'  => 'RFID tag (max 16 chars)'
                         ],
                         [
                             'type'     => 'ValidationTextBox',
                             'validate' => '^([0-9A-Fa-f][0-9A-Fa-f]){0,10}$',
                             'name'     => 'CLASS',
-                            'caption'  => 'RFID Class (max 20 Chars)'
+                            'caption'  => 'RFID class (max 20 chars)'
                         ],
                         [
                             'type'    => 'Button',
@@ -777,13 +790,16 @@ class KeConnectP30udp extends IPSModule
                     ],
                 ],
                 [
+                    'type'    => 'Label',
+                ],
+                [
                     'type'    => 'RowLayout',
                     'items'   => [
                         [
                             'type'     => 'ValidationTextBox',
                             'validate' => '^([0-9A-Fa-f][0-9A-Fa-f]){1,8}$',
                             'name'     => 'TAG',
-                            'caption'  => 'RFID Tag (max 16 Chars)'
+                            'caption'  => 'RFID tag (max 16 chars)'
                         ],
                         [
                             'type'    => 'Button',
@@ -1143,7 +1159,7 @@ class KeConnectP30udp extends IPSModule
             $old_entries = json_decode((string) $old_s, true);
         }
         if ($old_entries != false) {
-            usort($old_entries, ['KeConnectP30udp', 'cmp_entries']);
+            usort($old_entries, [__CLASS__, 'cmp_entries']);
             $lastSessionID = $old_entries[0]['Session ID'];
         } else {
             $old_entries = [];
@@ -1293,7 +1309,7 @@ class KeConnectP30udp extends IPSModule
         }
 
         if ($new_entries != []) {
-            usort($new_entries, ['KeConnectP30udp', 'cmp_entries']);
+            usort($new_entries, [__CLASS__, 'cmp_entries']);
             $n = count($new_entries);
             $new_s = json_encode($new_entries);
         } else {
@@ -1917,17 +1933,26 @@ class KeConnectP30udp extends IPSModule
         return $ok;
     }
 
-    public function SendDisplayText(string $txt)
+    public function SendDisplayText(string $txt, int $min, int $max)
     {
-        $this->SendDebug(__FUNCTION__, 'text="' . $txt . '"', 0);
-
         // Text shown on the display. Maximum 23 ASCII characters can be used. 0 .. 23 characters
         //   ~ == Σ
         //   $ == blank
         //   , == comma
+        //
+        // min: Standard = 2s
+        // max: Standard = 10s
+
+        if ($min <= 0 || $max <= 0) {
+            $mode = 0;
+            $min = 0;
+            $max = 0;
+        } else {
+            $mode = 1;
+        }
         $s = substr(str_replace([' '], '$', $txt), 0, 23);
-        $this->SendDebug(__FUNCTION__, 'text="' . $txt . '" => ˝' . $s . '"', 0);
-        $cmd = 'display 0 0 0 0 ' . $s;
+        $this->SendDebug(__FUNCTION__, 'text="' . $txt . ($s != $txt ? '" => "' . $s : '') . '", min=' . $min . ', max=' . $max, 0);
+        $cmd = 'display ' . $mode . ' ' . $min . ' ' . $max . ' 0 ' . $s;
         $this->CallAction($cmd);
     }
 

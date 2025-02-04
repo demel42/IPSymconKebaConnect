@@ -6,7 +6,7 @@
 			"type": "ValidationTextBox",
 			"validate": "^([0-9A-Fa-f][0-9A-Fa-f]){1,8}$",
 			"name": "TAG",
-			"caption": "RFID Tag (max 16 Chars)"
+			"caption": "RFID tag (max 16 chars)"
 		}
 	],
 	"action": "KebaConnect_DeauthorizeSession($_IPS['TARGET'], $_IPS['TAG']);",
@@ -27,7 +27,7 @@
 	"locale": {
 		"de": {
 			"Deauthorize session": "Ladezyklus sperren",
-			"RFID Tag (max 16 Chars)": "RFID Tag (max 16 Zeichen)"
+			"RFID tag (max 16 chars)": "RFID Tag (max 16 Zeichen)"
 		}
 	}
 }

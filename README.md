@@ -54,8 +54,10 @@ Abruf aller Daten vom Gerät.
 `KebaConnect_ChargingUpdate(int $InstanzID)`<br>
 Eingeschränkte Abruf Daten vom Gerät (nur _report 2_).
 
-`KebaConnect_SendDisplayText(int $InstanzID, string $txt)`<br>
+`KebaConnect_SendDisplayText(int $InstanzID, string $txt, int $MinimumDuration, int $MaximumDuration)`<br>
 Übertragung eines Textes (max. 23 Zeichen) an eine Wallbox mit Display
+*MinimumDuration* gibt die minimale Dauer in Sekunden an (bis die Meldung durch eine neue Meldung überschrieben wird) und *MaximumDuration* die Dauer, bis die Meldung verschwindet;
+eine Angabe von **0** verwendet die Systemvorgabe (2s/10s)
 
 `KebaConnect_SwitchEnableCharging(int $InstanzID, bool $mode)`<br>
 Steuern des Ladevorgangs; aktivieren (LED's blinken grün) oder deaktivieren (LED's blinken blau)
@@ -161,6 +163,9 @@ Referenzen
 [KeContact P30 UDP Programmers Guide](https://www.keba.com/download/x/4a925c4c61/kecontactp30udp_pgen.pdf)
 
 ## 7. Versions-Historie
+
+- 1.16 @ 04.02.2025 09:48
+  - Verbesserung: KebaConnect_SendDisplayText() nun mit Angabe der Darstellungsdauer
 
 - 1.15 @ 11.11.2024 10:09
   - Verbesserung: Variable zur Phasenumschaltung entsprechend der Umschalt-Ruhezeit temporär deaktivieren

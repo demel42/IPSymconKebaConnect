@@ -5,10 +5,26 @@
 		{
 			"type": "ValidationTextBox",
 			"name": "TEXT",
-			"caption": "Text (max 23 Chars)"
+			"caption": "Text (max 23 chars)"
+		},
+		{
+			"type": "NumberSpinner",
+			"digits": 0,
+			"minimum": 0,
+			"suffix": "Seconds",
+			"name": "MIN_DURATION",
+			"caption": "Minimum duration"
+		},
+		{
+			"type": "NumberSpinner",
+			"digits": 0,
+			"minimum": 0,
+			"suffix": "Seconds",
+			"name": "MAX_DURATION",
+			"caption": "Maximum duration"
 		}
 	],
-	"action": "KebaConnect_SendDisplayText($_IPS['TARGET'], $_IPS['TEXT']);",
+	"action": "KebaConnect_SendDisplayText($_IPS['TARGET'], $_IPS['TEXT'], $_IPS['MIN_DURATION'], $_IPS['MAX_DURATION']);",
 	"restrictions": {
 		"objectType": [
 			1
@@ -17,8 +33,7 @@
 			"{A84E350B-55B7-2841-A6F1-C0B17FA0C4CD}"
 		],
 		"includeEnvironments": [
-			"TestCommands",
-			"Default"
+			"TestCommands", "Default"
 		]
 	},
 	"priority": 10,
@@ -27,8 +42,11 @@
 	"locale": {
 		"de": {
 			"Display text on wallbox": "Text auf der Wallbox anzeigen",
-			"Text (max 23 Chars)": "Text (max. 23 Zeichen)",
-			"Display text \"{TEXT}\"": "Text \"{TEXT}\" anzeigen"
+			"Text (max 23 chars)": "Text (max. 23 Zeichen)",
+			"Display text \"{TEXT}\"": "Text \"{TEXT}\" anzeigen",
+			"Minimum duration": "Minimale Dauer",
+			"Maximum duration": "Maximale Dauer",
+			"Seconds": "Sekunden"
 		}
 	}
 }

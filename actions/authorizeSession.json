@@ -6,13 +6,13 @@
 			"type": "ValidationTextBox",
 			"validate": "^([0-9A-Fa-f][0-9A-Fa-f]){1,8}$",
 			"name": "TAG",
-			"caption": "RFID Tag (max 16 Chars)"
+			"caption": "RFID tag (max 16 chars)"
 		},
 		{
 			"type": "ValidationTextBox",
 			"validate": "^([0-9A-Fa-f][0-9A-Fa-f]){0,10}$",
 			"name": "CLASS",
-			"caption": "RFID Class (max 20 Chars)"
+			"caption": "RFID class (max 20 chars)"
 		}
 	],
 	"action": "KebaConnect_AuthorizeSession($_IPS['TARGET'], $_IPS['TAG'], $_IPS['CLASS']);",
@@ -33,8 +33,8 @@
 	"locale": {
 		"de": {
 			"Authorize session": "Ladezyklus autorisieren",
-			"RFID Tag (max 16 Chars)": "RFID Tag (max 16 Zeichen)",
-			"RFID Class (max 20 Chars)": "RFID Class (max 20 Zeichen)"
+			"RFID tag (max 16 chars)": "RFID Tag (max 16 Zeichen)",
+			"RFID class (max 20 chars)": "RFID Class (max 20 Zeichen)"
 		}
 	}
 }

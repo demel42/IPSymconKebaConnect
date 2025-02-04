@@ -126,12 +126,13 @@
 
 			"__actions__": "",
 			"Update data": "Daten aktualisieren",
-			"Send text to wallbox (max 23 character) - Test of function \"KebaConnect_SendDisplayText\"":
-				"Text an Wallbox senden (max 23 Zeichen) - Test der Funktion \"KebaConnect_SendDisplayText\"",
-			"Text": "Text",
-			"Send": "Senden",
-			"RFID Tag (max 16 Chars)": "RFID Tag (max 16 Zeichen)",
-			"RFID Class (max 20 Chars)": "RFID Class (max 20 Zeichen)",
+			"Text (max 23 chars)": "Text (max 23 Zeichen)",
+			"Minimum duration": "Minimale Dauer",
+			"Maximum duration": "Maximale Dauer",
+			"Seconds": "Sekunden",
+			"Send text to wallbox": "Text an Wallbox senden",
+			"RFID tag (max 16 chars)": "RFID Tag (max 16 Zeichen)",
+			"RFID class (max 20 chars)": "RFID Class (max 20 Zeichen)",
 			"Authorize session": "Ladezyklus autorisieren",
 			"Deauthorize session": "Ladezyklus sperren",
 
