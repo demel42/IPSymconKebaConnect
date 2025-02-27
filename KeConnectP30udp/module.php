@@ -178,6 +178,9 @@ class KeConnectP30udp extends IPSModule
         $this->RegisterPropertyBoolean('log_no_parent', true);
 
         $this->RegisterPropertyString('host', '');
+        $this->RegisterPropertyInteger('unicast_port', self::$UnicastPort);
+        $this->RegisterPropertyInteger('broadcast_port', self::$BroadcastPort);
+
         $this->RegisterPropertyString('serialnumber', '');
         $this->RegisterPropertyString('use_fields', '[]');
 
@@ -544,6 +547,27 @@ class KeConnectP30udp extends IPSModule
                     'validate' => '^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$',
                 ],
                 [
+                    'type'    => 'NumberSpinner',
+                    'name'    => 'unicast_port',
+                    'caption' => 'Port for commands and results',
+                    'enabled' => false,
+                ],
+                [
+                    'type'    => 'Select',
+                    'name'    => 'broadcast_port',
+                    'options' => [
+                        [
+                            'caption' => self::$BroadcastPort,
+                            'value'   => self::$BroadcastPort,
+                        ],
+                        [
+                            'caption' => self::$UnicastPort,
+                            'value'   => self::$UnicastPort,
+                        ],
+                    ],
+                    'caption' => 'Port for status messages',
+                ],
+                [
                     'type'     => 'ValidationTextBox',
                     'name'     => 'serialnumber',
                     'caption'  => 'Serial number (optional)',
@@ -821,13 +845,14 @@ class KeConnectP30udp extends IPSModule
     public function GetConfigurationForParent()
     {
         $host = $this->ReadPropertyString('host');
+        $port = $this->ReadPropertyInteger('broadcast_port');
 
         $r = IPS_GetConfiguration($this->GetConnectionID());
         $this->SendDebug(__FUNCTION__, print_r($r, true), 0);
         $j = [
             'Host'               => $host,
-            'Port'               => self::$BroadcastPort,
-            'BindPort'           => self::$BroadcastPort,
+            'Port'               => $port,
+            'BindPort'           => $port,
             'EnableBroadcast'    => true,
             'EnableReuseAddress' => true,
         ];
@@ -878,7 +903,7 @@ class KeConnectP30udp extends IPSModule
     private function ExecuteCmd(string $cmd)
     {
         $host = $this->ReadPropertyString('host');
-        $port = self::$UnicastPort;
+        $port = $this->ReadPropertyInteger('unicast_port');
 
         $cmdData = json_decode($this->ReadAttributeString('CmdData'), true);
         $last_mts = (float) $this->GetArrayElem($cmdData, 'last_mts', 0);

@@ -35,6 +35,8 @@
 
 			"Basic configuration": "Basis-Konfiguration",
 			"IP address of the wallbox": "IP-Adresse der Wallbox",
+			"Port for commands and results": "Port für Befehle und Ergebnisse",
+			"Port for status messages": "Port für Statusmeldungen",
 			"Serial number (optional)": "Seriennummer (optional)",
 			"Update interval in standby": "Aktualisierungsintervall im Ruhezustand",
 			"Update interval while charging": "Aktualisierungsintervall während des Ladevorgangs",
