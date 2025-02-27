@@ -164,7 +164,7 @@ Referenzen
 
 ## 7. Versions-Historie
 
-- 1.17 @ 27.02.2025 11:11
+- 1.17 @ 27.02.2025 14:31
   - Verbesserung: Broadcast-Port kann eingestellt werden
 
 - 1.16 @ 04.02.2025 09:48
