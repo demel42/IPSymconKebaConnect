@@ -164,6 +164,9 @@ Referenzen
 
 ## 7. Versions-Historie
 
+- 1.17.1 @ 11.09.2025 18:53
+  - Fix: Korrektur zu 1.17 (unter Windows gibt es keine getrennte Option SO_REUSEPORT)
+
 - 1.17 @ 27.02.2025 14:31
   - Verbesserung: Broadcast-Port kann eingestellt werden
 

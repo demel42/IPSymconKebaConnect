@@ -941,7 +941,9 @@ class KeConnectP30udp extends IPSModule
         }
         if ($ok) {
             socket_set_option($fp, SOL_SOCKET, SO_REUSEADDR, 1);
-            socket_set_option($fp, SOL_SOCKET, SO_REUSEPORT, 1);
+            if (IPS_GetKernelPlatform() != 'Windows') {
+                socket_set_option($fp, SOL_SOCKET, SO_REUSEPORT, 1);
+            }
             socket_set_option($fp, SOL_SOCKET, SO_SNDTIMEO, ['sec' => 5, 'usec' => 0]);
             socket_set_option($fp, SOL_SOCKET, SO_RCVTIMEO, ['sec' => 5, 'usec' => 0]);
             if (socket_bind($fp, '0.0.0.0', $port) == false) {
@@ -1129,7 +1131,7 @@ class KeConnectP30udp extends IPSModule
                 $r = $this->SetMainsConnectionPhases($n_phases);
                 if ($r == false) {
                     $n_phases = 1;
-                // return $r;
+                    // return $r;
                 } else {
                     $current /= $n_phases;
                 }
