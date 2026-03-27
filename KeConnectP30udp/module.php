@@ -847,8 +847,6 @@ class KeConnectP30udp extends IPSModule
         $host = $this->ReadPropertyString('host');
         $port = $this->ReadPropertyInteger('broadcast_port');
 
-        $r = IPS_GetConfiguration($this->GetConnectionID());
-        $this->SendDebug(__FUNCTION__, print_r($r, true), 0);
         $j = [
             'Host'               => $host,
             'Port'               => $port,
@@ -856,7 +854,7 @@ class KeConnectP30udp extends IPSModule
             'EnableBroadcast'    => true,
             'EnableReuseAddress' => true,
         ];
-        $d = json_encode($j);
+        $d = json_encode($j, JSON_UNESCAPED_SLASHES);
         $this->SendDebug(__FUNCTION__, print_r($j, true), 0);
         return $d;
     }

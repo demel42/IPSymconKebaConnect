@@ -164,6 +164,10 @@ Referenzen
 
 ## 7. Versions-Historie
 
+- 1.18 @ 27.03.2026 14:15
+  - Fix: Anpassung für IPS 9: Reihenfolge der Anlage von Parents hat sich geändert
+  - update submodule CommonStubs
+
 - 1.17.1 @ 11.09.2025 18:53
   - Fix: Korrektur zu 1.17 (unter Windows gibt es keine getrennte Option SO_REUSEPORT)
 
