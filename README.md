@@ -164,7 +164,7 @@ Referenzen
 
 ## 7. Versions-Historie
 
-- 1.18 @ 27.03.2026 14:15
+- 1.18 @ 28.03.2026 10:36
   - Fix: Anpassung für IPS 9: Reihenfolge der Anlage von Parents hat sich geändert
   - update submodule CommonStubs
 
