@@ -65,12 +65,12 @@ trait KebaConnectLocalLib
             $this->SendDebug(__FUNCTION__, 'reInstall=' . $this->bool2str($reInstall), 0);
         }
 
-        $this->CreateVarProfile('KebaConnect.Current', VARIABLETYPE_FLOAT, ' A', 0, 0, 0, 1, '', '', $reInstall);
-        $this->CreateVarProfile('KebaConnect.Energy', VARIABLETYPE_FLOAT, ' kWh', 0, 0, 0, 2, '', '', $reInstall);
-        $this->CreateVarProfile('KebaConnect.PowerFactor', VARIABLETYPE_FLOAT, ' %', 0, 0, 0, 1, '', '', $reInstall);
-        $this->CreateVarProfile('KebaConnect.Power', VARIABLETYPE_FLOAT, ' kW', 0, 0, 0, 1, '', '', $reInstall);
-        $this->CreateVarProfile('KebaConnect.SurplusPower', VARIABLETYPE_FLOAT, ' W', 0, 0, 0, 1, '', '', $reInstall);
-        $this->CreateVarProfile('KebaConnect.Voltage', VARIABLETYPE_FLOAT, ' V', 0, 0, 0, 0, '', '', $reInstall);
+        $this->CreateVarProfile('KebaConnect.Current', VARIABLETYPE_FLOAT, ' A', 0, 0, 0, 1, '', [], $reInstall);
+        $this->CreateVarProfile('KebaConnect.Energy', VARIABLETYPE_FLOAT, ' kWh', 0, 0, 0, 2, '', [], $reInstall);
+        $this->CreateVarProfile('KebaConnect.PowerFactor', VARIABLETYPE_FLOAT, ' %', 0, 0, 0, 1, '', [], $reInstall);
+        $this->CreateVarProfile('KebaConnect.Power', VARIABLETYPE_FLOAT, ' kW', 0, 0, 0, 1, '', [], $reInstall);
+        $this->CreateVarProfile('KebaConnect.SurplusPower', VARIABLETYPE_FLOAT, ' W', 0, 0, 0, 1, '', [], $reInstall);
+        $this->CreateVarProfile('KebaConnect.Voltage', VARIABLETYPE_FLOAT, ' V', 0, 0, 0, 0, '', [], $reInstall);
 
         $associations = [
             ['Wert' => 0, 'Name' => '-', 'Farbe' => -1],

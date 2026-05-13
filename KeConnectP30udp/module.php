@@ -859,7 +859,7 @@ class KeConnectP30udp extends IPSModule
         return $d;
     }
 
-    private function SetStandbyUpdateInterval(int $sec = null)
+    private function SetStandbyUpdateInterval(?int $sec = null)
     {
         if (is_null($sec)) {
             $sec = $this->ReadPropertyInteger('standby_update_interval');
@@ -1920,7 +1920,7 @@ class KeConnectP30udp extends IPSModule
         return $enabled;
     }
 
-    private function CallAction($cmd, &$msg = null)
+    private function CallAction($cmd, ?string &$msg = null)
     {
         if (is_null($msg) == false) {
             $msg = '';

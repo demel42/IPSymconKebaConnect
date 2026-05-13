@@ -164,6 +164,10 @@ Referenzen
 
 ## 7. Versions-Historie
 
+- 1.19 @ 11.05.2026 15:02
+  - Fix: Änderung von deprecated php code
+  - update submodule CommonStubs
+
 - 1.18 @ 28.03.2026 10:36
   - Fix: Anpassung für IPS 9: Reihenfolge der Anlage von Parents hat sich geändert
   - update submodule CommonStubs
