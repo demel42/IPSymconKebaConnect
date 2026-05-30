@@ -150,6 +150,8 @@ class KeConnectP30udp extends IPSModule
     private static $t_COM_pause = 5 * 1000;	// The minimum waiting time between the scheduled repetitions of any UPD command in msec
     private static $t_DIS_pause = 2 * 1000;	// The minimum waiting time after sending a disable command (e.g. ena 0) in msec
 
+    private static $t_CMD_response = 5 * 1000;	// The maximum waiting time for a command response in msec
+
     private static $t_X2_pause = 5 * 60;	// The minimum waiting time between two phase switches in sec
 
     private static $semaphoreTM = 15 * 1000;
@@ -884,51 +886,84 @@ class KeConnectP30udp extends IPSModule
 
     public function ReceiveData($data)
     {
-        $this->SendDebug(__FUNCTION__, 'got broadcast, data="' . $data . '"', 0);
+        $this->SendDebug(__FUNCTION__, 'got data="' . $data . '"', 0);
         $jdata = json_decode($data, true);
         if (isset($jdata['ClientIP'])) {
             $clientIP = $jdata['ClientIP'];
             $host = $this->ReadPropertyString('host');
             if ($clientIP != $host) {
-                $this->SendDebug(__FUNCTION__, 'ignore broadcast from IP ' . $clientIP, 0);
+                $this->SendDebug(__FUNCTION__, 'ignore data from IP ' . $clientIP, 0);
                 return;
             }
         }
         $buffer = $jdata['Buffer'];
+
+        if ($this->GetBuffer('PendingCmd') != '' && $this->IsCommandResponse($buffer)) {
+            $this->SendDebug(__FUNCTION__, 'buffer command response="' . $buffer . '"', 0);
+            $this->SetBuffer('CmdResponse', $buffer);
+            return;
+        }
+
         $this->DecodeBroadcast($buffer);
     }
 
-    private function ExecuteCmd(string $cmd)
+    private function IsCommandResponse(string $data)
     {
-        $host = $this->ReadPropertyString('host');
-        $port = $this->ReadPropertyInteger('unicast_port');
-
-        $cmdData = json_decode($this->ReadAttributeString('CmdData'), true);
-        $last_mts = (float) $this->GetArrayElem($cmdData, 'last_mts', 0);
-        $last_cmd = $this->GetArrayElem($cmdData, 'last_cmd', '');
-        $mts = microtime(true);
-        $ms = round(($mts - $last_mts) * 1000);
-
-        $wait_ms = 0;
-        if ($ms <= self::$t_UDP_pause) {
-            $wait_ms = self::$t_UDP_pause - $ms + 1;
-        }
-        if ($last_cmd == $cmd) {
-            $wait_ms = self::$t_COM_pause;
-        } elseif ($last_cmd == 'ena 0') {
-            $wait_ms = self::$t_DIS_pause;
-        }
-        if ($wait_ms) {
-            IPS_Sleep($wait_ms);
-        }
-
-        $ok = true;
-        $fp = false;
-
-        if (IPS_SemaphoreEnter($this->SemaphoreID, self::$semaphoreTM) == false) {
-            $this->SendDebug(__FUNCTION__, 'unable to lock sempahore ' . $this->SemaphoreID, 0);
+        $pendingCmd = $this->GetBuffer('PendingCmd');
+        if ($pendingCmd == '') {
             return false;
         }
+
+        $jdata = json_decode($data, true);
+        if (is_array($jdata) == false) {
+            return true;
+        }
+
+        if (preg_match('/^report\s+(\d+)/', $pendingCmd, $r)) {
+            $report_id = intval($r[1]);
+            return isset($jdata['ID']) && intval($jdata['ID']) == $report_id;
+        }
+
+        return isset($jdata['ID']) == false;
+    }
+
+    private function ExecuteCmdViaParent(string $cmd, string $host, int $port)
+    {
+        $this->SetBuffer('PendingCmd', $cmd);
+        $this->SetBuffer('CmdResponse', '');
+
+        $j = [
+            'DataID'     => '{8E4D9B23-E0F2-1E05-41D8-C21EA53B8706}',
+            'Buffer'     => $cmd,
+            'ClientIP'   => '',
+            'ClientPort' => 0,
+            'Broadcast'  => false,
+        ];
+        $this->SendDebug(__FUNCTION__, 'sending ' . strlen($cmd) . ' bytes via parent/udp using socket configuration, fallback target=' . $host . ':' . $port . ', data=' . json_encode($j), 0);
+        $r = $this->SendDataToParent(json_encode($j));
+        $this->SendDebug(__FUNCTION__, 'SendDataToParent() returned ' . var_export($r, true) . ' - wait for ReceiveData response', 0);
+
+        $deadline = microtime(true) + (self::$t_CMD_response / 1000);
+        while (microtime(true) < $deadline) {
+            $buf = $this->GetBuffer('CmdResponse');
+            if ($buf != '') {
+                $this->SetBuffer('PendingCmd', '');
+                $this->SetBuffer('CmdResponse', '');
+                $this->SendDebug(__FUNCTION__, 'received response via parent, buf="' . $buf . '"', 0);
+                return $buf;
+            }
+            IPS_Sleep(25);
+        }
+
+        $this->SetBuffer('PendingCmd', '');
+        $this->SendDebug(__FUNCTION__, 'timeout waiting for command response', 0);
+        return false;
+    }
+
+    private function ExecuteCmdViaSocket(string $cmd, string $host, int $port)
+    {
+        $ok = true;
+        $fp = false;
 
         if ($ok) {
             $fp = @socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
@@ -968,13 +1003,52 @@ class KeConnectP30udp extends IPSModule
             socket_close($fp);
         }
 
+        return $ok ? $buf : false;
+    }
+
+    private function ExecuteCmd(string $cmd)
+    {
+        $host = $this->ReadPropertyString('host');
+        $port = $this->ReadPropertyInteger('unicast_port');
+        $broadcast_port = $this->ReadPropertyInteger('broadcast_port');
+
+        $cmdData = json_decode($this->ReadAttributeString('CmdData'), true);
+        $last_mts = (float) $this->GetArrayElem($cmdData, 'last_mts', 0);
+        $last_cmd = $this->GetArrayElem($cmdData, 'last_cmd', '');
+        $mts = microtime(true);
+        $ms = round(($mts - $last_mts) * 1000);
+
+        $wait_ms = 0;
+        if ($ms <= self::$t_UDP_pause) {
+            $wait_ms = self::$t_UDP_pause - $ms + 1;
+        }
+        if ($last_cmd == $cmd) {
+            $wait_ms = self::$t_COM_pause;
+        } elseif ($last_cmd == 'ena 0') {
+            $wait_ms = self::$t_DIS_pause;
+        }
+        if ($wait_ms) {
+            IPS_Sleep($wait_ms);
+        }
+
+        if (IPS_SemaphoreEnter($this->SemaphoreID, self::$semaphoreTM) == false) {
+            $this->SendDebug(__FUNCTION__, 'unable to lock sempahore ' . $this->SemaphoreID, 0);
+            return false;
+        }
+
+        if ($port == $broadcast_port) {
+            $buf = $this->ExecuteCmdViaParent($cmd, $host, $port);
+        } else {
+            $buf = $this->ExecuteCmdViaSocket($cmd, $host, $port);
+        }
+
         IPS_SemaphoreLeave($this->SemaphoreID);
 
         $cmdData['last_mts'] = $mts;
         $cmdData['last_cmd'] = $cmd;
         $this->WriteAttributeString('CmdData', json_encode($cmdData));
 
-        return $ok ? $buf : false;
+        return $buf;
     }
 
     public function StandbyUpdate()
