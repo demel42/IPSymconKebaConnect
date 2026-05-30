@@ -847,13 +847,16 @@ class KeConnectP30udp extends IPSModule
     public function GetConfigurationForParent()
     {
         $host = $this->ReadPropertyString('host');
-        $port = $this->ReadPropertyInteger('broadcast_port');
+        $unicast_port = $this->ReadPropertyInteger('unicast_port');
+        $broadcast_port = $this->ReadPropertyInteger('broadcast_port');
+
+        $enable_broadcast = $broadcast_port != $unicast_port;
 
         $j = [
             'Host'               => $host,
-            'Port'               => $port,
-            'BindPort'           => $port,
-            'EnableBroadcast'    => true,
+            'Port'               => $broadcast_port,
+            'BindPort'           => $broadcast_port,
+            'EnableBroadcast'    => $enable_broadcast,
             'EnableReuseAddress' => true,
         ];
         $d = json_encode($j, JSON_UNESCAPED_SLASHES);
@@ -886,24 +889,26 @@ class KeConnectP30udp extends IPSModule
 
     public function ReceiveData($data)
     {
-        $this->SendDebug(__FUNCTION__, 'got data="' . $data . '"', 0);
         $jdata = json_decode($data, true);
+        $this->SendDebug(__FUNCTION__, 'data=' . print_r($jdata, true), 0);
+
         if (isset($jdata['ClientIP'])) {
             $clientIP = $jdata['ClientIP'];
             $host = $this->ReadPropertyString('host');
             if ($clientIP != $host) {
-                $this->SendDebug(__FUNCTION__, 'ignore data from IP ' . $clientIP, 0);
+                $this->SendDebug(__FUNCTION__, 'ignore data from foreign IP ' . $clientIP, 0);
                 return;
             }
         }
         $buffer = $jdata['Buffer'];
 
         if ($this->GetBuffer('PendingCmd') != '' && $this->IsCommandResponse($buffer)) {
-            $this->SendDebug(__FUNCTION__, 'buffer command response="' . $buffer . '"', 0);
+            $this->SendDebug(__FUNCTION__, 'got command response', 0);
             $this->SetBuffer('CmdResponse', $buffer);
             return;
         }
 
+        $this->SendDebug(__FUNCTION__, 'got broadcast', 0);
         $this->DecodeBroadcast($buffer);
     }
 
@@ -939,9 +944,10 @@ class KeConnectP30udp extends IPSModule
             'ClientPort' => 0,
             'Broadcast'  => false,
         ];
-        $this->SendDebug(__FUNCTION__, 'sending ' . strlen($cmd) . ' bytes via parent/udp using socket configuration, fallback target=' . $host . ':' . $port . ', data=' . json_encode($j), 0);
-        $r = $this->SendDataToParent(json_encode($j));
-        $this->SendDebug(__FUNCTION__, 'SendDataToParent() returned ' . var_export($r, true) . ' - wait for ReceiveData response', 0);
+        $this->SendDebug(__FUNCTION__, 'sending ' . strlen($cmd) . ' bytes via parent/udp using socket configuration', 0);
+        $d = json_encode($j);
+        $r = $this->SendDataToParent($d);
+        $this->SendDebug(__FUNCTION__, 'SendDataToParent(' . $d . ') returned ' . var_export($r, true) . ' - wait for response via ReceiveData()', 0);
 
         $deadline = microtime(true) + (self::$t_CMD_response / 1000);
         while (microtime(true) < $deadline) {
@@ -977,8 +983,9 @@ class KeConnectP30udp extends IPSModule
             if (IPS_GetKernelPlatform() != 'Windows') {
                 socket_set_option($fp, SOL_SOCKET, SO_REUSEPORT, 1);
             }
-            socket_set_option($fp, SOL_SOCKET, SO_SNDTIMEO, ['sec' => 5, 'usec' => 0]);
-            socket_set_option($fp, SOL_SOCKET, SO_RCVTIMEO, ['sec' => 5, 'usec' => 0]);
+            $sec = self::$t_CMD_response / 1000;
+            socket_set_option($fp, SOL_SOCKET, SO_SNDTIMEO, ['sec' => $sec, 'usec' => 0]);
+            socket_set_option($fp, SOL_SOCKET, SO_RCVTIMEO, ['sec' => $sec, 'usec' => 0]);
             if (socket_bind($fp, '0.0.0.0', $port) == false) {
                 $this->SendDebug(__FUNCTION__, 'socket_bind() failed, reason=' . socket_strerror(socket_last_error($fp)), 0);
                 $ok = false;

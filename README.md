@@ -164,6 +164,10 @@ Referenzen
 
 ## 7. Versions-Historie
 
+- 1.20 @ 29.05.2026 07:50
+  - Korrektur: gleiche Nummer für Broadcast- und Unicast-Port führt eventuell zu Problemen (resource temporarly unavailable).
+    Die Kommunikation erfolgt in dem Fall nun komplett über die IO-Instanz (Dank für Fix @TiTan).
+
 - 1.19 @ 11.05.2026 15:02
   - Fix: Änderung von deprecated php code
   - update submodule CommonStubs
